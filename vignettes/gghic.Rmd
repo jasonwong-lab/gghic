@@ -1,0 +1,305 @@
+---
+title: "Use gghic to Visualise Genomic Interaction Data"
+author: "Minghao Jiang"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_document:
+    toc: true
+    toc_float: true
+    number_sections: false
+    center: false
+    theme: default
+    highlight: pygments
+    css: style.css
+vignette: >
+  %\VignetteIndexEntry{gghic}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteKeywords{genomics, visualisation, Hi-C}
+  %\VignetteAbstract{This vignette demonstrates how to use the gghic package to visualise genomic interaction data.}
+editor_options:
+  markdown:
+    wrap: 80
+    code_folding: true
+    scroll_past_end: true
+    tab_size: 2
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  tidy = FALSE,
+  cache = FALSE,
+  dev = "png"
+)
+```
+
+## Load R Packages and Data
+
+```{r setup}
+load_pkg <- function(pkgs) {
+  for (pkg in pkgs) suppressMessages(require(pkg, character.only = TRUE))
+}
+
+load_pkg(
+  c(
+    "gghic", "ggplot2", "tibble", "scales", "dplyr",
+    "tidyr", "HiCExperiment", "InteractionSet"
+  )
+)
+```
+
+The `gghic` package includes two cooler files:
+
+- `chr4_11-100kb.cool`: a 100kb resolution cooler file.
+
+- `chr4_11-5kb.cool`: a 5kb resolution cooler file.
+
+```{r message=FALSE, warning=FALSE}
+cf_100 <- HiCExperiment::CoolFile(
+  system.file("extdata", "cooler", "chr4_11-100kb.cool", package = "gghic")
+)
+hic_100 <- HiCExperiment::import(cf_100)
+
+cf_5 <- HiCExperiment::CoolFile(
+  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+)
+hic_5 <- HiCExperiment::import(cf_5)
+```
+
+Generate a tibble from the `HiCExperiment` object for visualisation.
+
+```{r}
+gis <- InteractionSet::interactions(hic_100)
+gis$score <- log10(gis$balanced)
+x_100 <- tibble::as_tibble(gis)
+scores <- x_100$score[
+  InteractionSet::pairdist(gis) != 0 &
+    !is.na(InteractionSet::pairdist(gis) != 0)
+]
+scores <- scores[!is.na(scores) & !is.infinite(scores)]
+x_100$score <- scales::oob_squish(x_100$score, c(min(scores), max(scores)))
+
+gis <- InteractionSet::interactions(hic_5)
+gis$score <- log10(gis$balanced)
+x_5 <- tibble::as_tibble(gis)
+scores <- x_5$score[
+  InteractionSet::pairdist(gis) != 0 &
+    !is.na(InteractionSet::pairdist(gis) != 0)
+]
+scores <- scores[!is.na(scores) & !is.infinite(scores)]
+x_5$score <- scales::oob_squish(x_5$score, c(min(scores), max(scores)))
+```
+
+## Chromosomal Interaction Data Visualisation
+
+### Heatmap - `geom_hic`
+
+`geom_hic()` is the main function to visualise Hi-C/-like data. It requires the following aesthetics: `seqnames1`, `start1`, `end1`, `seqnames2`, `start2`, `end2`, and `fill`.
+
+```{r}
+p <- x_100 |>
+  dplyr::filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
+  tidyr::drop_na(score) |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2,
+      fill = score
+    )
+  ) +
+  geom_hic()
+
+p
+```
+
+`theme_hic()` is a theme function for `geom_hic()` that enhances the appearance of the plot.
+
+```{r}
+p + theme_hic()
+```
+
+`gghic()` is a wrapper function that can take either a `HiCExperiment` object, a `GenomicInteractions` object, or a `tibble`/`data.frame` as input. (exactly the same as above).
+
+```{r eval=FALSE, echo=TRUE}
+hic_100["chr11"] |>
+  gghic()
+```
+
+### Ideogram - `geom_ideogram`
+
+`geom_ideogram()` can be used to add chromosome ideograms to the plot.
+
+```{r}
+x_100 |>
+  dplyr::filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2,
+      fill = score
+    )
+  ) +
+  geom_hic() +
+  theme_hic() +
+  geom_ideogram(
+    genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
+  )
+```
+
+The wrapper function `gghic()` can also add ideograms to the plot. (exactly the same as above).
+
+```{r eval=FALSE, echo=TRUE}
+hic_100["chr11"] |>
+  gghic(
+    ideogram = TRUE, genome = "hg19", highlight = FALSE, length_ratio = 0.7,
+    ideogram_fontsize = 8
+  )
+```
+
+The plotted region can be highlighted on the ideogram by setting `highlight = TRUE`.
+
+```{r}
+hic_100["chr4:10000000-15000000"] |>
+  gghic(
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, length_ratio = 0.7,
+    ideogram_fontsize = 8
+  )
+```
+
+### Gene Annotation - `geom_annotation`
+
+Track-based gene annotation can be added to the plot by using `geom_annotation()`.
+
+```{r}
+p <- x_5 |>
+  dplyr::filter(
+    seqnames1 == "chr11", seqnames2 == "chr11",
+    center1 > 67000000, center1 < 67100000,
+    center2 > 67000000, center2 < 67100000
+  ) |>
+  ggplot2::ggplot(
+    ggplot2::aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2,
+      fill = score
+    )
+  ) +
+  geom_hic() +
+  theme_hic() +
+  geom_ideogram(
+    genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
+  )
+
+path_gtf <- system.file(
+  "extdata", "gtf", "gencode-chr4_11.gtf.gz", package = "gghic"
+)
+
+p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
+```
+
+Some parameters can be set for `geom_annotation()`:
+
+- `style` can be set to `"arrow"` to change the annotation style.
+
+- `maxgap` is used to calculate how many non-overlapping tracks are needed for the annotation.
+
+- `gene_symbols` can be used to specify genes to plot.
+
+```{r}
+p + geom_annotation(
+  gtf_path = path_gtf, style = "arrow", maxgap = -1,
+  gene_symbols = c("GRK2", "SSH3", "KDM2A")
+)
+```
+
+`gghic()` can also add gene annotation to the plot (exactly the same as above).
+
+```{r eval=FALSE, echo=TRUE}
+hic_5["chr11:67000000-67100000"] |>
+  gghic(
+    ideogram = TRUE, genome = "hg19", highlight = FALSE, length_ratio = 0.7,
+    ideogram_fontsize = 8,
+
+    annotation = TRUE, gtf_path = path_gtf, style = "arrow", maxgap = -1,
+    gene_symbols = c("GRK2", "SSH3", "KDM2A")
+  )
+```
+
+### Visualisation of Interaction Data of Multiple Chromosomes
+
+Set `draw_boundary` to `TRUE` to draw the boundary of the chromosomes.
+
+Set `expand_xaxis` to `TRUE` to expand the x-axis if the plot is crowded.
+
+```{r}
+hic_100 |>
+  gghic(
+    draw_boundary = TRUE,
+    expand_xaxis = TRUE, expand_left = 2000000, expand_right = 2000000
+  )
+```
+
+Chromosome ideograms and gene tracks can also be added to the plot when visualising multiple chromosomes.
+
+```{r}
+p <- x_5 |>
+  dplyr::filter(
+    center1 > 10000000 & center1 < 11000000 &
+      center2 > 10000000 & center2 < 11000000
+  ) |>
+  gghic(
+    draw_boundary = TRUE,
+
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7,
+    ideogram_width_ratio = 0.08,
+
+    annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
+    style = "arrow", maxgap = 100000, annotation_fontsize = 5,
+    annotation_width_ratio = 0.05,
+
+    expand_xaxis = TRUE
+  )
+
+p
+```
+
+### Other Data Tracks - `geom_track`
+
+`geom_track()` can be used to add other data tracks to the plot.
+
+```{r}
+paths_track <- system.file(
+  "extdata", "bigwig", c("track1.bigWig", "track2.bigWig"), package = "gghic"
+)
+
+p + geom_track(
+  data_paths = paths_track, width_ratio = 0.5, fill = c("#DC0000B2", "#00A087B2"),
+  data_range = "auto"
+)
+```
+
+`gghic()` is handy for adding all these features to the plot.
+
+```{r}
+x_5 |>
+  dplyr::filter(
+    center1 > 10000000 & center1 < 11000000 &
+      center2 > 10000000 & center2 < 11000000
+  ) |>
+  gghic(
+    draw_boundary = TRUE,
+
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7,
+    ideogram_width_ratio = 0.08,
+    annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
+    style = "arrow", maxgap = 100000, annotation_fontsize = 5,
+    annotation_width_ratio = 0.05,
+
+    track = TRUE, data_paths = paths_track, track_width_ratio = 0.5,
+    track_fill = c("#DC0000B2", "#00A087B2"), data_range = "maximum",
+
+    expand_xaxis = TRUE
+  )
+```

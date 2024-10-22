@@ -1,0 +1,270 @@
+scale_data <- function(gis, score_column, scale_method) {
+  gis$score <- scale_method(S4Vectors::mcols(gis)[, score_column])
+
+  x <- tibble::as_tibble(gis)
+  scores <- x$score[
+    InteractionSet::pairdist(gis) != 0 &
+      !is.na(InteractionSet::pairdist(gis) != 0)
+  ]
+  scores <- scores[!is.na(scores) & !is.infinite(scores)]
+  M <- max(scores)
+  m <- min(scores)
+
+  x$score <- scales::oob_squish(x$score, c(m, M))
+
+  x
+}
+
+check_data_type <- function(data, ...) {
+  if (is(data, "GInteractions")) {
+    x <- scale_data(data, ...)
+  } else if (is(data, "HiCExperiment")) {
+    gis <- InteractionSet::interactions(data)
+    x <- scale_data(gis, ...)
+  } else if (tibble::is_tibble(data) || is(data, "data.frame")) {
+    cols_required <- c(
+      "seqnames1", "seqnames2", "start1", "end1", "start2", "end2", "score"
+    )
+    cols_missing <- setdiff(cols_required, colnames(data))
+    if (length(cols_missing) > 0) {
+      stop(
+        "data must have the following columns: ",
+        paste(cols_missing, collapse=', ')
+      )
+    }
+    x <- data
+  } else {
+    stop("data must be a HiCExperiment object or a tibble/data.frame")
+  }
+  x
+}
+
+calculate_xrange <- function(data) {
+  n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
+
+  if (n_sn == 1 || (n_sn == 2 && all(data$seqnames1 != data$seqnames2))) {
+    data <- data
+  } else {
+    data <- data |>
+      adjust_coordinates(list(c(start1 = "start1", end1 = "end1")), FALSE)
+  }
+
+  c(min(data$start1), max(data$end1))
+}
+
+#' gghic
+#'
+#' @description A ggplot2 wrapper of [geom_hic()], [geom_ideogram()],
+#'   [geom_annotation()], and [geom_track()] for easy visualisation of
+#'   Hi-C/-like data.
+#' @inheritParams geom_hic
+#' @inheritParams geom_ideogram
+#' @inheritParams geom_annotation
+#' @inheritParams geom_track
+#' @param data Either a HiCExperiment object, or a GInteractions object, or a
+#'   tibble/data.frame.
+#' @param score_column The column name of which the score is calculated.
+#'   Default is `"balanced"`.
+#' @param scale_method The function to scale the score. Default is `log10`.
+#' @param rasterise Whether to rasterise the plot of Hi-C or not.
+#'   Default is `FALSE`.
+#' @param dpi The resolution of the rasterised plot. Default is `300`.
+#' @param ideogram Whether to add ideogram or not. Default is `FALSE`.
+#' @param ideogram_width_ratio The width ratio of the ideogram.
+#'   Default is `1/30`.
+#' @param ideogram_fontsize The font size of the ideogram. Default is `10`.
+#' @param ideogram_colour The color of the ideogram. Default is `"red"`.
+#' @param ideogram_fill The fill color of the highlighted region on the
+#'   ideogram. Default is `"#FFE3E680"`.
+#' @param annotation Whether to add annotation or not. Default is `FALSE`.
+#' @param annotation_width_ratio The width ratio of the annotation.
+#'   Default is `1/50`.
+#' @param annotation_spacing_ratio The spacing ratio of the annotation.
+#'   Default is `1/3`.
+#' @param  annotation_fontsize The font size of the annotation. Default is `10`.
+#' @param annotation_colour The color of the annotation. Default is `"#48CFCB"`.
+#' @param annotation_fill The fill color of the annotation.
+#'   Default is `"#48CFCB"`.
+#' @param track Whether to add track or not. Default is `FALSE`.
+#' @param track_width_ratio The width ratio of the track. Default is `1/20`.
+#' @param track_spacing_ratio The spacing ratio of the track. Default is `1/2`.
+#' @param track_fill The fill color of the track. Default is `"black"`.
+#' @param track_fontsize The font size of the track. Default is `5`.
+#' @param expand_xaxis Whether to expand the x-axis or not. Default is `FALSE`.
+#' @param expand_left The left expansion of the x-axis. Default is `NULL`.
+#' @param expand_right The right expansion of the x-axis. Default is `NULL`.
+#' @inheritDotParams geom_hic -mapping
+#' @inheritDotParams geom_ideogram -mapping -width_ratio -fontsize -colour -fill
+#' @inheritDotParams geom_annotation -mapping -width_ratio -spacing_ratio
+#'   -fontsize -colour -fill
+#' @inheritDotParams geom_track -mapping -width_ratio -spacing_ratio -fill
+#'   -fontsize
+#' @return A ggplot object.
+#' @examples
+#' \dontrun{
+#' library(gghic)
+#' library(dplyr)
+#' library(HiCExperiment)
+#' library(InteractionSet)
+#' library(scales)
+#' library(scales)
+#'
+#' cf <- HiCExperiment::CoolFile(
+#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+#' )
+#' hic <- HiCExperiment::import(cf)
+#'
+#' gis <- InteractionSet::interactions(hic)
+#' gis$score <- log10(gis$balanced)
+#' x <- tibble::as_tibble(gis)
+#' scores <- x$score[
+#'   InteractionSet::pairdist(gis) != 0 &
+#'     !is.na(InteractionSet::pairdist(gis) != 0)
+#' ]
+#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
+#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#'
+#' p <- x_5 |>
+#'   dplyr::filter(
+#'     center1 > 10000000 & center1 < 11000000 &
+#'       center2 > 10000000 & center2 < 11000000
+#'   ) |>
+#'   gghic(
+#'     draw_boundary = TRUE,
+#'
+#'     ideogram = TRUE, genome = "hg19", highlight = TRUE,
+#'     ideogram_fontsize = 7, ideogram_width_ratio = 0.08,
+#'
+#'     annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
+#'     style = "arrow", maxgap = 100000, annotation_fontsize = 5,
+#'     annotation_width_ratio = 0.05,
+#'
+#'     expand_xaxis = TRUE
+#'   )
+#' }
+#' @export gghic
+gghic <- function(
+  data = NULL,
+  score_column = "balanced",
+  scale_method = log10,
+
+  rasterise = FALSE,
+  dpi = 300,
+
+  ideogram = FALSE,
+  ideogram_width_ratio = 1 / 30,
+  ideogram_fontsize = 10,
+  ideogram_colour = "red",
+  ideogram_fill = "#FFE3E680",
+
+  annotation = FALSE,
+  annotation_width_ratio = 1 / 50,
+  annotation_spacing_ratio = 1 / 3,
+  annotation_fontsize = 10,
+  annotation_colour = "#48CFCB",
+  annotation_fill = "#48CFCB",
+
+  track = FALSE,
+  track_width_ratio = 1 / 20,
+  track_spacing_ratio = 1 / 2,
+  track_fill = "black",
+  track_fontsize = 5,
+
+  expand_xaxis = FALSE,
+  expand_left = NULL,
+  expand_right = NULL,
+
+  ...
+) {
+  dat <- data |>
+    check_data_type(score_column = score_column, scale_method = scale_method) |>
+    tidyr::drop_na(score)
+
+  p <- dat |>
+    ggplot2::ggplot(
+      ggplot2::aes(
+        seqnames1 = seqnames1, start1 = start1, end1 = end1,
+        seqnames2 = seqnames2, start2 = start2, end2 = end2,
+        fill = score
+      )
+    )
+
+  if (rasterise) {
+    p <- p + ggrastr::rasterise(geom_hic(...), dpi = dpi)
+  } else {
+    p <- p + geom_hic(...)
+  }
+
+  if (ideogram) {
+    p <- p +
+      geom_ideogram(
+        width_ratio = ideogram_width_ratio,
+        fontsize = ideogram_fontsize,
+        colour = ideogram_colour,
+        fill = ideogram_fill,
+        ...
+      )
+  }
+
+  if (annotation) {
+    p <- p +
+      geom_annotation(
+        width_ratio = annotation_width_ratio,
+        spacing_ratio = annotation_spacing_ratio,
+        fontsize = annotation_fontsize,
+        colour = annotation_colour,
+        fill = annotation_fill,
+        ...
+      )
+  }
+
+  if (track) {
+    p <- p +
+      geom_track(
+        width_ratio = track_width_ratio,
+        spacing_ratio = track_spacing_ratio,
+        fill = track_fill,
+        fontsize = track_fontsize,
+        ...
+      )
+  }
+
+  range_x <- NULL
+  if (expand_xaxis) {
+    range_x <- dat |>
+      calculate_xrange()
+
+    if (is.null(expand_left)) expand_left <- 150000
+    if (is.null(expand_right)) expand_right <- 150000
+  }
+
+  breaks <- ggplot2::waiver()
+  labels <- scales::unit_format(unit = "M", scale = 1e-6)
+  n_sn <- length(unique(c(dat$seqnames1, dat$seqnames2)))
+  if (n_sn != 1 && (n_sn != 2 || any(dat$seqnames1 == dat$seqnames2))) {
+    tmp <- dat |>
+      dplyr::group_by(seqnames1) |>
+      dplyr::reframe(
+        bin = seq(from = min(end1), to = max(end1), length.out = 5)
+      ) |>
+      dplyr::rename(seqname = seqnames1)
+
+    chroms_add <- dat |> calculate_add_lengths()
+    chroms_sub <- dat |> calculate_subtract_lengths()
+
+    tmp2 <- tmp |>
+      adjust_coordinates2(chroms_add, chroms_sub, c(bin = "bin"))
+
+    breaks <- tmp2$bin
+    labels <- labels(tmp$bin)
+  }
+
+  p <- p +
+    theme_hic(
+      breaks = breaks, labels = labels,
+      xmin = range_x[1], xmax = range_x[2],
+      expand_x = c(expand_left, expand_right)
+    )
+
+  p
+}
