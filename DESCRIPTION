@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R:
     person("Minghao", "Jiang", , "mjhk@connect.hku.hk", role = c("aut", "cre", "ctb"),
            comment = c(ORCID = "0000-0003-3309-9185"))
-Description: gghic
+Description: A package for visualising genomic interaction data using ggplot2.
 License: GPL (>= 3)
 Imports:
     AnnotationDbi,
@@ -32,7 +32,8 @@ Imports:
     vroom
 Suggests:
     knitr,
-    rmarkdown
+    rmarkdown,
+    HiCExperiment
 VignetteBuilder:
     knitr
 biocViews: Annotation, DataImport, DataRepresentation, GenomeAnnotation, HiC,
