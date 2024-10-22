@@ -548,6 +548,7 @@ GeomAnnotation <- ggplot2::ggproto(
 #' geom_annotation
 #'
 #' @description A ggplot2 geom for gene model tracks.
+#' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param txdb The TxDb object. Default is `NULL`.
 #' @param tx2gene An optional data frame or tibble that maps transcript
@@ -595,13 +596,18 @@ GeomAnnotation <- ggplot2::ggproto(
 #' library(scales)
 #' library(scales)
 #'
-#' cf <- HiCExperiment::CoolFile(system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic"))
+#' cf <- HiCExperiment::CoolFile(
+#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+#' )
 #' hic <- HiCExperiment::import(cf)
 #'
 #' gis <- InteractionSet::interactions(hic)
 #' gis$score <- log10(gis$balanced)
 #' x <- tibble::as_tibble(gis)
-#' scores <- x$score[InteractionSet::pairdist(gis) != 0 & !is.na(InteractionSet::pairdist(gis) != 0)]
+#' scores <- x$score[
+#'   InteractionSet::pairdist(gis) != 0 &
+#'     !is.na(InteractionSet::pairdist(gis) != 0)
+#' ]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
 #' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
 #'
@@ -626,9 +632,10 @@ GeomAnnotation <- ggplot2::ggproto(
 #' p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
 #' }
 #' @export geom_annotation
+#' @aliases geom_annotation
 geom_annotation <- function(
   mapping = NULL, data = NULL, stat = StatAnnotation, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, check.param = FALSE, ...,
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   txdb = NULL, tx2gene = NULL, gtf_path = NULL, width_ratio = 1 / 50,
   spacing_ratio = 1 / 3, maxgap = -1, include_ncrna = TRUE,
   style = c("basic", "arrow"), gene_symbols = NULL,

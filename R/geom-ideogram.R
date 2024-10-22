@@ -199,6 +199,7 @@ GeomIdeogram <- ggplot2::ggproto(
 #' geom_ideogram
 #'
 #' @description A ggplot2 geom for chromosome ideogram.
+#' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param genome The genome name. Default is `"hg19"`.
 #' @param highlight Whether to highlight the boundary of the chromosome.
@@ -230,13 +231,18 @@ GeomIdeogram <- ggplot2::ggproto(
 #' library(scales)
 #' library(scales)
 #'
-#' cf <- HiCExperiment::CoolFile(system.file("extdata", "cooler", "chr4_11-100kb.cool", package = "gghic"))
+#' cf <- HiCExperiment::CoolFile(
+#'   system.file("extdata", "cooler", "chr4_11-100kb.cool", package = "gghic")
+#' )
 #' hic <- HiCExperiment::import(cf)
 #'
 #' gis <- InteractionSet::interactions(hic)
 #' gis$score <- log10(gis$balanced)
 #' x <- tibble::as_tibble(gis)
-#' scores <- x$score[InteractionSet::pairdist(gis) != 0 & !is.na(InteractionSet::pairdist(gis) != 0)]
+#' scores <- x$score[
+#'   InteractionSet::pairdist(gis) != 0 &
+#'     !is.na(InteractionSet::pairdist(gis) != 0)
+#' ]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
 #' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
 #'
@@ -257,9 +263,10 @@ GeomIdeogram <- ggplot2::ggproto(
 #' )
 #' }
 #' @export geom_ideogram
+#' @aliases geom_ideogram
 geom_ideogram <- function(
   mapping = NULL, data = NULL, stat = StatIdeogram, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, check.param = FALSE, ...,
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   genome = "hg19", highlight = FALSE, width_ratio = 1 / 30, length_ratio = 0.8,
   fontsize = 10, colour = "red", fill = "#FFE3E680"
 ) {

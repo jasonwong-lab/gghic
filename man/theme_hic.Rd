@@ -50,13 +50,18 @@ library(InteractionSet)
 library(scales)
 library(scales)
 
-cf <- HiCExperiment::CoolFile(system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic"))
+cf <- HiCExperiment::CoolFile(
+  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+)
 hic <- HiCExperiment::import(cf)
 
 gis <- InteractionSet::interactions(hic)
 gis$score <- log10(gis$balanced)
 x <- tibble::as_tibble(gis)
-scores <- x$score[InteractionSet::pairdist(gis) != 0 & !is.na(InteractionSet::pairdist(gis) != 0)]
+scores <- x$score[
+  InteractionSet::pairdist(gis) != 0 &
+    !is.na(InteractionSet::pairdist(gis) != 0)
+]
 scores <- scores[!is.na(scores) & !is.infinite(scores)]
 x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
 

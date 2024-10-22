@@ -14,7 +14,6 @@
 #' @importFrom Gviz GeneRegionTrack
 #' @importFrom InteractionSet interactions pairdist
 #' @importFrom IRanges IRanges overlapsAny
-#' @importFrom lifecycle deprecated
 #' @importFrom purrr map map2 map_df pmap
 #' @importFrom rappdirs user_cache_dir
 #' @importFrom reticulate import_from_path

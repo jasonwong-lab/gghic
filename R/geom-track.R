@@ -312,6 +312,7 @@ GeomTrack <- ggproto(
 #' geom_track
 #'
 #' @description A ggplot2 geom for sequencing data tracks.
+#' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param data_paths The paths to the sequencing data files. Default is `NULL`.
 #' @param data_granges The GRanges object of the sequencing data.
@@ -387,9 +388,10 @@ GeomTrack <- ggproto(
 #' )
 #' }
 #' @export geom_track
+#' @aliases geom_track
 geom_track <- function(
   mapping = NULL, data = NULL, stat = StatTrack, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, check.param = FALSE, ...,
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   data_paths = NULL, data_granges = NULL, width_ratio = 1 / 20,
   spacing_ratio = 0.5, data_range = c("auto", "maximum"),
   fill = "black", fontsize = 5,

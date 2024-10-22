@@ -5,7 +5,7 @@
 \alias{gghic-package}
 \title{gghic: gghic}
 \description{
-gghic
+A package for visualising genomic interaction data using ggplot2.
 }
 \author{
 \strong{Maintainer}: Minghao Jiang \email{mjhk@connect.hku.hk} (\href{https://orcid.org/0000-0003-3309-9185}{ORCID}) [contributor]

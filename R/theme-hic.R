@@ -26,6 +26,7 @@ colors_hic <- function() {
 #' @return A ggplot2 theme.
 #' @inherit geom_hic examples
 #' @export theme_hic
+#' @aliases theme_hic
 theme_hic <- function(
   hide_y = TRUE, coord_ratio = 1,
   breaks = ggplot2::waiver(),

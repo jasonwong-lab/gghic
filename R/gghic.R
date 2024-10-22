@@ -143,6 +143,7 @@ calculate_xrange <- function(data) {
 #'   )
 #' }
 #' @export gghic
+#' @aliases gghic
 gghic <- function(
   data = NULL,
   score_column = "balanced",

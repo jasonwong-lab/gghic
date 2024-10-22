@@ -152,6 +152,7 @@ GeomHic <- ggplot2::ggproto(
 #' geom_hic
 #'
 #' @description A ggplot2 geom for Hi-C data.
+#' @inheritParams ggplot2::geom_polygon
 #' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
 #' @param draw_boundary Whether to draw the boundary line or not when plotting
 #'   multiple chromosomes. Default is `TRUE`.
@@ -178,13 +179,18 @@ GeomHic <- ggplot2::ggproto(
 #' library(scales)
 #' library(scales)
 #'
-#' cf <- HiCExperiment::CoolFile(system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic"))
+#' cf <- HiCExperiment::CoolFile(
+#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+#' )
 #' hic <- HiCExperiment::import(cf)
 #'
 #' gis <- InteractionSet::interactions(hic)
 #' gis$score <- log10(gis$balanced)
 #' x <- tibble::as_tibble(gis)
-#' scores <- x$score[InteractionSet::pairdist(gis) != 0 & !is.na(InteractionSet::pairdist(gis) != 0)]
+#' scores <- x$score[
+#'   InteractionSet::pairdist(gis) != 0 &
+#'     !is.na(InteractionSet::pairdist(gis) != 0)
+#' ]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
 #' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
 #'
@@ -205,9 +211,10 @@ GeomHic <- ggplot2::ggproto(
 #'   theme_hic()
 #' }
 #' @export geom_hic
+#' @aliases geom_hic
 geom_hic <- function(
   mapping = NULL, data = NULL, stat = StatHic, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, check.param = FALSE, ...,
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
 ) {
   ggplot2::layer(
