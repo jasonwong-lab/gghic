@@ -77,7 +77,7 @@ StatTrack <- ggplot2::ggproto(
           dplyr::group_by(seqnames1) |>
           dplyr::summarize(maxs_x = max(xend)) |>
           dplyr::pull(maxs_x) |>
-          setNames(unique(dat_hic$seqnames1))
+          stats::setNames(unique(dat_hic$seqnames1))
       }
     }
     min_y <- ifelse(n_annotation > n_track, env$min_y, 0)

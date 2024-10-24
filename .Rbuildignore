@@ -12,3 +12,5 @@
 ^vignettes/style\.css$
 ^doc$
 ^Meta$
+^cran-comments\.md$
+^inst/\.CITATION$

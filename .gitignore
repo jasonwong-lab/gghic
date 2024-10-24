@@ -1,6 +1,7 @@
 __pycache__/
 .DS_Store
 vignettes/dummy.Rmd
+inst/.CITATION
 
 # History files
 .Rhistory

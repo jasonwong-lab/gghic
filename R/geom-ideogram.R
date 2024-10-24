@@ -22,8 +22,8 @@ retrive_cytoband <- function(data, genome) {
     gvar = unname(cols_all["gpos100"])
   )
   gpcols <- unique(grep("gpos", bands$gieStain, value = TRUE))
-  crmp <- colorRampPalette(c(cols["gneg"], cols["gpos"]))(100)
-  posCols <- setNames(crmp[as.integer(gsub("gpos", "", gpcols))], gpcols)
+  crmp <- grDevices::colorRampPalette(c(cols["gneg"], cols["gpos"]))(100)
+  posCols <- stats::setNames(crmp[as.integer(gsub("gpos", "", gpcols))], gpcols)
   cols <- c(cols, posCols) |>
     as.data.frame() |>
     tibble::rownames_to_column("type") |>

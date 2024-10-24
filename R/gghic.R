@@ -16,12 +16,12 @@ scale_data <- function(gis, score_column, scale_method) {
 }
 
 check_data_type <- function(data, ...) {
-  if (is(data, "GInteractions")) {
+  if (methods::is(data, "GInteractions")) {
     x <- scale_data(data, ...)
-  } else if (is(data, "HiCExperiment")) {
+  } else if (methods::is(data, "HiCExperiment")) {
     gis <- InteractionSet::interactions(data)
     x <- scale_data(gis, ...)
-  } else if (tibble::is_tibble(data) || is(data, "data.frame")) {
+  } else if (tibble::is_tibble(data) || methods::is(data, "data.frame")) {
     cols_required <- c(
       "seqnames1", "seqnames2", "start1", "end1", "start2", "end2", "score"
     )
@@ -29,7 +29,7 @@ check_data_type <- function(data, ...) {
     if (length(cols_missing) > 0) {
       stop(
         "data must have the following columns: ",
-        paste(cols_missing, collapse=', ')
+        paste(cols_missing, collapse = ", ")
       )
     }
     x <- data

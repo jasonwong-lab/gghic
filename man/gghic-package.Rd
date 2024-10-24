@@ -3,12 +3,20 @@
 \docType{package}
 \name{gghic-package}
 \alias{gghic-package}
-\title{gghic: gghic}
+\title{gghic: GGHIC: A Package for Visualizing Genomic Interaction Data Using ggplot2}
 \description{
-A package for visualising genomic interaction data using ggplot2.
+An easy way to create publication-ready figures for genomic interaction data using ggplot2.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/jasonwong-lab/gghic}
+  \item Report bugs at \url{https://github.com/jasonwong-lab/gghic/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: Minghao Jiang \email{mjhk@connect.hku.hk} (\href{https://orcid.org/0000-0003-3309-9185}{ORCID}) [contributor]
+\strong{Maintainer}: Minghao Jiang \email{mjhk@connect.hku.hk} (\href{https://orcid.org/0000-0003-3309-9185}{ORCID}) [contributor, copyright holder]
 
 }
 \keyword{internal}

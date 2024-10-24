@@ -23,14 +23,16 @@ extract_trs <- function(
   if (is.null(gene_info)) {
     .txdump$transcripts <- .txdump$transcripts[
       .txdump$transcripts$tx_chrom == chrom &
-        .txdump$transcripts$tx_start < end(r) &
-        .txdump$transcripts$tx_end > start(r), ,
+        .txdump$transcripts$tx_start < stats::end(r) &
+        .txdump$transcripts$tx_end > stats::start(r), ,
       drop = FALSE
     ]
   }
   if (!is.null(gene_info)) {
     gene_info <- gene_info |>
-      dplyr::filter(chrom == chrom, start < end(r), end > start(r))
+      dplyr::filter(
+        chrom == chrom, start < stats::end(r), end > stats::start(r)
+      )
     if (nrow(gene_info) == 0) {
       return(GenomicRanges::GRangesList())
     }
@@ -54,7 +56,8 @@ extract_trs <- function(
 
   exons_gviz <- Gviz::GeneRegionTrack(
     txdb_subset,
-    chromosome = chrom, start = start(r), end = end(r), strand = "*"
+    chromosome = chrom, start = stats::start(r), end = stats::end(r),
+    strand = "*"
   )
   exons <- exons_gviz@range
 
@@ -159,7 +162,7 @@ retrive_genes <- function(
             features, function(f) {
               if (f$feature[1] == "intron") {
                 tmp <- f
-                mcols(tmp) <- NULL
+                S4Vectors::mcols(tmp) <- NULL
                 names(tmp) <- NULL
               } else {
                 tmp <- GenomicRanges::reduce(f)
@@ -178,8 +181,8 @@ retrive_genes <- function(
           GenomicRanges::GRanges(
             seqnames = tmp@seqnames[1],
             ranges = IRanges::IRanges(
-              start = min(start(tmp)),
-              end = max(end(tmp))
+              start = min(stats::start(tmp)),
+              end = max(stats::end(tmp))
             ),
             strand = tmp@strand[1]
           )
@@ -192,7 +195,7 @@ retrive_genes <- function(
         genes_reduced, function(.x) {
           tmp <- GenomicRanges::GRangesList(.x) |>
             unlist()
-          tibble::as_tibble(setNames(tmp, NULL))
+          tibble::as_tibble(stats::setNames(tmp, NULL))
         }
       ) |>
         dplyr::left_join(dat_line, by = "gene_id") |>
@@ -283,7 +286,7 @@ StatAnnotation <- ggplot2::ggproto(
           dplyr::group_by(seqnames1) |>
           dplyr::summarize(maxs_x = max(xend)) |>
           dplyr::pull(maxs_x) |>
-          setNames(unique(dat_hic$seqnames1))
+          stats::setNames(unique(dat_hic$seqnames1))
       }
     }
     min_y <- ifelse(n_track > n_annotation, env$min_y, 0)

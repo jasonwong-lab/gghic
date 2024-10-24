@@ -73,7 +73,7 @@ StatHic <- ggplot2::ggproto(
       dplyr::group_by(seqnames1) |>
       dplyr::summarize(maxs_x = max(xend)) |>
       dplyr::pull(maxs_x) |>
-      setNames(unique(dat$seqnames1))
+      stats::setNames(unique(dat$seqnames1))
 
     dat
   }

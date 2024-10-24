@@ -1,10 +1,12 @@
 Package: gghic
-Title: gghic
-Version: 0.0.0.9000
+Title: GGHIC: A Package for Visualizing Genomic Interaction Data Using ggplot2
+Version: 0.1.0
 Authors@R:
-    person("Minghao", "Jiang", , "mjhk@connect.hku.hk", role = c("aut", "cre", "ctb"),
+    person("Minghao", "Jiang", , "mjhk@connect.hku.hk",
+           role = c("aut", "cre", "ctb", "cph"),
            comment = c(ORCID = "0000-0003-3309-9185"))
-Description: A package for visualising genomic interaction data using ggplot2.
+Description: An easy way to create publication-ready figures for genomic
+    interaction data using ggplot2.
 License: GPL (>= 3)
 Imports:
     AnnotationDbi,
@@ -19,6 +21,7 @@ Imports:
     Gviz,
     InteractionSet,
     IRanges,
+    methods,
     purrr,
     rappdirs,
     reticulate,
@@ -41,3 +44,5 @@ biocViews: Annotation, DataImport, DataRepresentation, GenomeAnnotation, HiC,
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
+URL: https://github.com/jasonwong-lab/gghic
+BugReports: https://github.com/jasonwong-lab/gghic/issues
