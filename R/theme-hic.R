@@ -33,8 +33,6 @@ theme_hic <- function(
   labels = scales::unit_format(unit = "M", scale = 1e-6),
   xmin = NULL, xmax = NULL, expand_x = c(0, 0)
 ) {
-  `%+replace%` <- ggplot2::`%+replace%`
-
   t <- ggplot2::theme_bw() %+replace%
     ggplot2::theme(
       panel.grid.minor = ggplot2::element_blank(),

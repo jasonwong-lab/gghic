@@ -44,28 +44,42 @@ load_pkg <- function(pkgs) {
 
 load_pkg(
   c(
-    "gghic", "ggplot2", "tibble", "scales", "dplyr",
-    "tidyr", "HiCExperiment", "InteractionSet"
+    "gghic", "ggplot2", "tibble", "scales", "dplyr", "rappdirs",
+    "tidyr", "HiCExperiment", "InteractionSet", "glue"
   )
 )
 ```
 
-The `gghic` package includes two cooler files:
+Download following example data:
 
-- `chr4_11-100kb.cool`: a 100kb resolution cooler file.
+- `chr4_11-100kb.cool` and `chr4_11-5kb.cool`: cooler files of 100kb and 5kb resolution.
 
-- `chr4_11-5kb.cool`: a 5kb resolution cooler file.
+- `track1.bigWig` and `track2.bigWig`: bigWig files.
+
+- `gencode-chr4_11.gtf.gz`: a GTF file.
+
+```{r}
+download_example_files()
+```
 
 ```{r message=FALSE, warning=FALSE}
+dir_cache_gghic <- rappdirs::user_cache_dir(appname = "gghic")
+
 cf_100 <- HiCExperiment::CoolFile(
-  system.file("extdata", "cooler", "chr4_11-100kb.cool", package = "gghic")
+  glue::glue("{dir_cache_gghic}/chr4_11-100kb.cool")
 )
 hic_100 <- HiCExperiment::import(cf_100)
 
 cf_5 <- HiCExperiment::CoolFile(
-  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
+  glue::glue("{dir_cache_gghic}/chr4_11-5kb.cool")
 )
 hic_5 <- HiCExperiment::import(cf_5)
+
+path_gtf <- glue::glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+
+paths_track <- glue::glue(
+  "{dir_cache_gghic}/{c('track1.bigWig', 'track2.bigWig')}"
+)
 ```
 
 Generate a tibble from the `HiCExperiment` object for visualisation.
@@ -192,10 +206,6 @@ p <- x_5 |>
     genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
   )
 
-path_gtf <- system.file(
-  "extdata", "gtf", "gencode-chr4_11.gtf.gz", package = "gghic"
-)
-
 p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
 ```
 
@@ -270,10 +280,6 @@ p
 `geom_track()` can be used to add other data tracks to the plot.
 
 ```{r}
-paths_track <- system.file(
-  "extdata", "bigwig", c("track1.bigWig", "track2.bigWig"), package = "gghic"
-)
-
 p + geom_track(
   data_paths = paths_track, width_ratio = 0.5, fill = c("#DC0000B2", "#00A087B2"),
   data_range = "auto"
@@ -302,4 +308,10 @@ x_5 |>
 
     expand_xaxis = TRUE
   )
+```
+
+## Session Information
+
+```{r}
+sessionInfo()
 ```

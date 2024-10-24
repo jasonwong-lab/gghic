@@ -1,5 +1,5 @@
 Package: gghic
-Title: GGHIC: A Package for Visualizing Genomic Interaction Data Using ggplot2
+Title: Visualizing Genomic Interaction Data Using ggplot2
 Version: 0.1.0
 Authors@R:
     person("Minghao", "Jiang", , "mjhk@connect.hku.hk",
@@ -32,6 +32,7 @@ Imports:
     tibble,
     tidyr,
     txdbmaker,
+    utils,
     vroom
 Suggests:
     knitr,

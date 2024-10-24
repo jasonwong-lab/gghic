@@ -1,9 +1,7 @@
 name_pkg <- "gghic"
 
 ensure_dir <- function(paths) {
-  for (path in paths) {
-    if (!dir.exists(path)) dir.create(path)
-  }
+  for (path in paths) if (!dir.exists(path)) dir.create(path, recursive = TRUE)
 }
 
 calculate_add_lengths <- function(data) {
@@ -172,4 +170,37 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
   }
   stop_if_null(tx2gene, "tx2gene data could not be created or loaded.")
   tx2gene
+}
+
+#' download_example_files
+#'
+#' @description Download example files under the cache directory.
+#' @return NULL
+#' @examples
+#' \dontrun{
+#' library(gghic)
+#' download_example_files()
+#' }
+#' @export download_example_files
+#' @aliases download_example_files
+download_example_files <- function() {
+  files <- list(
+    "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
+    "chr4_11-5kb.cool" = "cooler/chr4_11-5kb.cool",
+    "track1.bigWig" = "bigwig/track1.bigWig",
+    "track2.bigWig" = "bigwig/track2.bigWig",
+    "gencode-chr4_11.gtf.gz" = "gtf/gencode-chr4_11.gtf.gz"
+  )
+
+  url_base <- paste0(
+    "https://raw.githubusercontent.com/",
+    "mhjiang97/gghic-data/refs/heads/master/"
+  )
+
+  for (file_name in names(files)) {
+    file_path <- file.path(dir_cache, file_name)
+    if (!file.exists(file_path)) {
+      utils::download.file(paste0(url_base, files[[file_name]]), file_path)
+    }
+  }
 }

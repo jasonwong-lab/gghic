@@ -3,7 +3,7 @@
 \docType{package}
 \name{gghic-package}
 \alias{gghic-package}
-\title{gghic: GGHIC: A Package for Visualizing Genomic Interaction Data Using ggplot2}
+\title{gghic: Visualizing Genomic Interaction Data Using ggplot2}
 \description{
 An easy way to create publication-ready figures for genomic interaction data using ggplot2.
 }
