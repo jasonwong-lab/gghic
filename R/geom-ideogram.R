@@ -212,6 +212,7 @@ GeomIdeogram <- ggplot2::ggproto(
 #' @param colour The color of the chromosome boundary. Default is `"red"`.
 #' @param fill The fill color of the highlighted region on the ideogram.
 #'   Default is `"#FFE3E680"`.
+#' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
 #' * seqnames1
@@ -229,27 +230,27 @@ GeomIdeogram <- ggplot2::ggproto(
 #' library(HiCExperiment)
 #' library(InteractionSet)
 #' library(scales)
-#' library(scales)
+#' library(glue)
+#' library(rappdirs)
 #'
-#' cf <- HiCExperiment::CoolFile(
-#'   system.file("extdata", "cooler", "chr4_11-100kb.cool", package = "gghic")
-#' )
-#' hic <- HiCExperiment::import(cf)
+#' download_example_files()
+#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
 #'
-#' gis <- InteractionSet::interactions(hic)
+#' hic <- glue("{dir_cache_gghic}/chr4_11-100kb.cool") |>
+#'   CoolFile() |>
+#'   import(cf)
+#'
+#' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
-#' x <- tibble::as_tibble(gis)
-#' scores <- x$score[
-#'   InteractionSet::pairdist(gis) != 0 &
-#'     !is.na(InteractionSet::pairdist(gis) != 0)
-#' ]
+#' x <- as_tibble(gis)
+#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
 #' p <- x |>
-#'   dplyr::filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
-#'   ggplot2::ggplot(
-#'     ggplot2::aes(
+#'   filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
+#'   ggplot(
+#'     aes(
 #'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
 #'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
 #'       fill = score
