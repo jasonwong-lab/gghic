@@ -16,11 +16,15 @@ scale_data <- function(gis, score_column, scale_method) {
 }
 
 check_data_type <- function(data, ...) {
+  env <- get(".env", envir = asNamespace(name_pkg))
+
   if (methods::is(data, "GInteractions")) {
     x <- scale_data(data, ...)
+    env$gis <- data
   } else if (methods::is(data, "HiCExperiment")) {
     gis <- InteractionSet::interactions(data)
     x <- scale_data(gis, ...)
+    env$gis <- data
   } else if (tibble::is_tibble(data) || methods::is(data, "data.frame")) {
     cols_required <- c(
       "seqnames1", "seqnames2", "start1", "end1", "start2", "end2", "score"
@@ -90,6 +94,15 @@ calculate_xrange <- function(data) {
 #' @param track_spacing_ratio The spacing ratio of the track. Default is `1/2`.
 #' @param track_fill The fill color of the track. Default is `"black"`.
 #' @param track_fontsize The font size of the track. Default is `5`.
+#' @param tad Whether to add TAD or not. Default is `FALSE`.
+#' @param tad_is_0based Whether the TAD coordinates are 0-based or not.
+#'   Default is `FALSE`.
+#' @param tad_colour The color of the TAD. Default is `"grey"`.
+#' @param loop Whether to add loop or not. Default is `FALSE`.
+#' @param loop_is_0based Whether the loop coordinates are 0-based or not.
+#'   Default is `FALSE`.
+#' @param loop_colour The color of the loop. Default is `"black"`.
+#' @param loop_fill The fill color of the loop. Default is `NA`.
 #' @param expand_xaxis Whether to expand the x-axis or not. Default is `FALSE`.
 #' @param expand_left The left expansion of the x-axis. Default is `NULL`.
 #' @param expand_right The right expansion of the x-axis. Default is `NULL`.
@@ -99,6 +112,8 @@ calculate_xrange <- function(data) {
 #'   -fontsize -colour -fill
 #' @inheritDotParams geom_track -mapping -width_ratio -spacing_ratio -fill
 #'   -fontsize
+#' @inheritDotParams geom_tad -mapping -is_0based -colour
+#' @inheritDotParams geom_loop -mapping -is_0based -colour -fill
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
@@ -109,23 +124,22 @@ calculate_xrange <- function(data) {
 #' library(scales)
 #' library(scales)
 #'
-#' cf <- HiCExperiment::CoolFile(
-#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-#' )
-#' hic <- HiCExperiment::import(cf)
+#' download_example_files()
+#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
 #'
-#' gis <- InteractionSet::interactions(hic)
+#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#'   CoolFile() |>
+#'   import(cf)
+#'
+#' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
-#' x <- tibble::as_tibble(gis)
-#' scores <- x$score[
-#'   InteractionSet::pairdist(gis) != 0 &
-#'     !is.na(InteractionSet::pairdist(gis) != 0)
-#' ]
+#' x <- as_tibble(gis)
+#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
-#' p <- x_5 |>
-#'   dplyr::filter(
+#' p <- x |>
+#'   filter(
 #'     center1 > 10000000 & center1 < 11000000 &
 #'       center2 > 10000000 & center2 < 11000000
 #'   ) |>
@@ -170,6 +184,15 @@ gghic <- function(
   track_spacing_ratio = 1 / 2,
   track_fill = "black",
   track_fontsize = 5,
+
+  tad = FALSE,
+  tad_is_0based = FALSE,
+  tad_colour = "grey",
+
+  loop = FALSE,
+  loop_is_0based = FALSE,
+  loop_colour = "black",
+  loop_fill = NA,
 
   expand_xaxis = FALSE,
   expand_left = NULL,
@@ -226,6 +249,25 @@ gghic <- function(
         spacing_ratio = track_spacing_ratio,
         fill = track_fill,
         fontsize = track_fontsize,
+        ...
+      )
+  }
+
+  if (tad) {
+    p <- p +
+      geom_tad(
+        is_0based = tad_is_0based,
+        colour = tad_colour,
+        ...
+      )
+  }
+
+  if (loop) {
+    p <- p +
+      geom_loop(
+        is_0based = loop_is_0based,
+        colour = loop_colour,
+        fill = loop_fill,
         ...
       )
   }
