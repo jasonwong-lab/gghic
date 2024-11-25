@@ -22,8 +22,9 @@ Minghao Jiang, <mjhk@connect.hku.hk>
 2. [x] Plot chromosome ideograms with highlighted regions above the heatmap.
 3. [x] Plot gene tracks under the heatmap easily with a GTF file.
 4. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, *etc.*, under the heatmap.
-5. [ ] Plot compartments, TADs, and loops on the heatmap.
-6. [ ] ...
+5. [x] Plot compartments, TADs, and loops on the heatmap.
+6. [ ] Support duckplyr for data manipulation.
+7. [ ] ...
 
 ## Installation
 
