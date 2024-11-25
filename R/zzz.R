@@ -8,6 +8,7 @@
   if (any(toset)) options(myops[toset])
 
   env <- new.env(parent = emptyenv())
+  env$gis <- NULL
   env$n_hic <- 0
   env$n_annotation <- 0
   env$n_track <- 0
