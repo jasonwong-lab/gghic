@@ -100,6 +100,19 @@ adjust_coordinates2 <- function(data, chroms_add, chroms_sub, columns) {
   data
 }
 
+tbl2gis <- function(data) {
+  anchor1 <- GenomicRanges::GRanges(
+    seqnames = data$seqnames1,
+    ranges = IRanges::IRanges(data$start1, data$end1)
+  )
+  anchor2 <- GenomicRanges::GRanges(
+    seqnames = data$seqnames2,
+    ranges = IRanges::IRanges(data$start2, data$end2)
+  )
+
+  InteractionSet::GInteractions(anchor1, anchor2)
+}
+
 # *--------------------------------------------------------------------------* #
 # * Use the cache directory to store the cytoBand, TxDb, txdump, and tx2gene.  #
 # *--------------------------------------------------------------------------* #
@@ -189,7 +202,9 @@ download_example_files <- function() {
     "chr4_11-5kb.cool" = "cooler/chr4_11-5kb.cool",
     "track1.bigWig" = "bigwig/track1.bigWig",
     "track2.bigWig" = "bigwig/track2.bigWig",
-    "gencode-chr4_11.gtf.gz" = "gtf/gencode-chr4_11.gtf.gz"
+    "gencode-chr4_11.gtf.gz" = "gtf/gencode-chr4_11.gtf.gz",
+    "TADs_500kb-chr4_11.tsv" = "tad/TADs_500kb-chr4_11.tsv",
+    "loops-chr4_11.txt" = "loop/loops-chr4_11.txt"
   )
 
   url_base <- paste0(
