@@ -36,24 +36,22 @@ StatHic <- ggplot2::ggproto(
   ),
   compute_panel = function(data, scales) {
     # ======================================================================== #
-    #   ^           ^ (xmax, ymax)                                             #
-    #   |          / \                                                         #
-    #   |         /   \                                                        #
-    #   |        /     \                                                       #
-    #   |       /       \                                                      #
-    #   |      /         \                                                     #
-    #   |     /           \                                                    #
-    #   |    /             \                                                   #
-    #   |   /               \                                                  #
-    #   |   \ (xmin, ymin)  / (xend, yend)                                     #
-    #.  |    \             /                                                   #
-    #.  |     \           /                                                    #
-    #.  |      \         /                                                     #
-    #.  |       \       /                                                      #
-    #.  |        \     /                                                       #
-    #.  |         \   /                                                        #
-    #.  |          \ /                                                         #
-    #   |           v (x, y)                                                   #
+    #   ^          /\ (xmax, ymax)                                             #
+    #   |         /  \                                                         #
+    #   |        /    \                                                        #
+    #   |       /      \                                                       #
+    #   |      /        \                                                      #
+    #   |     /          \                                                     #
+    #   |    /            \                                                    #
+    #   |   /              \                                                   #
+    #   |   \ (xmin, ymin) / (xend, yend)                                      #
+    #   |    \            /                                                    #
+    #   |     \          /                                                     #
+    #   |      \        /                                                      #
+    #   |       \      /                                                       #
+    #   |        \    /                                                        #
+    #   |         \  /                                                         #
+    #   |          \/ (x, y)                                                   #
     # --+--------------------------------------------------------------------> #
     #   |                                                                      #
     # ======================================================================== #
@@ -65,6 +63,8 @@ StatHic <- ggplot2::ggproto(
     env$n_track <- 0
     env$n_hic <- 1
     env$max_y <- max(dat$ymax, na.rm = TRUE)
+    env$min_y <- min(dat$y, na.rm = TRUE)
+    env$MIN_Y <- min(dat$y, na.rm = TRUE)
     env$max_x <- max(dat$xend, na.rm = TRUE)
     env$min_x <- min(dat$xmin, na.rm = TRUE)
     env$res <- data$end1[1] - data$start1[1] + 1
@@ -177,31 +177,31 @@ GeomHic <- ggplot2::ggproto(
 #' library(HiCExperiment)
 #' library(InteractionSet)
 #' library(scales)
-#' library(scales)
+#' library(glue)
+#' library(rappdirs)
 #'
-#' cf <- HiCExperiment::CoolFile(
-#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-#' )
-#' hic <- HiCExperiment::import(cf)
+#' download_example_files()
+#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
 #'
-#' gis <- InteractionSet::interactions(hic)
+#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#'   CoolFile() |>
+#'   import(cf)
+#'
+#' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
-#' x <- tibble::as_tibble(gis)
-#' scores <- x$score[
-#'   InteractionSet::pairdist(gis) != 0 &
-#'     !is.na(InteractionSet::pairdist(gis) != 0)
-#' ]
+#' x <- as_tibble(gis)
+#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
 #' x |>
-#'   dplyr::filter(
+#'   filter(
 #'     seqnames1 == "chr11", seqnames2 == "chr11",
 #'     center1 > 67000000, center1 < 67100000,
 #'     center2 > 67000000, center2 < 67100000
 #'   ) |>
-#'   ggplot2::ggplot(
-#'     ggplot2::aes(
+#'   ggplot(
+#'     aes(
 #'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
 #'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
 #'       fill = score
