@@ -26,6 +26,13 @@ gghic(
   track_spacing_ratio = 1/2,
   track_fill = "black",
   track_fontsize = 5,
+  tad = FALSE,
+  tad_is_0based = FALSE,
+  tad_colour = "grey",
+  loop = FALSE,
+  loop_is_0based = FALSE,
+  loop_colour = "black",
+  loop_fill = NA,
   expand_xaxis = FALSE,
   expand_left = NULL,
   expand_right = NULL,
@@ -83,6 +90,22 @@ Default is \code{"#48CFCB"}.}
 
 \item{track_fontsize}{The font size of the track. Default is \code{5}.}
 
+\item{tad}{Whether to add TAD or not. Default is \code{FALSE}.}
+
+\item{tad_is_0based}{Whether the TAD coordinates are 0-based or not.
+Default is \code{FALSE}.}
+
+\item{tad_colour}{The color of the TAD. Default is \code{"grey"}.}
+
+\item{loop}{Whether to add loop or not. Default is \code{FALSE}.}
+
+\item{loop_is_0based}{Whether the loop coordinates are 0-based or not.
+Default is \code{FALSE}.}
+
+\item{loop_colour}{The color of the loop. Default is \code{"black"}.}
+
+\item{loop_fill}{The fill color of the loop. Default is \code{NA}.}
+
 \item{expand_xaxis}{Whether to expand the x-axis or not. Default is \code{FALSE}.}
 
 \item{expand_left}{The left expansion of the x-axis. Default is \code{NULL}.}
@@ -90,7 +113,7 @@ Default is \code{"#48CFCB"}.}
 \item{expand_right}{The right expansion of the x-axis. Default is \code{NULL}.}
 
 \item{...}{
-  Arguments passed on to \code{\link[=geom_hic]{geom_hic}}, \code{\link[=geom_ideogram]{geom_ideogram}}, \code{\link[=geom_annotation]{geom_annotation}}, \code{\link[=geom_track]{geom_track}}
+  Arguments passed on to \code{\link[=geom_hic]{geom_hic}}, \code{\link[=geom_ideogram]{geom_ideogram}}, \code{\link[=geom_annotation]{geom_annotation}}, \code{\link[=geom_track]{geom_track}}, \code{\link[=geom_tad]{geom_tad}}, \code{\link[=geom_loop]{geom_loop}}
   \describe{
     \item{\code{draw_boundary}}{Whether to draw the boundary line or not when plotting
 multiple chromosomes. Default is \code{TRUE}.}
@@ -164,6 +187,11 @@ Default is \code{NULL}.}
 Default is \code{NULL}.}
     \item{\code{data_range}}{The range of the x axis. It can be \code{"auto"}, \code{"maximum"},
 or a number (vector). Default is \code{"auto"}.}
+    \item{\code{tad_path}}{A path to the TAD file. Default is \code{NULL}.}
+    \item{\code{tad_gis}}{An InteractionSet object of TADs. Default is \code{NULL}.}
+    \item{\code{loop_path}}{A path to the loop file. Default is \code{NULL}.}
+    \item{\code{loop_gis}}{An InteractionSet object of loops. Default is \code{NULL}.}
+    \item{\code{shape}}{The shape of the loops. Default is \code{21}.}
   }}
 }
 \value{
@@ -183,23 +211,22 @@ library(InteractionSet)
 library(scales)
 library(scales)
 
-cf <- HiCExperiment::CoolFile(
-  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-)
-hic <- HiCExperiment::import(cf)
+download_example_files()
+dir_cache_gghic <- user_cache_dir(appname = "gghic")
 
-gis <- InteractionSet::interactions(hic)
+hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+  CoolFile() |>
+  import(cf)
+
+gis <- interactions(hic)
 gis$score <- log10(gis$balanced)
-x <- tibble::as_tibble(gis)
-scores <- x$score[
-  InteractionSet::pairdist(gis) != 0 &
-    !is.na(InteractionSet::pairdist(gis) != 0)
-]
+x <- as_tibble(gis)
+scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 
-p <- x_5 |>
-  dplyr::filter(
+p <- x |>
+  filter(
     center1 > 10000000 & center1 < 11000000 &
       center2 > 10000000 & center2 < 11000000
   ) |>

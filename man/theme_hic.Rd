@@ -48,31 +48,31 @@ library(dplyr)
 library(HiCExperiment)
 library(InteractionSet)
 library(scales)
-library(scales)
+library(glue)
+library(rappdirs)
 
-cf <- HiCExperiment::CoolFile(
-  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-)
-hic <- HiCExperiment::import(cf)
+download_example_files()
+dir_cache_gghic <- user_cache_dir(appname = "gghic")
 
-gis <- InteractionSet::interactions(hic)
+hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+  CoolFile() |>
+  import(cf)
+
+gis <- interactions(hic)
 gis$score <- log10(gis$balanced)
-x <- tibble::as_tibble(gis)
-scores <- x$score[
-  InteractionSet::pairdist(gis) != 0 &
-    !is.na(InteractionSet::pairdist(gis) != 0)
-]
+x <- as_tibble(gis)
+scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 
 x |>
-  dplyr::filter(
+  filter(
     seqnames1 == "chr11", seqnames2 == "chr11",
     center1 > 67000000, center1 < 67100000,
     center2 > 67000000, center2 < 67100000
   ) |>
-  ggplot2::ggplot(
-    ggplot2::aes(
+  ggplot(
+    aes(
       seqnames1 = seqnames1, start1 = start1, end1 = end1,
       seqnames2 = seqnames2, start2 = start2, end2 = end2,
       fill = score

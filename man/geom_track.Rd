@@ -86,33 +86,7 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
-\item{...}{Other arguments passed on to \code{\link[ggplot2:layer]{layer()}}'s \code{params} argument. These
-arguments broadly fall into one of 4 categories below. Notably, further
-arguments to the \code{position} argument, or aesthetics that are required
-can \emph{not} be passed through \code{...}. Unknown arguments that are not part
-of the 4 categories below are ignored.
-\itemize{
-\item Static aesthetics that are not mapped to a scale, but are at a fixed
-value and apply to the layer as a whole. For example, \code{colour = "red"}
-or \code{linewidth = 3}. The geom's documentation has an \strong{Aesthetics}
-section that lists the available options. The 'required' aesthetics
-cannot be passed on to the \code{params}. Please note that while passing
-unmapped aesthetics as vectors is technically possible, the order and
-required length is not guaranteed to be parallel to the input data.
-\item When constructing a layer using
-a \verb{stat_*()} function, the \code{...} argument can be used to pass on
-parameters to the \code{geom} part of the layer. An example of this is
-\code{stat_density(geom = "area", outline.type = "both")}. The geom's
-documentation lists which parameters it can accept.
-\item Inversely, when constructing a layer using a
-\verb{geom_*()} function, the \code{...} argument can be used to pass on parameters
-to the \code{stat} part of the layer. An example of this is
-\code{geom_area(stat = "density", adjust = 0.5)}. The stat's documentation
-lists which parameters it can accept.
-\item The \code{key_glyph} argument of \code{\link[ggplot2:layer]{layer()}} may also be passed on through
-\code{...}. This can be one of the functions described as
-\link[ggplot2:draw_key]{key glyphs}, to change the display of the layer in the legend.
-}}
+\item{...}{Parameters to be ignored.}
 
 \item{data_paths}{The paths to the sequencing data files. Default is \code{NULL}.}
 
@@ -164,25 +138,25 @@ library(dplyr)
 library(HiCExperiment)
 library(InteractionSet)
 library(scales)
-library(scales)
+library(glue)
+library(rappdirs)
 
-cf <- HiCExperiment::CoolFile(
-  system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-)
-hic <- HiCExperiment::import(cf)
+download_example_files()
+dir_cache_gghic <- user_cache_dir(appname = "gghic")
 
-gis <- InteractionSet::interactions(hic)
+hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+  CoolFile() |>
+  import(cf)
+
+gis <- interactions(hic)
 gis$score <- log10(gis$balanced)
-x <- tibble::as_tibble(gis)
-scores <- x$score[
-  InteractionSet::pairdist(gis) != 0 &
-    !is.na(InteractionSet::pairdist(gis) != 0)
-]
+x <- as_tibble(gis)
+scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 
-p <- x_5 |>
-  dplyr::filter(
+p <- x |>
+  filter(
     center1 > 10000000 & center1 < 11000000 &
       center2 > 10000000 & center2 < 11000000
   ) |>
@@ -199,10 +173,7 @@ p <- x_5 |>
     expand_xaxis = TRUE
   )
 
-paths_track <- system.file(
-  "extdata", "bigwig", c("track1.bigWig", "track2.bigWig"),
-  package = "gghic"
-)
+paths_track <- glue("{dir_cache_gghic}/track{1:2}.bigWig")
 
 p + geom_track(
   data_paths = paths_track, width_ratio = 0.5,
