@@ -23,10 +23,10 @@ StatTrack <- ggplot2::ggproto(
     #       | (0, min_y)                                                       #
     #       |                                                                  #
     # x --+ |      |                       (x, ymin) +----+ (xmax, ymin)       #
-    #     | |     | |         ^                      |    |                    #
-    #     | |    |   |      /   \                    |    |                    #
-    #     | |   |     \   /      \                   |    |                    #
-    # 0 --+ |  -       ---        --          (x, y) +----+ (xmax, y)          #
+    #     | |     | |        /\                      |    |                    #
+    #     | |    |   |      /  \                     |    |                    #
+    #     | |   |     \    /    \                    |    |                    #
+    # 0 --+ | --       ---       --           (x, y) +----+ (xmax, y)          #
     # ======================================================================== #
     data_range <- data_range[1]
     if (is.null(data_paths) && is.null(data_granges)) {
@@ -206,8 +206,8 @@ GeomTrack <- ggproto(
     "x", "y", "xmax", "ymin", "type", "name", "seqname"
   ),
   extra_params = c(
-    ggplot2::Geom$extra_params, "fill", "fontsize", "draw_boundary",
-    "boundary_colour", "linetype"
+    ggplot2::Geom$extra_params,
+    "fill", "fontsize", "draw_boundary", "boundary_colour", "linetype"
   ),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
@@ -325,6 +325,7 @@ GeomTrack <- ggproto(
 #'   or a number (vector). Default is `"auto"`.
 #' @param fill The fill color of the track. Default is `"black"`.
 #' @param fontsize The font size of the track names. Default is `5`.
+#' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
 #' * seqnames1
@@ -342,25 +343,25 @@ GeomTrack <- ggproto(
 #' library(HiCExperiment)
 #' library(InteractionSet)
 #' library(scales)
-#' library(scales)
+#' library(glue)
+#' library(rappdirs)
 #'
-#' cf <- HiCExperiment::CoolFile(
-#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-#' )
-#' hic <- HiCExperiment::import(cf)
+#' download_example_files()
+#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
 #'
-#' gis <- InteractionSet::interactions(hic)
+#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#'   CoolFile() |>
+#'   import(cf)
+#'
+#' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
-#' x <- tibble::as_tibble(gis)
-#' scores <- x$score[
-#'   InteractionSet::pairdist(gis) != 0 &
-#'     !is.na(InteractionSet::pairdist(gis) != 0)
-#' ]
+#' x <- as_tibble(gis)
+#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
-#' p <- x_5 |>
-#'   dplyr::filter(
+#' p <- x |>
+#'   filter(
 #'     center1 > 10000000 & center1 < 11000000 &
 #'       center2 > 10000000 & center2 < 11000000
 #'   ) |>
@@ -377,10 +378,7 @@ GeomTrack <- ggproto(
 #'     expand_xaxis = TRUE
 #'   )
 #'
-#' paths_track <- system.file(
-#'   "extdata", "bigwig", c("track1.bigWig", "track2.bigWig"),
-#'   package = "gghic"
-#' )
+#' paths_track <- glue("{dir_cache_gghic}/track{1:2}.bigWig")
 #'
 #' p + geom_track(
 #'   data_paths = paths_track, width_ratio = 0.5,
