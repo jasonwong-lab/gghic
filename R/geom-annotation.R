@@ -23,15 +23,17 @@ extract_trs <- function(
   if (is.null(gene_info)) {
     .txdump$transcripts <- .txdump$transcripts[
       .txdump$transcripts$tx_chrom == chrom &
-        .txdump$transcripts$tx_start < stats::end(r) &
-        .txdump$transcripts$tx_end > stats::start(r), ,
+        .txdump$transcripts$tx_start < GenomicRanges::end(r) &
+        .txdump$transcripts$tx_end > GenomicRanges::start(r), ,
       drop = FALSE
     ]
   }
   if (!is.null(gene_info)) {
     gene_info <- gene_info |>
       dplyr::filter(
-        chrom == chrom, start < stats::end(r), end > stats::start(r)
+        chrom == chrom,
+        start < GenomicRanges::end(r),
+        end > GenomicRanges::start(r)
       )
     if (nrow(gene_info) == 0) {
       return(GenomicRanges::GRangesList())
@@ -56,7 +58,7 @@ extract_trs <- function(
 
   exons_gviz <- Gviz::GeneRegionTrack(
     txdb_subset,
-    chromosome = chrom, start = stats::start(r), end = stats::end(r),
+    chromosome = chrom, start = GenomicRanges::start(r), end = GenomicRanges::end(r),
     strand = "*"
   )
   exons <- exons_gviz@range
@@ -181,8 +183,8 @@ retrive_genes <- function(
           GenomicRanges::GRanges(
             seqnames = tmp@seqnames[1],
             ranges = IRanges::IRanges(
-              start = min(stats::start(tmp)),
-              end = max(stats::end(tmp))
+              start = min(GenomicRanges::start(tmp)),
+              end = max(GenomicRanges::end(tmp))
             ),
             strand = tmp@strand[1]
           )
@@ -580,6 +582,7 @@ GeomAnnotation <- ggplot2::ggproto(
 #' @param fontsize The font size of the gene symbols. Default is `10`.
 #' @param colour The color of the gene model track. Default is `"#48CFCB"`.
 #' @param fill The fill color of the gene model track. Default is `"#48CFCB"`.
+#' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
 #' * seqnames1
@@ -597,31 +600,31 @@ GeomAnnotation <- ggplot2::ggproto(
 #' library(HiCExperiment)
 #' library(InteractionSet)
 #' library(scales)
-#' library(scales)
+#' library(glue)
+#' library(rappdirs)
 #'
-#' cf <- HiCExperiment::CoolFile(
-#'   system.file("extdata", "cooler", "chr4_11-5kb.cool", package = "gghic")
-#' )
-#' hic <- HiCExperiment::import(cf)
+#' download_example_files()
+#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
 #'
-#' gis <- InteractionSet::interactions(hic)
+#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#'   CoolFile() |>
+#'   import(cf)
+#'
+#' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
-#' x <- tibble::as_tibble(gis)
-#' scores <- x$score[
-#'   InteractionSet::pairdist(gis) != 0 &
-#'     !is.na(InteractionSet::pairdist(gis) != 0)
-#' ]
+#' x <- as_tibble(gis)
+#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- scales::oob_squish(x$score, c(min(scores), max(scores)))
+#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
 #' p <- x |>
-#'   dplyr::filter(
+#'   filter(
 #'     seqnames1 == "chr11", seqnames2 == "chr11",
 #'     center1 > 67000000, center1 < 67100000,
 #'     center2 > 67000000, center2 < 67100000
 #'   ) |>
-#'   ggplot2::ggplot(
-#'     ggplot2::aes(
+#'   ggplot(
+#'     aes(
 #'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
 #'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
 #'       fill = score
@@ -629,9 +632,8 @@ GeomAnnotation <- ggplot2::ggproto(
 #'   ) +
 #'   geom_hic()
 #'
-#' path_gtf <- system.file(
-#'   "extdata", "gtf", "gencode-chr4_11.gtf.gz", package = "gghic"
-#' )
+#' path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+#'
 #' p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
 #' }
 #' @export geom_annotation
