@@ -1,5 +1,10 @@
-retrive_cytoband <- function(data, genome) {
+retrive_cytoband <- function(data, genome, chrom_prefix) {
   bands_all <- ensure_cytoband(genome = genome)
+
+  if (!chrom_prefix) {
+    bands_all <- bands_all |>
+      dplyr::mutate(chrom = gsub("chr", "", chrom))
+  }
 
   chroms <- unique(c(data$seqnames1, data$seqnames2)) |>
     as.character()
@@ -47,13 +52,14 @@ StatIdeogram <- ggplot2::ggproto(
   ),
   extra_params = c(
     ggplot2::Stat$extra_params,
-    "genome", "highlight", "width_ratio", "length_ratio"
+    "genome", "chrom_prefix", "highlight", "width_ratio", "length_ratio"
   ),
   dropped_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
   ),
   compute_panel = function(
-    data, scales, genome, highlight, width_ratio, length_ratio
+    data, scales,
+    genome, chrom_prefix, highlight, width_ratio, length_ratio
   ) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -68,7 +74,7 @@ StatIdeogram <- ggplot2::ggproto(
     # --+--------------------------------------------------------------------> #
     #   | (0, 0)                                                               #
     # ======================================================================== #
-    bands <- retrive_cytoband(data, genome = genome)
+    bands <- retrive_cytoband(data, genome, chrom_prefix)
 
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic == 1) {
@@ -202,6 +208,8 @@ GeomIdeogram <- ggplot2::ggproto(
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param genome The genome name. Default is `"hg19"`.
+#' @param chrom_prefix Whether the input data has chromosome names
+#'   with prefix 'chr' or not. Default is `TRUE`.
 #' @param highlight Whether to highlight the boundary of the chromosome.
 #'   Default is `TRUE`.
 #' @param width_ratio The ratio of the width of each chromosome ideogram
@@ -268,7 +276,8 @@ GeomIdeogram <- ggplot2::ggproto(
 geom_ideogram <- function(
   mapping = NULL, data = NULL, stat = StatIdeogram, position = "identity",
   na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  genome = "hg19", highlight = FALSE, width_ratio = 1 / 30, length_ratio = 0.8,
+  genome = "hg19", chrom_prefix = TRUE, highlight = FALSE,
+  width_ratio = 1 / 30, length_ratio = 0.8,
   fontsize = 10, colour = "red", fill = "#FFE3E680"
 ) {
   ggplot2::layer(
@@ -277,9 +286,9 @@ geom_ideogram <- function(
     check.param = FALSE,
     params = list(
       na.rm = na.rm, ...,
-      genome = genome, highlight = highlight, width_ratio = width_ratio,
-      length_ratio = length_ratio, fontsize = fontsize, colour = colour,
-      fill = fill
+      genome = genome, chrom_prefix = chrom_prefix, highlight = highlight,
+      width_ratio = width_ratio, length_ratio = length_ratio,
+      fontsize = fontsize, colour = colour, fill = fill
     )
   )
 }
