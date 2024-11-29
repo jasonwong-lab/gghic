@@ -70,10 +70,10 @@ StatHic <- ggplot2::ggproto(
     env$res <- data$end1[1] - data$start1[1] + 1
     env$n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
     env$maxs_x <- dat |>
-      dplyr::group_by(seqnames1) |>
+      dplyr::group_by(seqnames2) |>
       dplyr::summarize(maxs_x = max(xend)) |>
       dplyr::pull(maxs_x) |>
-      stats::setNames(unique(dat$seqnames1))
+      stats::setNames(unique(dat$seqnames2))
 
     dat
   }
