@@ -155,6 +155,8 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
     \item{\code{genome}}{The genome name. Default is \code{"hg19"}.}
+    \item{\code{chrom_prefix}}{Whether the input data has chromosome names
+with prefix 'chr' or not. Default is \code{TRUE}.}
     \item{\code{highlight}}{Whether to highlight the boundary of the chromosome.
 Default is \code{TRUE}.}
     \item{\code{length_ratio}}{The ratio of the length of each chromosome ideogram

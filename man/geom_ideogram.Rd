@@ -14,6 +14,7 @@ geom_ideogram(
   inherit.aes = TRUE,
   ...,
   genome = "hg19",
+  chrom_prefix = TRUE,
   highlight = FALSE,
   width_ratio = 1/30,
   length_ratio = 0.8,
@@ -86,6 +87,9 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 \item{...}{Parameters to be ignored.}
 
 \item{genome}{The genome name. Default is \code{"hg19"}.}
+
+\item{chrom_prefix}{Whether the input data has chromosome names
+with prefix 'chr' or not. Default is \code{TRUE}.}
 
 \item{highlight}{Whether to highlight the boundary of the chromosome.
 Default is \code{TRUE}.}

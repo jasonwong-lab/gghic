@@ -140,6 +140,9 @@ multiple chromosomes. Default is \code{TRUE}.}
 \item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
 
 \item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+
+\item{chrom_prefix}{Whether the input data has chromosome names
+with prefix 'chr' or not. Default is \code{TRUE}.}
 }
 \value{
 A ggplot object.
