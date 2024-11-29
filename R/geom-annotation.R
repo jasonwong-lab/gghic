@@ -115,7 +115,8 @@ decide_track_lines <- function(genes_span, maxgap) {
 }
 
 retrive_genes <- function(
-  data, txdb, tx2gene, gtf_path, maxgap, include_ncrna, gene_symbols
+  data, txdb, tx2gene, gtf_path, maxgap, include_ncrna,
+  gene_symbols, chrom_prefix
 ) {
   txdb <- ensure_txdb(txdb, gtf_path)
   tx2gene <- ensure_tx2gene(tx2gene, gtf_path)
@@ -129,8 +130,10 @@ retrive_genes <- function(
 
   grs <- purrr::map(
     unique(data$seqnames1), function(.x) {
+      tmp <- .x
+      if (!chrom_prefix) tmp <- paste0("chr", tmp)
       GenomicRanges::GRanges(
-        seqnames = .x,
+        seqnames = tmp,
         ranges = IRanges::IRanges(
           start = min(data$start1[data$seqnames1 == .x]),
           end = max(data$end1[data$seqnames1 == .x])
@@ -222,8 +225,9 @@ StatAnnotation <- ggplot2::ggproto(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
   extra_params = c(
-    ggplot2::Stat$extra_params, "txdb", "tx2gene", "gtf_path", "width_ratio",
-    "spacing_ratio", "maxgap", "include_ncrna", "style", "gene_symbols"
+    ggplot2::Stat$extra_params,
+    "txdb", "tx2gene", "gtf_path", "width_ratio", "spacing_ratio", "maxgap",
+    "include_ncrna", "style", "gene_symbols", "chrom_prefix"
   ),
   dropped_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
@@ -231,7 +235,7 @@ StatAnnotation <- ggplot2::ggproto(
   compute_panel = function(
     data, scales,
     txdb, tx2gene, gtf_path, width_ratio, spacing_ratio, maxgap, include_ncrna,
-    style, gene_symbols
+    style, gene_symbols, chrom_prefix
   ) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -285,10 +289,10 @@ StatAnnotation <- ggplot2::ggproto(
         maxs_x <- env$maxs_x
       } else {
         maxs_x <- dat_hic |>
-          dplyr::group_by(seqnames1) |>
+          dplyr::group_by(seqnames2) |>
           dplyr::summarize(maxs_x = max(xend)) |>
           dplyr::pull(maxs_x) |>
-          stats::setNames(unique(dat_hic$seqnames1))
+          stats::setNames(unique(dat_hic$seqnames2))
       }
     }
     min_y <- ifelse(n_track > n_annotation, env$min_y, 0)
@@ -297,7 +301,8 @@ StatAnnotation <- ggplot2::ggproto(
     .height_cds <- .height * 0.8
 
     genes <- retrive_genes(
-      data, txdb, tx2gene, gtf_path, maxgap, include_ncrna, gene_symbols
+      data, txdb, tx2gene, gtf_path, maxgap, include_ncrna,
+      gene_symbols, chrom_prefix
     ) |>
       dplyr::rename(seqname = seqnames)
 
@@ -395,6 +400,11 @@ StatAnnotation <- ggplot2::ggproto(
         dplyr::bind_rows(dat_text)
     }
 
+    if (!chrom_prefix) {
+      dat <- dat |>
+        dplyr::mutate(seqname = stringr::str_remove(seqname, "^chr"))
+    }
+
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
         calculate_add_lengths()
@@ -472,7 +482,7 @@ GeomAnnotation <- ggplot2::ggproto(
       coords_intron <- coords |>
         dplyr::filter(feature == "intron")
       ends <- ifelse(coords_intron$strand == "+", "last", "first")
-      lengths_arrow <- rep(1 / 80, nrow(coords_intron))
+      lengths_arrow <- rep(1 / 90, nrow(coords_intron))
       lengths_intron <- coords_intron$xmax - coords_intron$x
       lengths_arrow[lengths_arrow > lengths_intron] <- 0
       grob_intron <- grid::segmentsGrob(
@@ -568,6 +578,8 @@ GeomAnnotation <- ggplot2::ggproto(
 #' @param gtf_path The path to the GTF file, which is used to generate `txdb`
 #'   and `tx2gene`. Generated files are saved in the cache directory.
 #'   Default is `NULL`.
+#' @param chrom_prefix Whether the input data has chromosome names
+#'   with prefix 'chr' or not. Default is `TRUE`.
 #' @param width_ratio The ratio of the width of each gene model track
 #'   relative to the height of the Hi-C plot. Default is `1/50`.
 #' @param spacing_ratio The ratio of the spacing between two gene model tracks.
