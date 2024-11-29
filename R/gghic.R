@@ -300,6 +300,9 @@ gghic <- function(
 
     breaks <- tmp2$bin
     labels <- labels(tmp$bin)
+
+    indices <- match(unique(tmp$seqname), tmp$seqname)[-1]
+    labels[indices] <- paste0("\n", labels[indices])
   }
 
   p <- p +
