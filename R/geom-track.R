@@ -28,7 +28,7 @@ StatTrack <- ggplot2::ggproto(
     #     | |   |     \    /    \                    |    |                    #
     # 0 --+ | --       ---       --           (x, y) +----+ (xmax, y)          #
     # ======================================================================== #
-    data_range <- data_range[1]
+    # data_range <- data_range[1]
     if (is.null(data_paths) && is.null(data_granges)) {
       stop("Either data_paths or data_granges must be provided.")
     }
@@ -45,8 +45,7 @@ StatTrack <- ggplot2::ggproto(
     }
     if (
       is.numeric(data_range) &&
-        length(data_range) != 1 &&
-        length(data_range) != n_data
+        (length(data_range) != 1 && length(data_range) != n_data)
     ) {
       stop("data_range must be of length 1 or equal to the number of data.")
     }
@@ -69,22 +68,30 @@ StatTrack <- ggplot2::ggproto(
       res <- data$end1[1] - data$start1[1] + 1
       n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
     }
+
     if (n_sn > 1) {
       if (env$n_hic == 1 || env$n_annotation == 1) {
         maxs_x <- env$maxs_x
       } else {
         maxs_x <- dat_hic |>
-          dplyr::group_by(seqnames1) |>
+          dplyr::group_by(seqnames2) |>
           dplyr::summarize(maxs_x = max(xend)) |>
           dplyr::pull(maxs_x) |>
-          stats::setNames(unique(dat_hic$seqnames1))
+          stats::setNames(unique(dat_hic$seqnames2))
       }
     }
     min_y <- ifelse(n_annotation > n_track, env$min_y, 0)
 
     .height <- max_y * width_ratio
 
-    ys <- names(data_paths) |>
+    if (!is.null(data_paths)) {
+      names_track <- names(data_paths)
+    }
+    if (!is.null(data_granges)) {
+      names_track <- names(data_granges)
+    }
+
+    ys <- names_track |>
       tibble::as_tibble() |>
       dplyr::rename(name = value) |>
       dplyr::mutate(
@@ -117,7 +124,9 @@ StatTrack <- ggplot2::ggproto(
     if (!is.null(data_granges)) {
       tracks <- purrr::map(
         data_granges, function(.x) {
-          tmp <- GenomicRanges::pintersect(.x, grs_range, ignore.strand = TRUE)
+          tmp <- .x[
+            IRanges::overlapsAny(.x, grs_range, ignore.strand = TRUE)
+          ]
           tmp <- tmp[width(tmp) > 0]
           tibble::as_tibble(tmp)
         }
@@ -126,12 +135,12 @@ StatTrack <- ggplot2::ggproto(
         dplyr::rename(seqname = seqnames)
     }
 
-    if (data_range == "auto") {
+    if (data_range[1] == "auto") {
       .max <- tracks |>
         dplyr::group_by(name) |>
         dplyr::summarize(.max = round(max(score, na.rm = TRUE), digits = 2))
     }
-    if (data_range == "maximum") {
+    if (data_range[1] == "maximum") {
       .max <- tibble::tibble(
         name = unique(tracks$name),
         .max = round(max(tracks$score, na.rm = TRUE), digits = 2)
@@ -147,8 +156,11 @@ StatTrack <- ggplot2::ggproto(
       dplyr::mutate(
         x = start,
         xmax = end,
-        ymin = y + .height / .max * (score),
+        ymin = y + ((.height / .max) * score),
         type = "track"
+      ) |>
+      dplyr::mutate(
+        ymin = ifelse(ymin - y > .height, y + .height, ymin)
       )
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
@@ -272,7 +284,7 @@ GeomTrack <- ggproto(
       x1 = coords_axis$x - (1 / 200),
       y0 = coords_axis$ymin,
       y1 = coords_axis$y,
-      gp = grid::gpar(col = "black", fill = "black"),
+      gp = grid::gpar(col = "black", fill = NA),
       default.units = "native"
     )
     grob_tick <- grid::segmentsGrob(
@@ -280,7 +292,7 @@ GeomTrack <- ggproto(
       x1 = rep(coords_axis$x - (1 / 90) - (1 / 200), nrow(coords_axis)),
       y0 = c(coords_axis$ymin, coords_axis$y),
       y1 = c(coords_axis$ymin, coords_axis$y),
-      gp = grid::gpar(col = "black", fill = "black"),
+      gp = grid::gpar(col = "black", fill = NA),
       default.units = "native"
     )
     grob_tick_text <- grid::textGrob(
