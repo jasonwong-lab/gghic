@@ -1,16 +1,18 @@
 scale_data <- function(gis, score_column, scale_method) {
-  gis$score <- scale_method(S4Vectors::mcols(gis)[, score_column])
-
-  x <- tibble::as_tibble(gis)
-  scores <- x$score[
-    InteractionSet::pairdist(gis) != 0 &
+  x <- tibble::as_tibble(gis) |>
+    dplyr::mutate(
+      score = scale_method(.data[[score_column]])
+    ) |>
+    dplyr::filter(
+      InteractionSet::pairdist(gis) != 0,
       !is.na(InteractionSet::pairdist(gis) != 0)
-  ]
-  scores <- scores[!is.na(scores) & !is.infinite(scores)]
-  M <- max(scores)
-  m <- min(scores)
-
-  x$score <- scales::oob_squish(x$score, c(m, M))
+    ) |>
+    dplyr::filter(
+      !is.na(score), !is.infinite(score)
+    ) |>
+    dplyr::mutate(
+      score = scales::oob_squish(score, c(min(score), max(score)))
+    )
 
   x
 }
@@ -70,9 +72,6 @@ calculate_xrange <- function(data) {
 #' @param score_column The column name of which the score is calculated.
 #'   Default is `"balanced"`.
 #' @param scale_method The function to scale the score. Default is `log10`.
-#' @param rasterise Whether to rasterise the plot of Hi-C or not.
-#'   Default is `FALSE`.
-#' @param dpi The resolution of the rasterised plot. Default is `300`.
 #' @param ideogram Whether to add ideogram or not. Default is `FALSE`.
 #' @param ideogram_width_ratio The width ratio of the ideogram.
 #'   Default is `1/30`.
@@ -159,46 +158,43 @@ calculate_xrange <- function(data) {
 #' @export gghic
 #' @aliases gghic
 gghic <- function(
-  data = NULL,
-  score_column = "balanced",
-  scale_method = log10,
+    data = NULL,
+    score_column = "balanced",
+    scale_method = log10,
 
-  rasterise = FALSE,
-  dpi = 300,
+    ideogram = FALSE,
+    ideogram_width_ratio = 1 / 30,
+    ideogram_fontsize = 10,
+    ideogram_colour = "red",
+    ideogram_fill = "#FFE3E680",
 
-  ideogram = FALSE,
-  ideogram_width_ratio = 1 / 30,
-  ideogram_fontsize = 10,
-  ideogram_colour = "red",
-  ideogram_fill = "#FFE3E680",
+    annotation = FALSE,
+    annotation_width_ratio = 1 / 50,
+    annotation_spacing_ratio = 1 / 3,
+    annotation_fontsize = 10,
+    annotation_colour = "#48CFCB",
+    annotation_fill = "#48CFCB",
 
-  annotation = FALSE,
-  annotation_width_ratio = 1 / 50,
-  annotation_spacing_ratio = 1 / 3,
-  annotation_fontsize = 10,
-  annotation_colour = "#48CFCB",
-  annotation_fill = "#48CFCB",
+    track = FALSE,
+    track_width_ratio = 1 / 20,
+    track_spacing_ratio = 1 / 2,
+    track_fill = "black",
+    track_fontsize = 5,
 
-  track = FALSE,
-  track_width_ratio = 1 / 20,
-  track_spacing_ratio = 1 / 2,
-  track_fill = "black",
-  track_fontsize = 5,
+    tad = FALSE,
+    tad_is_0based = FALSE,
+    tad_colour = "grey",
 
-  tad = FALSE,
-  tad_is_0based = FALSE,
-  tad_colour = "grey",
+    loop = FALSE,
+    loop_is_0based = FALSE,
+    loop_colour = "black",
+    loop_fill = NA,
 
-  loop = FALSE,
-  loop_is_0based = FALSE,
-  loop_colour = "black",
-  loop_fill = NA,
+    expand_xaxis = FALSE,
+    expand_left = NULL,
+    expand_right = NULL,
 
-  expand_xaxis = FALSE,
-  expand_left = NULL,
-  expand_right = NULL,
-
-  ...
+    ...
 ) {
   dat <- data |>
     check_data_type(score_column = score_column, scale_method = scale_method) |>
@@ -213,11 +209,7 @@ gghic <- function(
       )
     )
 
-  if (rasterise) {
-    p <- p + ggrastr::rasterise(geom_hic(...), dpi = dpi)
-  } else {
-    p <- p + geom_hic(...)
-  }
+  p <- p + geom_hic(...)
 
   if (ideogram) {
     p <- p +
