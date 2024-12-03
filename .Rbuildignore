@@ -15,3 +15,6 @@
 ^cran-comments\.md$
 ^inst/\.CITATION$
 ^CRAN-SUBMISSION$
+^/data/$
+^/code/$
+^/figs/$
