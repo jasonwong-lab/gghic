@@ -86,11 +86,14 @@ GeomHic <- ggplot2::ggproto(
     "x", "xmin", "xmax", "xend", "y", "ymin", "ymax", "yend", "fill"
   ),
   extra_params = c(
-    ggplot2::Geom$extra_params, "draw_boundary", "boundary_colour", "linetype"
+    ggplot2::Geom$extra_params,
+    "draw_boundary", "boundary_colour", "linetype",
+    "rasterize", "dpi", "dev", "scale"
   ),
   draw_key = ggplot2::draw_key_polygon,
   draw_panel = function(
     data, panel_params, coord,
+    rasterize, dpi, dev, scale,
     draw_boundary, boundary_colour, linetype
   ) {
     coords <- coord$transform(data, panel_params)
@@ -99,7 +102,7 @@ GeomHic <- ggplot2::ggproto(
     grob_boundary_left <- grob_boundary_right <- grid::nullGrob()
     if (
       draw_boundary &&
-        (n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))
+      (n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))
     ) {
       coords_line_top <- coords |>
         dplyr::group_by(seqnames1, seqnames2) |>
@@ -145,6 +148,14 @@ GeomHic <- ggplot2::ggproto(
       default.units = "native",
       gp = grid::gpar(fill = coords$fill, col = NA)
     )
+
+    if (rasterize) {
+      class(grob_hic) <- c("rasteriser", class(grob_hic))
+      grob_hic$dpi <- dpi
+      grob_hic$dev <- dev
+      grob_hic$scale <- scale
+    }
+
     grid::gList(grob_hic, grob_boundary_left, grob_boundary_right)
   }
 )
@@ -154,6 +165,10 @@ GeomHic <- ggplot2::ggproto(
 #' @description A ggplot2 geom for Hi-C data.
 #' @inheritParams ggplot2::geom_polygon
 #' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
+#' @param rasterize Whether to rasterize the plot or not. Default is `FALSE`.
+#' @param dpi The resolution of the rasterised plot. Default is `300`.
+#' @param dev The device to rasterise the plot. Default is `"cairo"`.
+#' @param scale The scale of the rasterised plot. Default is `1`.
 #' @param draw_boundary Whether to draw the boundary line or not when plotting
 #'   multiple chromosomes. Default is `TRUE`.
 #' @param boundary_colour The color of the boundary line. Default is `"black"`.
@@ -213,9 +228,10 @@ GeomHic <- ggplot2::ggproto(
 #' @export geom_hic
 #' @aliases geom_hic
 geom_hic <- function(
-  mapping = NULL, data = NULL, stat = StatHic, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+    mapping = NULL, data = NULL, stat = StatHic, position = "identity",
+    na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
+    rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
+    draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
 ) {
   ggplot2::layer(
     geom = GeomHic, mapping = mapping, data = data, stat = stat,
@@ -223,6 +239,7 @@ geom_hic <- function(
     check.param = FALSE,
     params = list(
       na.rm = na.rm, ...,
+      rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
       linetype = linetype
     )
