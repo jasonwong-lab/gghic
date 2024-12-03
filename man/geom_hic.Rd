@@ -13,6 +13,10 @@ geom_hic(
   show.legend = NA,
   inherit.aes = TRUE,
   ...,
+  rasterize = FALSE,
+  dpi = 300,
+  dev = "cairo",
+  scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
   linetype = "dashed"
@@ -77,6 +81,14 @@ that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 
 \item{...}{Parameters to be ignored.}
+
+\item{rasterize}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+
+\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
+
+\item{dev}{The device to rasterise the plot. Default is \code{"cairo"}.}
+
+\item{scale}{The scale of the rasterised plot. Default is \code{1}.}
 
 \item{draw_boundary}{Whether to draw the boundary line or not when plotting
 multiple chromosomes. Default is \code{TRUE}.}

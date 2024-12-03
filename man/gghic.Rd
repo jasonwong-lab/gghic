@@ -8,8 +8,6 @@ gghic(
   data = NULL,
   score_column = "balanced",
   scale_method = log10,
-  rasterise = FALSE,
-  dpi = 300,
   ideogram = FALSE,
   ideogram_width_ratio = 1/30,
   ideogram_fontsize = 10,
@@ -47,11 +45,6 @@ tibble/data.frame.}
 Default is \code{"balanced"}.}
 
 \item{scale_method}{The function to scale the score. Default is \code{log10}.}
-
-\item{rasterise}{Whether to rasterise the plot of Hi-C or not.
-Default is \code{FALSE}.}
-
-\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
 
 \item{ideogram}{Whether to add ideogram or not. Default is \code{FALSE}.}
 
@@ -115,6 +108,10 @@ Default is \code{FALSE}.}
 \item{...}{
   Arguments passed on to \code{\link[=geom_hic]{geom_hic}}, \code{\link[=geom_ideogram]{geom_ideogram}}, \code{\link[=geom_annotation]{geom_annotation}}, \code{\link[=geom_track]{geom_track}}, \code{\link[=geom_tad]{geom_tad}}, \code{\link[=geom_loop]{geom_loop}}
   \describe{
+    \item{\code{rasterize}}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+    \item{\code{dpi}}{The resolution of the rasterised plot. Default is \code{300}.}
+    \item{\code{dev}}{The device to rasterise the plot. Default is \code{"cairo"}.}
+    \item{\code{scale}}{The scale of the rasterised plot. Default is \code{1}.}
     \item{\code{draw_boundary}}{Whether to draw the boundary line or not when plotting
 multiple chromosomes. Default is \code{TRUE}.}
     \item{\code{boundary_colour}}{The color of the boundary line. Default is \code{"black"}.}
