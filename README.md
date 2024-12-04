@@ -1,12 +1,12 @@
 <!-- markdownlint-configure-file {
   "no-inline-html": {
     "allowed_elements": [
-      "p"
+      "p", "a", "img"
     ]
   }
 } -->
 
-# gghic
+# gghic <a href="https://yulab-smu.github.io/treedata-book/"><img src="https://raw.githubusercontent.com/jasonwong-lab/gghic/refs/heads/master/inst/figures/gghic.png" alt="gghic logo" height="100" align="right" /></a>
 
 <p align="center"> A versatile R package for exploring and visualizing 3D genome organization </p>
 
