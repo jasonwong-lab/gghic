@@ -8,9 +8,9 @@
 
 # gghic
 
-<font size="2"> *An R package for easy visualization of genomic interaction data* </font>
+<font size="2"> *A versatile R pakcage for exploring and visulazing 3D genome organization* </font>
 
-> :warning: This R package is in its early stages. Issues and PRs are welcome.
+> :warning: `gghic` is in its early stages. Issues and PRs are welcome.
 
 ## Author
 
@@ -18,13 +18,14 @@ Minghao Jiang, <mjhk@connect.hku.hk>
 
 ## Features
 
-1. [x] Visualise genomic interaction data of multiple chromosomes.
+1. [x] Plot triangular heatmaps for genomic interaction data containing multiple chromosomes.
 2. [x] Plot chromosome ideograms with highlighted regions above the heatmap.
-3. [x] Plot gene tracks under the heatmap easily with a GTF file.
+3. [x] Plot gene/transcript model tracks under the heatmap.
 4. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, *etc.*, under the heatmap.
 5. [x] Plot compartments, TADs, and loops on the heatmap.
-6. [ ] Support duckplyr for data manipulation.
-7. [ ] ...
+6. [x] Allow for generating rasterized heatmaps to handle large datasets.
+7. [ ] Support duckplyr for faster data manipulation.
+8. [ ] ...
 
 ## Installation
 
