@@ -1,14 +1,14 @@
 <!-- markdownlint-configure-file {
   "no-inline-html": {
     "allowed_elements": [
-      "font"
+      "p"
     ]
   }
 } -->
 
 # gghic
 
-<font size="2"> *A versatile R pakcage for exploring and visulazing 3D genome organization* </font>
+<p align="center"> A versatile R package for exploring and visualizing 3D genome organization </p>
 
 > :warning: `gghic` is in its early stages. Issues and PRs are welcome.
 
