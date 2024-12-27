@@ -1,18 +1,12 @@
 scale_data <- function(gis, score_column, scale_method) {
   x <- tibble::as_tibble(gis) |>
-    dplyr::mutate(
-      score = scale_method(.data[[score_column]])
-    ) |>
+    dplyr::mutate(score = scale_method(.data[[score_column]])) |>
     dplyr::filter(
       InteractionSet::pairdist(gis) != 0,
       !is.na(InteractionSet::pairdist(gis) != 0)
     ) |>
-    dplyr::filter(
-      !is.na(score), !is.infinite(score)
-    ) |>
-    dplyr::mutate(
-      score = scales::oob_squish(score, c(min(score), max(score)))
-    )
+    dplyr::filter(!is.na(score), !is.infinite(score)) |>
+    dplyr::mutate(score = scales::oob_squish(score, c(min(score), max(score))))
 
   x
 }
