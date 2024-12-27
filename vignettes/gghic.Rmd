@@ -67,55 +67,47 @@ download_example_files()
 
 dir_cache_gghic <- rappdirs::user_cache_dir(appname = "gghic")
 
-path_cf_100 <- glue::glue("{dir_cache_gghic}/chr4_11-100kb.cool") |>
-  as.character()
-
-path_cf_5 <- glue::glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
-  as.character()
-
-path_gtf <- glue::glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz") |>
-  as.character()
-
-paths_track <- glue::glue("{dir_cache_gghic}/track{1:2}.bigWig") |>
-  as.character()
-
-path_tad <- glue::glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv") |>
-  as.character()
-
-path_loop <- glue::glue("{dir_cache_gghic}/loops-chr4_11.txt") |>
-  as.character()
+path_cf_100 <- glue::glue("{dir_cache_gghic}/chr4_11-100kb.cool")
+path_cf_5 <- glue::glue("{dir_cache_gghic}/chr4_11-5kb.cool")
+path_gtf <- glue::glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+paths_track <- glue::glue("{dir_cache_gghic}/track{1:2}.bigWig")
+path_tad <- glue::glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
+path_loop <- glue::glue("{dir_cache_gghic}/loops-chr4_11.txt")
 ```
 
 ```{r}
-cf_100 <- HiCExperiment::CoolFile(path_cf_100)
-cf_5 <- HiCExperiment::CoolFile(path_cf_5)
+hic_100 <- path_cf_100 |>
+  HiCExperiment::CoolFile() |>
+  HiCExperiment::import()
 
-hic_100 <- HiCExperiment::import(cf_100)
-hic_5 <- HiCExperiment::import(cf_5)
+hic_5 <- path_cf_5 |>
+  HiCExperiment::CoolFile() |>
+  HiCExperiment::import()
 ```
 
 Generate a tibble from the `HiCExperiment` object for visualisation.
 
 ```{r}
-gis <- InteractionSet::interactions(hic_100)
-gis$score <- log10(gis$balanced)
-x_100 <- tibble::as_tibble(gis)
-scores <- x_100$score[
-  InteractionSet::pairdist(gis) != 0 &
-    !is.na(InteractionSet::pairdist(gis) != 0)
-]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x_100$score <- scales::oob_squish(x_100$score, c(min(scores), max(scores)))
+scale_data <- function(hic, score_column = "balanced", scale_method = log10) {
+  gis <- InteractionSet::interactions(hic)
 
-gis <- InteractionSet::interactions(hic_5)
-gis$score <- log10(gis$balanced)
-x_5 <- tibble::as_tibble(gis)
-scores <- x_5$score[
-  InteractionSet::pairdist(gis) != 0 &
-    !is.na(InteractionSet::pairdist(gis) != 0)
-]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x_5$score <- scales::oob_squish(x_5$score, c(min(scores), max(scores)))
+  x <- gis |>
+    tibble::as_tibble() |>
+    dplyr::mutate(score = scale_method(.data[[score_column]])) |>
+    dplyr::filter(
+      InteractionSet::pairdist(gis) != 0,
+      !is.na(InteractionSet::pairdist(gis) != 0)
+    ) |>
+    dplyr::filter(!is.na(score), !is.infinite(score)) |>
+    dplyr::mutate(score = scales::oob_squish(score, c(min(score), max(score))))
+
+  x
+}
+
+
+x_100 <- scale_data(hic_100)
+
+x_5 <- scale_data(hic_5)
 ```
 
 ## Chromosomal Interaction Data Visualisation
@@ -256,7 +248,7 @@ Set `draw_boundary` to `TRUE` to draw the boundary of the chromosomes.
 Set `expand_xaxis` to `TRUE` to expand the x-axis if the plot is crowded.
 
 ```{r}
-hic_100 |>
+x_100 |>
   gghic(
     draw_boundary = TRUE,
     expand_xaxis = TRUE, expand_left = 2000000, expand_right = 2000000
