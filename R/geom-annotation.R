@@ -655,7 +655,7 @@ geom_annotation <- function(
   na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   txdb = NULL, tx2gene = NULL, gtf_path = NULL, width_ratio = 1 / 50,
   spacing_ratio = 1 / 3, maxgap = -1, include_ncrna = TRUE,
-  style = c("basic", "arrow"), gene_symbols = NULL,
+  style = c("basic", "arrow"), gene_symbols = NULL, chrom_prefix = TRUE,
   fontsize = 10, colour = "#48CFCB", fill = "#48CFCB",
   draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
 ) {
@@ -667,6 +667,7 @@ geom_annotation <- function(
       txdb = txdb, tx2gene = tx2gene, gtf_path = gtf_path,
       width_ratio = width_ratio, spacing_ratio = spacing_ratio, maxgap = maxgap,
       include_ncrna = include_ncrna, style = style, gene_symbols = gene_symbols,
+      chrom_prefix = chrom_prefix,
       fontsize = fontsize, colour = colour, fill = fill,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
       linetype = linetype
