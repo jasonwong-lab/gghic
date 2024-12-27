@@ -96,6 +96,9 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
 \item{shape}{The shape of the loops. Default is \code{21}.}
 
 \item{fill}{The fill color of the loops. Default is \code{NA}.}
+
+\item{size}{The size of the loops. Default is \code{NULL}.
+If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
 }
 \value{
 A ggplot object.

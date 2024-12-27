@@ -191,6 +191,8 @@ or a number (vector). Default is \code{"auto"}.}
     \item{\code{loop_path}}{A path to the loop file. Default is \code{NULL}.}
     \item{\code{loop_gis}}{An InteractionSet object of loops. Default is \code{NULL}.}
     \item{\code{shape}}{The shape of the loops. Default is \code{21}.}
+    \item{\code{size}}{The size of the loops. Default is \code{NULL}.
+If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
   }}
 }
 \value{

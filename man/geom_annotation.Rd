@@ -22,6 +22,7 @@ geom_annotation(
   include_ncrna = TRUE,
   style = c("basic", "arrow"),
   gene_symbols = NULL,
+  chrom_prefix = TRUE,
   fontsize = 10,
   colour = "#48CFCB",
   fill = "#48CFCB",
@@ -128,6 +129,9 @@ or \code{"arrow"}. Default is \code{"basic"}.}
 \item{gene_symbols}{A character vector of gene symbols to be included only.
 Default is \code{NULL}.}
 
+\item{chrom_prefix}{Whether the input data has chromosome names
+with prefix 'chr' or not. Default is \code{TRUE}.}
+
 \item{fontsize}{The font size of the gene symbols. Default is \code{10}.}
 
 \item{colour}{The color of the gene model track. Default is \code{"#48CFCB"}.}
@@ -140,9 +144,6 @@ multiple chromosomes. Default is \code{TRUE}.}
 \item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
 
 \item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
-
-\item{chrom_prefix}{Whether the input data has chromosome names
-with prefix 'chr' or not. Default is \code{TRUE}.}
 }
 \value{
 A ggplot object.
