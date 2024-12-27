@@ -146,6 +146,8 @@ GeomLoop <- ggproto(
 #' @param colour The color of the loops. Default is `grey`.
 #' @param shape The shape of the loops. Default is `21`.
 #' @param fill The fill color of the loops. Default is `NA`.
+#' @param size The size of the loops. Default is `NULL`.
+#'   If `NULL`, the size is `grid::unit(1 / 80, "native")`.
 #' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
