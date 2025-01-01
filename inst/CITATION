@@ -1,0 +1,9 @@
+bibentry(
+  bibtype  = "Article",
+  title = "gghic: A Versatile R Package for Exploring and Visualizing 3D Genome Organization",
+  author = as.person("Minghao Jiang [aut], Duohui Jing [aut], Jason W. H. Wong [aut]"),
+  journal = "arXiv preprint",
+  year = 2024,
+  doi = "10.48550/arXiv.2412.03005",
+  url = "https://arxiv.org/abs/2412.03005",
+)

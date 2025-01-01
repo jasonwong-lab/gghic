@@ -43,6 +43,12 @@ You can find the vignettes for `gghic` by running the following command:
 browseVignettes("gghic")
 ```
 
+## Citation
+
+```r
+citation("gghic")
+```
+
 ## License
 
 **`gghic`** is licensed under the [GNU General Public License v3](LICENSE.md).
