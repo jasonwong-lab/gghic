@@ -20,7 +20,7 @@ check_data_type <- function(data, ...) {
   } else if (methods::is(data, "HiCExperiment")) {
     gis <- InteractionSet::interactions(data)
     x <- scale_data(gis, ...)
-    env$gis <- data
+    env$gis <- InteractionSet::interactions(data)
   } else if (tibble::is_tibble(data) || methods::is(data, "data.frame")) {
     cols_required <- c(
       "seqnames1", "seqnames2", "start1", "end1", "start2", "end2", "score"
