@@ -23,7 +23,7 @@ Minghao Jiang, <mjhk@connect.hku.hk>
 3. [x] Plot gene/transcript model tracks under the heatmap.
 4. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, *etc.*, under the heatmap.
 5. [x] Plot compartments, TADs, and loops on the heatmap.
-6. [x] Allow for generating rasterized heatmaps to handle large datasets.
+6. [x] Allow for generating rasterized heatmaps and tracks to handle large datasets.
 7. [ ] Support duckplyr for faster data manipulation.
 8. [ ] ...
 
