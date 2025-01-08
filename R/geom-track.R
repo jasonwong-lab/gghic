@@ -35,13 +35,17 @@ StatTrack <- ggplot2::ggproto(
     if (!is.null(data_paths) && !is.null(data_granges)) {
       stop("Only one of data_paths or data_granges can be provided.")
     }
+    if (!is.null(data_paths)) {
+      n_data <- length(data_paths)
+    }
+    if (!is.null(data_granges)) {
+      n_data <- length(data_granges)
+    }
     if (!is.null(data_paths) && is.null(names(data_paths))) {
       names(data_paths) <- glue::glue("track_{seq_along(data_paths)}")
-      n_data <- length(data_paths)
     }
     if (!is.null(data_granges) && is.null(names(data_granges))) {
       names(data_granges) <- glue::glue("track_{seq_along(data_granges)}")
-      n_data <- length(data_granges)
     }
     if (
       is.numeric(data_range) &&
@@ -219,11 +223,13 @@ GeomTrack <- ggproto(
   ),
   extra_params = c(
     ggplot2::Geom$extra_params,
-    "fill", "fontsize", "draw_boundary", "boundary_colour", "linetype"
+    "fill", "fontsize", "draw_boundary", "boundary_colour", "linetype",
+    "rasterize", "dpi", "dev", "scale"
   ),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
     data, panel_params, coord,
+    rasterize, dpi, dev, scale,
     fill, fontsize, draw_boundary, boundary_colour, linetype
   ) {
     coords <- coord$transform(data, panel_params)
@@ -315,6 +321,13 @@ GeomTrack <- ggproto(
       default.units = "native"
     )
 
+    if (rasterize) {
+      class(grob_track) <- c("rasteriser", class(grob_track))
+      grob_track$dpi <- dpi
+      grob_track$dev <- dev
+      grob_track$scale <- scale
+    }
+
     grid::gList(
       grob_track, grob_axis, grob_tick, grob_tick_text, grob_text, grob_vline
     )
@@ -405,6 +418,7 @@ geom_track <- function(
   data_paths = NULL, data_granges = NULL, width_ratio = 1 / 20,
   spacing_ratio = 0.5, data_range = c("auto", "maximum"),
   fill = "black", fontsize = 5,
+  rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
   draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
 ) {
   ggplot2::layer(
@@ -416,6 +430,7 @@ geom_track <- function(
       data_paths = data_paths, data_granges = data_granges,
       width_ratio = width_ratio, spacing_ratio = spacing_ratio,
       data_range = data_range, fill = fill, fontsize = fontsize,
+      rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
       linetype = linetype
     )
