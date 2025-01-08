@@ -1,10 +1,10 @@
 scale_data <- function(gis, score_column, scale_method) {
   x <- tibble::as_tibble(gis) |>
     dplyr::mutate(score = scale_method(.data[[score_column]])) |>
-    dplyr::filter(
-      InteractionSet::pairdist(gis) != 0,
-      !is.na(InteractionSet::pairdist(gis) != 0)
-    ) |>
+    # dplyr::filter(
+    #   InteractionSet::pairdist(gis) != 0,
+    #   !is.na(InteractionSet::pairdist(gis) != 0)
+    # ) |>
     dplyr::filter(!is.na(score), !is.infinite(score)) |>
     dplyr::mutate(score = scales::oob_squish(score, c(min(score), max(score))))
 
@@ -152,43 +152,43 @@ calculate_xrange <- function(data) {
 #' @export gghic
 #' @aliases gghic
 gghic <- function(
-    data = NULL,
-    score_column = "balanced",
-    scale_method = log10,
+  data = NULL,
+  score_column = "balanced",
+  scale_method = log10,
 
-    ideogram = FALSE,
-    ideogram_width_ratio = 1 / 30,
-    ideogram_fontsize = 10,
-    ideogram_colour = "red",
-    ideogram_fill = "#FFE3E680",
+  ideogram = FALSE,
+  ideogram_width_ratio = 1 / 30,
+  ideogram_fontsize = 10,
+  ideogram_colour = "red",
+  ideogram_fill = "#FFE3E680",
 
-    annotation = FALSE,
-    annotation_width_ratio = 1 / 50,
-    annotation_spacing_ratio = 1 / 3,
-    annotation_fontsize = 10,
-    annotation_colour = "#48CFCB",
-    annotation_fill = "#48CFCB",
+  annotation = FALSE,
+  annotation_width_ratio = 1 / 50,
+  annotation_spacing_ratio = 1 / 3,
+  annotation_fontsize = 10,
+  annotation_colour = "#48CFCB",
+  annotation_fill = "#48CFCB",
 
-    track = FALSE,
-    track_width_ratio = 1 / 20,
-    track_spacing_ratio = 1 / 2,
-    track_fill = "black",
-    track_fontsize = 5,
+  track = FALSE,
+  track_width_ratio = 1 / 20,
+  track_spacing_ratio = 1 / 2,
+  track_fill = "black",
+  track_fontsize = 5,
 
-    tad = FALSE,
-    tad_is_0based = FALSE,
-    tad_colour = "grey",
+  tad = FALSE,
+  tad_is_0based = FALSE,
+  tad_colour = "grey",
 
-    loop = FALSE,
-    loop_is_0based = FALSE,
-    loop_colour = "black",
-    loop_fill = NA,
+  loop = FALSE,
+  loop_is_0based = FALSE,
+  loop_colour = "black",
+  loop_fill = NA,
 
-    expand_xaxis = FALSE,
-    expand_left = NULL,
-    expand_right = NULL,
+  expand_xaxis = FALSE,
+  expand_left = NULL,
+  expand_right = NULL,
 
-    ...
+  ...
 ) {
   dat <- data |>
     check_data_type(score_column = score_column, scale_method = scale_method) |>
