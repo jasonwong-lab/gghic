@@ -348,6 +348,10 @@ GeomTrack <- ggproto(
 #'   Default is `0.5`.
 #' @param data_range The range of the x axis. It can be `"auto"`, `"maximum"`,
 #'   or a number (vector). Default is `"auto"`.
+#' @param rasterize Whether to rasterize the plot or not. Default is `FALSE`.
+#' @param dpi The resolution of the rasterised plot. Default is `300`.
+#' @param dev The device to rasterise the plot. Default is `"cairo"`.
+#' @param scale The scale of the rasterised plot. Default is `1`.
 #' @param fill The fill color of the track. Default is `"black"`.
 #' @param fontsize The font size of the track names. Default is `5`.
 #' @param ... Parameters to be ignored.
