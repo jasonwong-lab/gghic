@@ -20,6 +20,10 @@ geom_track(
   data_range = c("auto", "maximum"),
   fill = "black",
   fontsize = 5,
+  rasterize = FALSE,
+  dpi = 300,
+  dev = "cairo",
+  scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
   linetype = "dashed"
@@ -105,6 +109,14 @@ or a number (vector). Default is \code{"auto"}.}
 \item{fill}{The fill color of the track. Default is \code{"black"}.}
 
 \item{fontsize}{The font size of the track names. Default is \code{5}.}
+
+\item{rasterize}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+
+\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
+
+\item{dev}{The device to rasterise the plot. Default is \code{"cairo"}.}
+
+\item{scale}{The scale of the rasterised plot. Default is \code{1}.}
 
 \item{draw_boundary}{Whether to draw the boundary line or not when plotting
 multiple chromosomes. Default is \code{TRUE}.}

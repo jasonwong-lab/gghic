@@ -106,16 +106,16 @@ Default is \code{FALSE}.}
 \item{expand_right}{The right expansion of the x-axis. Default is \code{NULL}.}
 
 \item{...}{
-  Arguments passed on to \code{\link[=geom_hic]{geom_hic}}, \code{\link[=geom_ideogram]{geom_ideogram}}, \code{\link[=geom_annotation]{geom_annotation}}, \code{\link[=geom_track]{geom_track}}, \code{\link[=geom_tad]{geom_tad}}, \code{\link[=geom_loop]{geom_loop}}
+  Arguments passed on to \code{\link[=geom_tad]{geom_tad}}, \code{\link[=geom_loop]{geom_loop}}, \code{\link[=geom_hic]{geom_hic}}, \code{\link[=geom_ideogram]{geom_ideogram}}, \code{\link[=geom_annotation]{geom_annotation}}, \code{\link[=geom_track]{geom_track}}, \code{\link[=geom_tad]{geom_tad}}, \code{\link[=geom_loop]{geom_loop}}
   \describe{
-    \item{\code{rasterize}}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
-    \item{\code{dpi}}{The resolution of the rasterised plot. Default is \code{300}.}
-    \item{\code{dev}}{The device to rasterise the plot. Default is \code{"cairo"}.}
-    \item{\code{scale}}{The scale of the rasterised plot. Default is \code{1}.}
-    \item{\code{draw_boundary}}{Whether to draw the boundary line or not when plotting
-multiple chromosomes. Default is \code{TRUE}.}
-    \item{\code{boundary_colour}}{The color of the boundary line. Default is \code{"black"}.}
-    \item{\code{linetype}}{The line type of the boundary line. Default is \code{"dashed"}.}
+    \item{\code{tad_path}}{A path to the TAD file. Default is \code{NULL}.}
+    \item{\code{tad_gis}}{An InteractionSet object of TADs. Default is \code{NULL}.}
+    \item{\code{is_0based}}{Whether the TAD file is 0-based or not. Default is \code{FALSE}.}
+    \item{\code{colour}}{The color of the TADs. Default is \code{grey}.}
+    \item{\code{mapping}}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{aes()}}. If specified and
+\code{inherit.aes = TRUE} (the default), it is combined with the default mapping
+at the top level of the plot. You must supply \code{mapping} if there is no plot
+mapping.}
     \item{\code{stat}}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
 argument can be used the override the default coupling between geoms and
@@ -151,6 +151,20 @@ display.}
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+    \item{\code{loop_path}}{A path to the loop file. Default is \code{NULL}.}
+    \item{\code{loop_gis}}{An InteractionSet object of loops. Default is \code{NULL}.}
+    \item{\code{shape}}{The shape of the loops. Default is \code{21}.}
+    \item{\code{fill}}{The fill color of the loops. Default is \code{NA}.}
+    \item{\code{size}}{The size of the loops. Default is \code{NULL}.
+If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
+    \item{\code{rasterize}}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+    \item{\code{dpi}}{The resolution of the rasterised plot. Default is \code{300}.}
+    \item{\code{dev}}{The device to rasterise the plot. Default is \code{"cairo"}.}
+    \item{\code{scale}}{The scale of the rasterised plot. Default is \code{1}.}
+    \item{\code{draw_boundary}}{Whether to draw the boundary line or not when plotting
+multiple chromosomes. Default is \code{TRUE}.}
+    \item{\code{boundary_colour}}{The color of the boundary line. Default is \code{"black"}.}
+    \item{\code{linetype}}{The line type of the boundary line. Default is \code{"dashed"}.}
     \item{\code{genome}}{The genome name. Default is \code{"hg19"}.}
     \item{\code{chrom_prefix}}{Whether the input data has chromosome names
 with prefix 'chr' or not. Default is \code{TRUE}.}
@@ -186,13 +200,6 @@ Default is \code{NULL}.}
 Default is \code{NULL}.}
     \item{\code{data_range}}{The range of the x axis. It can be \code{"auto"}, \code{"maximum"},
 or a number (vector). Default is \code{"auto"}.}
-    \item{\code{tad_path}}{A path to the TAD file. Default is \code{NULL}.}
-    \item{\code{tad_gis}}{An InteractionSet object of TADs. Default is \code{NULL}.}
-    \item{\code{loop_path}}{A path to the loop file. Default is \code{NULL}.}
-    \item{\code{loop_gis}}{An InteractionSet object of loops. Default is \code{NULL}.}
-    \item{\code{shape}}{The shape of the loops. Default is \code{21}.}
-    \item{\code{size}}{The size of the loops. Default is \code{NULL}.
-If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
   }}
 }
 \value{
@@ -200,8 +207,8 @@ A ggplot object.
 }
 \description{
 A ggplot2 wrapper of \code{\link[=geom_hic]{geom_hic()}}, \code{\link[=geom_ideogram]{geom_ideogram()}},
-\code{\link[=geom_annotation]{geom_annotation()}}, and \code{\link[=geom_track]{geom_track()}} for easy visualisation of
-Hi-C/-like data.
+\code{\link[=geom_annotation]{geom_annotation()}}, \code{\link[=geom_track]{geom_track()}}, \code{\link[=geom_tad]{geom_tad()}}, and \code{\link[=geom_loop]{geom_loop()}}
+for easy visualisation of Hi-C/-like data.
 }
 \examples{
 \dontrun{
