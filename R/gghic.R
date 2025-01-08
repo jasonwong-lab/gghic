@@ -55,12 +55,14 @@ calculate_xrange <- function(data) {
 #' gghic
 #'
 #' @description A ggplot2 wrapper of [geom_hic()], [geom_ideogram()],
-#'   [geom_annotation()], and [geom_track()] for easy visualisation of
-#'   Hi-C/-like data.
+#'   [geom_annotation()], [geom_track()], [geom_tad()], and [geom_loop()]
+#'   for easy visualisation of Hi-C/-like data.
 #' @inheritParams geom_hic
 #' @inheritParams geom_ideogram
 #' @inheritParams geom_annotation
 #' @inheritParams geom_track
+#' @inheritDotParams geom_tad
+#' @inheritDotParams geom_loop
 #' @param data Either a HiCExperiment object, or a GInteractions object, or a
 #'   tibble/data.frame.
 #' @param score_column The column name of which the score is calculated.
