@@ -102,7 +102,7 @@ GeomHic <- ggplot2::ggproto(
     grob_boundary_left <- grob_boundary_right <- grid::nullGrob()
     if (
       draw_boundary &&
-      (n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))
+        (n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))
     ) {
       coords_line_top <- coords |>
         dplyr::group_by(seqnames1, seqnames2) |>
@@ -228,10 +228,10 @@ GeomHic <- ggplot2::ggproto(
 #' @export geom_hic
 #' @aliases geom_hic
 geom_hic <- function(
-    mapping = NULL, data = NULL, stat = StatHic, position = "identity",
-    na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-    rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
-    draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  mapping = NULL, data = NULL, stat = StatHic, position = "identity",
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
+  rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
+  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
 ) {
   ggplot2::layer(
     geom = GeomHic, mapping = mapping, data = data, stat = stat,
