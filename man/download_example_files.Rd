@@ -4,7 +4,11 @@
 \alias{download_example_files}
 \title{download_example_files}
 \usage{
-download_example_files()
+download_example_files(check_exists = FALSE)
+}
+\arguments{
+\item{check_exists}{Boolean. Whether to check if the file exists.
+Default is \code{FALSE}.}
 }
 \description{
 Download example files under the cache directory.
