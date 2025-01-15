@@ -196,7 +196,7 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
 #' }
 #' @export download_example_files
 #' @aliases download_example_files
-download_example_files <- function() {
+download_example_files <- function(check_exists = FALSE) {
   files <- list(
     "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
     "chr4_11-5kb.cool" = "cooler/chr4_11-5kb.cool",
@@ -214,8 +214,7 @@ download_example_files <- function() {
 
   for (file_name in names(files)) {
     file_path <- file.path(dir_cache, file_name)
-    if (!file.exists(file_path)) {
-      utils::download.file(paste0(url_base, files[[file_name]]), file_path)
-    }
+    if (check_exists && file.exists(file_path)) next
+    utils::download.file(paste0(url_base, files[[file_name]]), file_path)
   }
 }
