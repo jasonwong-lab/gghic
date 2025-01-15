@@ -26,6 +26,7 @@ StatLoop <- ggplot2::ggproto(
     # --+--------------------------------------------------------------------> #
     #   |                                                                      #
     # ======================================================================== #
+    name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic == 1) {
       res <- env$res

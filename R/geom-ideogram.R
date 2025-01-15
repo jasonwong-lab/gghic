@@ -76,6 +76,7 @@ StatIdeogram <- ggplot2::ggproto(
     # ======================================================================== #
     bands <- retrive_cytoband(data, genome, chrom_prefix)
 
+    name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic == 1) {
       max_y <- env$max_y

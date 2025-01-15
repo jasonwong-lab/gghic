@@ -266,6 +266,7 @@ StatAnnotation <- ggplot2::ggproto(
       stop("Either gtf_path or txdb and tx2gene must be provided.")
     }
 
+    name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track

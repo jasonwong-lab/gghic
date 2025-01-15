@@ -1,7 +1,9 @@
 .onLoad <- function(libname, pkgname) {
+  dir_cache <- get_cache_dir()
   ensure_dir(dir_cache)
 
   myops <- list(FALSE)
+  name_pkg <- get_pkg_name()
   names(myops) <- glue::glue("{name_pkg}.clean_cache")
   op <- options()
   toset <- !(names(myops) %in% names(op))
@@ -18,6 +20,8 @@
 }
 
 .onUnload <- function(libpath) {
+  dir_cache <- get_cache_dir()
+  name_pkg <- get_pkg_name()
   if (getOption(glue::glue("{name_pkg}.clean_cache"))) {
     unlink(dir_cache, recursive = TRUE)
   }

@@ -58,6 +58,7 @@ StatHic <- ggplot2::ggproto(
     dat <- data |>
       calculate_hic_coordinates()
 
+    name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     env$n_annotation <- 0
     env$n_track <- 0
@@ -97,6 +98,7 @@ GeomHic <- ggplot2::ggproto(
     draw_boundary, boundary_colour, linetype
   ) {
     coords <- coord$transform(data, panel_params)
+    name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_sn <- env$n_sn
     grob_boundary_left <- grob_boundary_right <- grid::nullGrob()

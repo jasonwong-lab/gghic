@@ -12,6 +12,7 @@ scale_data <- function(gis, score_column, scale_method) {
 }
 
 check_data_type <- function(data, ...) {
+  name_pkg <- get_pkg_name()
   env <- get(".env", envir = asNamespace(name_pkg))
 
   if (methods::is(data, "GInteractions")) {

@@ -1,4 +1,5 @@
-name_pkg <- "gghic"
+# name_pkg <- "gghic"
+get_pkg_name <- function() "gghic"
 
 ensure_dir <- function(paths) {
   for (path in paths) if (!dir.exists(path)) dir.create(path, recursive = TRUE)
@@ -116,11 +117,13 @@ tbl2gis <- function(data) {
 # *--------------------------------------------------------------------------* #
 # * Use the cache directory to store the cytoBand, TxDb, txdump, and tx2gene.  #
 # *--------------------------------------------------------------------------* #
-dir_cache <- rappdirs::user_cache_dir(appname = name_pkg)
+# dir_cache <- rappdirs::user_cache_dir(appname = name_pkg)
+get_cache_dir <- function() rappdirs::user_cache_dir(appname = get_pkg_name())
 
 stop_if_null <- function(object, message) if (is.null(object)) stop(message)
 
 ensure_cytoband <- function(genome) {
+  dir_cache <- get_cache_dir()
   path_cytoband <- glue::glue("{dir_cache}/cytoBand.{genome}.rds")
   if (!file.exists(path_cytoband)) {
     session <- rtracklayer::browserSession()
@@ -136,6 +139,7 @@ ensure_cytoband <- function(genome) {
 }
 
 ensure_txdb <- function(txdb, gtf_path) {
+  dir_cache <- get_cache_dir()
   if (is.null(txdb) && !is.null(gtf_path)) {
     path_txdb <- glue::glue("{dir_cache}/{basename(gtf_path)}.sqlite")
     if (!file.exists(path_txdb)) {
@@ -150,6 +154,7 @@ ensure_txdb <- function(txdb, gtf_path) {
 }
 
 ensure_txdump <- function(txdb, gtf_path) {
+  dir_cache <- get_cache_dir()
   path_txdump <- glue::glue("{dir_cache}/{basename(gtf_path)}.txdump.rds")
   if (!file.exists(path_txdump)) {
     txdump <- AnnotationDbi::as.list(txdb)
@@ -161,6 +166,8 @@ ensure_txdump <- function(txdb, gtf_path) {
 }
 
 ensure_tx2gene <- function(tx2gene, gtf_path) {
+  dir_cache <- get_cache_dir()
+  name_pkg <- get_pkg_name()
   if (is.null(tx2gene) && !is.null(gtf_path)) {
     path_tx2gene <- glue::glue("{dir_cache}/{basename(gtf_path)}.tx2gene.rds")
     tsv <- glue::glue("{dir_cache}/{basename(gtf_path)}.tx2gene.tsv")
@@ -188,6 +195,8 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
 #' download_example_files
 #'
 #' @description Download example files under the cache directory.
+#' @param check_exists Boolean. Whether to check if the file exists.
+#'   Default is `FALSE`.
 #' @return NULL
 #' @examples
 #' \dontrun{
@@ -197,6 +206,7 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
 #' @export download_example_files
 #' @aliases download_example_files
 download_example_files <- function(check_exists = FALSE) {
+  dir_cache <- get_cache_dir()
   files <- list(
     "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
     "chr4_11-5kb.cool" = "cooler/chr4_11-5kb.cool",
