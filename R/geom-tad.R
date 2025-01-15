@@ -42,7 +42,11 @@ StatTad <- ggplot2::ggproto(
 
     if (!is.null(tad_path)) {
       tmp <- tad_path |>
-        vroom::vroom(delim = "\t", col_types = vroom::cols())
+        vroom::vroom(
+          delim = "\t",
+          col_types = vroom::cols(),
+          col_names = c("chrom", "start", "end")
+        )
 
       if (is_0based) tmp$start <- tmp$start + 1
 
