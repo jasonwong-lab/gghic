@@ -1,106 +1,93 @@
-# %%
-import re
-import os
+#!/usr/bin/env python3
+
+import argparse
 import gzip
-import logging
+import re
+import sys
+from pathlib import Path
+from typing import TextIO
 
-
-# %%
-logging.basicConfig(level=logging.WARNING, format='%(levelname)s: %(message)s')
-
-REGEX_PATTERNS = {
-    'gene_id': re.compile(r'gene_id "(.*?)";'),
-    'transcript_id': re.compile(r'transcript_id "(.*?)";'),
-    'transcript_name': re.compile(r'transcript_name "(.*?)";'),
-    'transcript_type': re.compile(r'transcript_type "(.*?)";'),
-    'gene_name': re.compile(r'gene_name "(.*?)";'),
-    'gene_type': re.compile(r'gene_type "(.*?)";')
+PATTERNS = {
+    "gene_id": re.compile(r'gene_id "(.*?)";'),
+    "transcript_id": re.compile(r'transcript_id "(.*?)";'),
+    "gene_name": re.compile(r'gene_name "(.*?)";'),
+    "gene_type": re.compile(r'gene_type "(.*?)";'),
 }
 
 
-# %%
-def read_file(file_path, is_gzip=False):
-    """Open a file safely, supporting gzip if necessary."""
-    try:
-        if is_gzip or file_path.endswith(".gz"):
-            return gzip.open(file_path, "rt", encoding='utf-8')
-        else:
-            return open(file_path, "r", encoding='utf-8')
-    except IOError as e:
-        logging.error(f"Error opening file {file_path}: {e}")
-        return None
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate a tx2gene file from GTF",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        "-i", "--input", type=Path, required=True, help="Input GTF file path"
+    )
+    parser.add_argument(
+        "-o", "--output", type=Path, required=True, help="Output file path"
+    )
+    parser.add_argument(
+        "-g", "--gzip", action="store_true", help="Input file is gzip compressed"
+    )
+    return parser.parse_args()
 
 
-# %%
-def parse_attributes(attributes):
-    """Extract values from attributes using predefined regex."""
-    result = {}
-    for key, pattern in REGEX_PATTERNS.items():
-        match = pattern.search(attributes)
-        if match:
-            result[key] = match.group(1)
-        else:
-            result[key] = 'unknown'
-    return result
+def open_file(file_path: Path, is_gz: bool) -> TextIO:
+    if is_gz or str(file_path).endswith(".gz"):
+        return gzip.open(file_path, "rt")
+    return open(file_path)
 
 
-# %%
-def generate_tx2gene(input_file, output_file, is_gzip=False):
-    tx_file_path = os.path.expanduser(input_file)
-    tx_file = read_file(tx_file_path, is_gzip)
-    if not tx_file:
-        return None
+def parse_gtf_line(line: str, fields: dict[str, dict[str, str]]) -> None:
+    if line.startswith("#"):
+        return
 
-    tx_to_gene = {}
-    tx_to_gname = {}
-    tx_to_tname = {}
-    tx_to_type = {}
-    tx_to_cse = {}
-    gene_to_type = {}
+    parts = line.strip().split("\t")
+    if parts[2] == "gene":
+        return
 
-    with tx_file:
-        for line in tx_file:
-            if line.startswith('#') or not line.strip():
-                continue
-            fields = line.strip().split("\t")
-            if len(fields) < 9 or fields[2] == "gene":
-                continue
+    chromosome = parts[0]
+    attributes = parts[8]
 
-            attr = parse_attributes(fields[8])
-            if 'unknown' in attr.values():
-                logging.warning(f"Warning: gtf line '{line.strip()}' missing required fields")
-                continue
+    matches = {field: pattern.search(attributes) for field, pattern in PATTERNS.items()}
 
-            chromosome = fields[0]
-            start = int(fields[3])
-            end = int(fields[4])
-            tx_to_gene[attr['transcript_id']] = attr['gene_id']
-            tx_to_gname[attr['transcript_id']] = attr['gene_name']
-            tx_to_tname[attr['transcript_id']] = attr['transcript_name']
-            tx_to_type[attr['transcript_id']] = attr['transcript_type']
-            tx_to_cse[attr['transcript_id']] = (chromosome, start, end)
-            gene_to_type[attr['gene_id']] = attr['gene_type']
+    if not all(matches.values()):
+        missing = [f for f, m in matches.items() if not m]
+        sys.stderr.write(f"Warning: line missing fields: {', '.join(missing)}\n")
 
-    output_path = os.path.expanduser(output_file)
-    try:
-        with open(output_path, "w", encoding='utf-8') as new_file:
-            for t, g in tx_to_gene.items():
-                line_new = "\t".join(
-                    [
-                        tx_to_cse[t][0],
-                        str(tx_to_cse[t][1]),
-                        str(tx_to_cse[t][2]),
-                        g,
-                        tx_to_gname[t],
-                        t,
-                        tx_to_tname[t],
-                        gene_to_type[g],
-                        tx_to_type[t],
-                    ]
-                ) + "\n"
-                new_file.write(line_new)
-    except IOError as e:
-        logging.error(f"Error writing to file {output_file}: {e}")
+    transcript_id = matches["transcript_id"].group(1)
+    gene_id = matches["gene_id"].group(1)
+    gene_name = matches["gene_name"].group(1)
+    gene_type = matches["gene_type"].group(1)
+
+    fields["tx_to_gene"][transcript_id] = gene_id
+    fields["tx_to_name"][transcript_id] = gene_name
+    fields["gene_to_chr"][gene_id] = chromosome
+    fields["gene_to_type"][gene_id] = gene_type
 
 
-# %%
+def write_output(output_path: Path, fields: dict[str, dict[str, str]]) -> None:
+    with open(output_path, "w") as f:
+        for transcript_id, gene_id in fields["tx_to_gene"].items():
+            chromosome = fields["gene_to_chr"][gene_id]
+            gene_name = fields["tx_to_name"][transcript_id]
+            gene_type = fields["gene_to_type"][gene_id]
+            f.write(
+                f"{chromosome}\t{gene_id}\t{gene_name}\t{transcript_id}\t{gene_type}\n"
+            )
+
+
+def main() -> None:
+    args = parse_args()
+
+    fields = {"tx_to_gene": {}, "tx_to_name": {}, "gene_to_chr": {}, "gene_to_type": {}}
+
+    with open_file(args.input, args.gzip) as f:
+        for line in f:
+            parse_gtf_line(line, fields)
+
+    write_output(args.output, fields)
+
+
+if __name__ == "__main__":
+    main()
