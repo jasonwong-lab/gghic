@@ -78,13 +78,16 @@ def write_output(output_path: Path, fields: dict[str, dict[str, str]]) -> None:
 
 
 def generate_tx2gene(gtf_path, out_tsv) -> None:
+    path_gtf = Path(gtf_path).expanduser().absolute()
+    path_tsv = Path(out_tsv).expanduser().absolute()
+
     fields = {"tx_to_gene": {}, "tx_to_name": {}, "gene_to_chr": {}, "gene_to_type": {}}
 
-    with open_file(gtf_path, False) as f:
+    with open_file(path_gtf, False) as f:
         for line in f:
             parse_gtf_line(line, fields)
 
-    write_output(out_tsv, fields)
+    write_output(path_tsv, fields)
 
 
 def main() -> None:
