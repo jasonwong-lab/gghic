@@ -68,8 +68,15 @@ StatLoop <- ggplot2::ggproto(
       gis_data <- env$gis
     }
 
-    to_keep1 <- IRanges::overlapsAny(anchors(gis_loop)$first, gis_data)
-    to_keep2 <- IRanges::overlapsAny(anchors(gis_loop)$second, gis_data)
+    .first <- InteractionSet::anchors(gis_loop)$first
+    .second <- InteractionSet::anchors(gis_loop)$second
+    seqlevels(.first) <- seqlevels(gis_data)
+    seqlevels(.second) <- seqlevels(gis_data)
+    GenomeInfoDb::seqinfo(.first) <- GenomeInfoDb::seqinfo(gis_data)
+    GenomeInfoDb::seqinfo(.second) <- GenomeInfoDb::seqinfo(gis_data)
+
+    to_keep1 <- IRanges::overlapsAny(.first, gis_data)
+    to_keep2 <- IRanges::overlapsAny(.second, gis_data)
     gis_loop <- gis_loop[to_keep1 & to_keep2]
 
     dat_loop <- gis_loop |>
