@@ -178,8 +178,7 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
       module_py$generate_tx2gene(gtf_path, tsv)
       vroom::vroom(
         tsv, col_names = c(
-          "chrom", "start", "end", "gene_id", "gene_symbol", "tx_id", "tx_name",
-          "gene_type", "tx_type"
+          "chrom", "gene_id", "gene_symbol", "tx_id", "gene_type"
         ),
         col_types = vroom::cols()
       ) |>
