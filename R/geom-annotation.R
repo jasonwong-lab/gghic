@@ -1,6 +1,8 @@
 extract_trs <- function(
   grs, genes, txdump, include_ncrna, gene_info
 ) {
+  `!!` <- rlang::`!!`
+
   chrom <- as.character(grs@seqnames)
   start <- grs@ranges@start
   end <- start + grs@ranges@width - 1
@@ -31,7 +33,7 @@ extract_trs <- function(
   if (!is.null(gene_info)) {
     gene_info <- gene_info |>
       dplyr::filter(
-        chrom == chrom,
+        chrom == !!chrom,
         start < GenomicRanges::end(r),
         end > GenomicRanges::start(r)
       )
