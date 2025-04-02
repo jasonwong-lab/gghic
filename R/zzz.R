@@ -14,6 +14,7 @@
   env$n_hic <- 0
   env$n_annotation <- 0
   env$n_track <- 0
+  env$n_concatemer <- 0
   assign(".env", env, envir = asNamespace(pkgname))
 
   invisible()

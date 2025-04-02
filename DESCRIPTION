@@ -37,7 +37,8 @@ Imports:
 Suggests:
     knitr,
     rmarkdown,
-    HiCExperiment
+    HiCExperiment,
+    testthat (>= 3.0.0)
 VignetteBuilder:
     knitr
 biocViews: Annotation, DataImport, DataRepresentation, GenomeAnnotation, HiC,
@@ -49,3 +50,4 @@ Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 URL: https://github.com/jasonwong-lab/gghic
 BugReports: https://github.com/jasonwong-lab/gghic/issues
+Config/testthat/edition: 3

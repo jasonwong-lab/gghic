@@ -62,6 +62,7 @@ StatHic <- ggplot2::ggproto(
     env <- get(".env", envir = asNamespace(name_pkg))
     env$n_annotation <- 0
     env$n_track <- 0
+    env$n_concatemer <- 0
     env$n_hic <- 1
     env$max_y <- max(dat$ymax, na.rm = TRUE)
     env$min_y <- min(dat$y, na.rm = TRUE)

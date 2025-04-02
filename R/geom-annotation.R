@@ -272,6 +272,7 @@ StatAnnotation <- ggplot2::ggproto(
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
+    n_concatemer <- env$n_concatemer
     if (env$n_hic == 1) {
       max_y <- env$max_y
       max_x <- env$max_x
@@ -288,7 +289,7 @@ StatAnnotation <- ggplot2::ggproto(
       n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
     }
     if (n_sn > 1) {
-      if (env$n_hic == 1 || env$n_track == 1) {
+      if (env$n_hic == 1 || env$n_track == 1 || env$n_concatemer == 1) {
         maxs_x <- env$maxs_x
       } else {
         maxs_x <- dat_hic |>
@@ -298,7 +299,9 @@ StatAnnotation <- ggplot2::ggproto(
           stats::setNames(unique(dat_hic$seqnames2))
       }
     }
-    min_y <- ifelse(n_track > n_annotation, env$min_y, 0)
+    min_y <- ifelse(
+      n_track > n_annotation || n_concatemer > n_annotation, env$min_y, 0
+    )
 
     .height <- max_y * width_ratio
     .height_cds <- .height * 0.8
