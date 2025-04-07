@@ -2,6 +2,7 @@
 
 export(download_example_files)
 export(geom_annotation)
+export(geom_concatemer)
 export(geom_hic)
 export(geom_ideogram)
 export(geom_loop)

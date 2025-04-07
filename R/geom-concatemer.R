@@ -158,20 +158,6 @@ StatConcatemer <- ggplot2::ggproto(
     env$min_y <- min(dat$ymin)
     env$n_concatemer <- env$n_concatemer + 1
 
-    # if (n_sn > 1) {
-    #   dat_vline <- dat |>
-    #     dplyr::slice(seq_len(length(maxs_x))) |>
-    #     dplyr::mutate(
-    #       xmax = maxs_x,
-    #       ymin = env$min_y - (.height * spacing_ratio),
-    #       y = min_y - (.height * spacing_ratio),
-    #       type = "vline"
-    #     ) |>
-    #     dplyr::slice(seq_len((dplyr::n() - 1)))
-    #
-    #   dat <- dplyr::bind_rows(dat, dat_vline)
-    # }
-
     dat
   }
 )
@@ -184,13 +170,12 @@ GeomConcatemer <- ggplot2::ggproto(
   ),
   extra_params = c(
     ggplot2::Geom$extra_params,
-    "colour", "fill",
-    "draw_boundary", "boundary_colour", "linetype"
+    "fill"
   ),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
     data, panel_params, coord,
-    colour, fill, draw_boundary, boundary_colour, linetype
+    fill
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -206,7 +191,7 @@ GeomConcatemer <- ggplot2::ggproto(
         coords_concatemer$ymin, coords_concatemer$y
       ),
       id = rep(seq_len(nrow(coords_concatemer)), 4),
-      gp = grid::gpar(col = colour, fill = fill),
+      gp = grid::gpar(fill = fill),
       default.units = "native"
     )
 
@@ -216,24 +201,11 @@ GeomConcatemer <- ggplot2::ggproto(
       x = c(coords_gap$x, coords_gap$xmax),
       y = c(coords_gap$y, coords_gap$y),
       id = rep(seq_len(nrow(coords_gap)), 2),
-      gp = grid::gpar(col = colour),
+      gp = grid::gpar(fill = fill),
       default.units = "native"
     )
 
-    grob_vline <- grid::nullGrob()
-    # if (length(unique(coords$seqname)) > 1 && draw_boundary) {
-    #   coords_vline <- coords |>
-    #     dplyr::filter(type == "vline")
-    #   grob_vline <- grid::polylineGrob(
-    #     x = c(coords_vline$xmax, coords_vline$xmax),
-    #     y = c(coords_vline$ymin, coords_vline$y),
-    #     id = rep(seq_len(nrow(coords_vline)), 2),
-    #     gp = grid::gpar(col = boundary_colour, lty = linetype),
-    #     default.units = "native"
-    #   )
-    # }
-
-    grids <- grid::gList(grob_concatemer, grob_gap, grob_vline)
+    grids <- grid::gList(grob_concatemer, grob_gap)
 
     grids
   }
@@ -244,14 +216,17 @@ GeomConcatemer <- ggplot2::ggproto(
 #' @description A ggplot2 geom for concatemers containing multi-way contacts.
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
-#' @param width_ratio The ratio of the width of each gene model track
-#'   relative to the height of the Hi-C plot. Default is `1/50`.
-#' @param spacing_ratio The ratio of the spacing between two gene model tracks.
-#'   Default is `1/3`.
-#' @param gene_symbols A character vector of gene symbols to be included only.
+#' @param width_ratio The ratio of the width of each concatemer track
+#'   relative to the height of the Hi-C plot. Default is `1/100`.
+#' @param spacing_ratio The ratio of the spacing between two tracks.
+#'   Default is `1/5`.
+#' @param concatemer_granges The GRanges object of the concatemer tracks.
 #'   Default is `NULL`.
-#' @param colour The color of the gene model track. Default is `"#48CFCB"`.
-#' @param fill The fill color of the gene model track. Default is `"#48CFCB"`.
+#' @param concatemer_paths The paths to the concatemer files. Default is `NULL`.
+#' @param group_identifier A character indicating the column name in the
+#'   concatemer GRanges object that identifies the group of
+#'   concatemers. Default is `NULL`.
+#' @param fill The fill color of the gene model track. Default is `"black"`.
 #' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
@@ -268,12 +243,11 @@ GeomConcatemer <- ggplot2::ggproto(
 #' @export geom_concatemer
 #' @aliases geom_concatemer
 geom_concatemer <- function(
-    mapping = NULL, data = NULL, stat = StatConcatemer, position = "identity",
-    na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-    width_ratio = 1 / 100, spacing_ratio = 1 / 5,
-    concatemer_granges = NULL, concatemer_paths = NULL,
-    colour = "black", fill = "black",
-    draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  mapping = NULL, data = NULL, stat = StatConcatemer, position = "identity",
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
+  width_ratio = 1 / 100, spacing_ratio = 1 / 5,
+  concatemer_granges = NULL, concatemer_paths = NULL, group_identifier = NULL,
+  fill = "black"
 ) {
   ggplot2::layer(
     geom = GeomConcatemer, mapping = mapping, data = data, stat = stat,
@@ -282,9 +256,8 @@ geom_concatemer <- function(
       na.rm = na.rm, ...,
       width_ratio = width_ratio, spacing_ratio = spacing_ratio,
       concatemer_granges = concatemer_granges,
-      concatemer_paths = concatemer_paths, colour = colour, fill = fill,
-      draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      concatemer_paths = concatemer_paths, group_identifier = group_identifier,
+      fill = fill
     )
   )
 }
