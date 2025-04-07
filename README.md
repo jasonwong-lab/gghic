@@ -6,7 +6,7 @@
   }
 } -->
 
-# gghic <a href="https://yulab-smu.github.io/treedata-book/"><img src="https://raw.githubusercontent.com/jasonwong-lab/gghic/refs/heads/master/inst/figures/gghic.png" alt="gghic logo" height="180" align="right" /></a>
+# gghic <img src="https://raw.githubusercontent.com/jasonwong-lab/gghic/refs/heads/master/inst/figures/gghic.png" alt="gghic logo" height="180" align="right" />
 
 <p align="center"> A versatile R package for exploring and visualizing 3D genome organization </p>
 
