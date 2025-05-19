@@ -15,6 +15,9 @@
   env$n_annotation <- 0
   env$n_track <- 0
   env$n_concatemer <- 0
+  env$chrom_add <- NULL
+  env$chrom_sub <- NULL
+  env$grs_range <- NULL
   assign(".env", env, envir = asNamespace(pkgname))
 
   invisible()
