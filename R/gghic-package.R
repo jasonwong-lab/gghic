@@ -3,7 +3,6 @@
 
 ## usethis namespace: start
 #' @importFrom AnnotationDbi as.list loadDb saveDb
-#' @importFrom biovizBase getBioColor
 #' @importFrom dplyr bind_rows case_when distinct filter first group_by
 #'   left_join mutate reframe rename row_number select slice slice_max
 #'   slice_min summarise ungroup
@@ -12,8 +11,7 @@
 #'   pintersect reduce split start
 #' @importFrom ggplot2 aes coord_fixed draw_key_blank draw_key_path
 #'   draw_key_polygon element_blank element_line Geom ggplot ggproto layer
-#' scale_fill_gradientn scale_x_continuous Stat theme theme_bw %+replace%
-#' @importFrom ggrastr rasterise
+#'   scale_fill_gradientn scale_x_continuous Stat theme theme_bw %+replace%
 #' @importFrom glue glue
 #' @importFrom grDevices colorRampPalette
 #' @importFrom grid arrow gList gpar is.unit nullGrob pathGrob pointsGrob
