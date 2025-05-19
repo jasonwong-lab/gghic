@@ -30,7 +30,6 @@ Imports:
     tibble,
     tidyr,
     txdbmaker,
-    utils,
     vroom
 Suggests:
     knitr,
