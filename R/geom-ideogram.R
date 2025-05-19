@@ -20,7 +20,7 @@ retrive_cytoband <- function(data, genome, chrom_prefix) {
     bnames[bnames == ""] <- glue::glue("band_null_{which(bnames == '')}")
   }
 
-  cols_all <- biovizBase::getBioColor("CYTOBAND")
+  cols_all <- get_cytoband_colors()
   cols <- c(
     cols_all[c("gneg", "stalk", "acen")],
     gpos = unname(cols_all["gpos100"]),
