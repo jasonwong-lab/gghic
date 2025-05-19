@@ -131,12 +131,14 @@ library(scales)
 library(glue)
 library(rappdirs)
 
-download_example_files()
 dir_cache_gghic <- user_cache_dir(appname = "gghic")
+url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-100kb.cool"
+path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
+download.file(url_file, path_file)
 
-hic <- glue("{dir_cache_gghic}/chr4_11-100kb.cool") |>
+hic <- path_file |>
   CoolFile() |>
-  import(cf)
+  import()
 
 gis <- interactions(hic)
 gis$score <- log10(gis$balanced)
@@ -153,7 +155,9 @@ p <- x |>
   ) |>
   gghic(expand_xaxis = TRUE)
 
+url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/loop/loops-chr4_11.txt"
 path_loop <- glue("{dir_cache_gghic}/loops-chr4_11.txt")
+download.file(url_file, path_loop)
 
 p + geom_loop(loop_path = path_loop, is_0based = TRUE)
 }

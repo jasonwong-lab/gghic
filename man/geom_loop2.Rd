@@ -97,5 +97,6 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
+# example usage
 }
 }
