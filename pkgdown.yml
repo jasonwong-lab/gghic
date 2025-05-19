@@ -1,0 +1,9 @@
+pandoc: 3.1.11
+pkgdown: 2.1.2
+pkgdown_sha: ~
+articles:
+  gghic: gghic.html
+last_built: 2025-05-19T09:19Z
+urls:
+  reference: https://jasonwong-lab.github.io/gghic/reference
+  article: https://jasonwong-lab.github.io/gghic/articles
