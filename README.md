@@ -6,7 +6,7 @@
   }
 } -->
 
-# gghic <img src="https://raw.githubusercontent.com/jasonwong-lab/gghic/refs/heads/master/inst/figures/gghic.png" alt="gghic logo" height="180" align="right" />
+# gghic <img src="https://raw.githubusercontent.com/jasonwong-lab/gghic/refs/heads/master/man/figures/gghic.png" alt="gghic's logo" height="180" align="right" />
 
 <p align="center"> A versatile R package for exploring and visualizing 3D genome organization </p>
 
