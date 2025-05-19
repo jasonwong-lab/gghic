@@ -201,7 +201,7 @@ GeomConcatemer <- ggplot2::ggproto(
       x = c(coords_gap$x, coords_gap$xmax),
       y = c(coords_gap$y, coords_gap$y),
       id = rep(seq_len(nrow(coords_gap)), 2),
-      gp = grid::gpar(fill = fill),
+      gp = grid::gpar(fill = fill, lwd = 0.3),
       default.units = "native"
     )
 
