@@ -1,0 +1,5 @@
+url: https://jasonwong-lab.github.io/gghic/
+template:
+  bootstrap: 5
+development:
+  mode: auto
