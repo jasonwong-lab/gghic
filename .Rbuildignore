@@ -8,7 +8,7 @@
 ^pkgdown$           # Resources used for the package website
 ^_pkgdown\.yml$     # Configuration info for the package website
 ^\.github$          # Contributing guidelines, CoC, issue templates, etc.
-^vignettes/dummy\.Rmd$
+^vignettes/_dummy\.Rmd$
 ^vignettes/style\.css$
 ^doc$
 ^Meta$
