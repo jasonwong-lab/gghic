@@ -120,12 +120,14 @@ calculate_xrange <- function(data) {
 #' library(scales)
 #' library(scales)
 #'
-#' download_example_files()
 #' dir_cache_gghic <- user_cache_dir(appname = "gghic")
+#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+#' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
+#' download.file(url_file, path_file)
 #'
-#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#' hic <- path_file |>
 #'   CoolFile() |>
-#'   import(cf)
+#'   import()
 #'
 #' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
@@ -134,7 +136,11 @@ calculate_xrange <- function(data) {
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
 #' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
-#' p <- x |>
+#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/gtf/gencode-chr4_11.gtf.gz"
+#' path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+#' download.file(url_file, path_gtf)
+#'
+#' x |>
 #'   filter(
 #'     center1 > 10000000 & center1 < 11000000 &
 #'       center2 > 10000000 & center2 < 11000000
