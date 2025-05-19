@@ -116,13 +116,13 @@ GeomLoop <- ggproto(
   required_aes = c("x", "y"),
   extra_params = c(
     ggplot2::Geom$extra_params,
-    "colour", "shape", "fill", "size"
+    "colour", "shape", "fill", "size", "linewidth"
   ),
   draw_key = ggplot2::draw_key_point,
   default_aes = NULL,
   draw_panel = function(
     data, panel_params, coord,
-    colour, shape, fill, size
+    colour, shape, fill, size, linewidth
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -138,7 +138,7 @@ GeomLoop <- ggproto(
       coords$x, coords$y,
       pch = shape, size = size,
       default.units = "native",
-      gp = grid::gpar(col = colour, fill = fill)
+      gp = grid::gpar(col = colour, fill = fill, lwd = linewidth)
     )
   }
 )
@@ -156,6 +156,7 @@ GeomLoop <- ggproto(
 #' @param fill The fill color of the loops. Default is `NA`.
 #' @param size The size of the loops. Default is `NULL`.
 #'   If `NULL`, the size is `grid::unit(1 / 80, "native")`.
+#' @param linewidth The line width of the loops. Default is `1`.
 #' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:
@@ -209,7 +210,7 @@ geom_loop <- function(
   mapping = NULL, data = NULL, stat = StatLoop, position = "identity",
   na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
   loop_path = NULL, loop_gis = NULL, is_0based = FALSE,
-  colour = "black", shape = 21, fill = NA, size = NULL
+  colour = "black", shape = 21, fill = NA, size = NULL, linewidth = 1
 ) {
   ggplot2::layer(
     geom = GeomLoop, mapping = mapping, data = data, stat = stat,
@@ -218,7 +219,8 @@ geom_loop <- function(
     params = list(
       na.rm = na.rm, ...,
       loop_path = loop_path, loop_gis = loop_gis, is_0based = is_0based,
-      colour = colour, shape = shape, fill = fill, size = size
+      colour = colour, shape = shape, fill = fill, size = size,
+      linewidth = linewidth
     )
   )
 }
