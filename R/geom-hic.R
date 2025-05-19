@@ -58,6 +58,7 @@ StatHic <- ggplot2::ggproto(
     dat <- data |>
       calculate_hic_coordinates()
 
+    n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
     name_pkg <- get_pkg_name()
     env <- get(".env", envir = asNamespace(name_pkg))
     env$n_annotation <- 0
@@ -70,12 +71,35 @@ StatHic <- ggplot2::ggproto(
     env$max_x <- max(dat$xend, na.rm = TRUE)
     env$min_x <- min(dat$xmin, na.rm = TRUE)
     env$res <- data$end1[1] - data$start1[1] + 1
-    env$n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
     env$maxs_x <- dat |>
       dplyr::group_by(seqnames2) |>
       dplyr::summarize(maxs_x = max(xend)) |>
       dplyr::pull(maxs_x) |>
       stats::setNames(unique(dat$seqnames2))
+    env$n_sn <- n_sn
+    env$grs_range <- data |>
+      dplyr::group_by(seqnames1) |>
+      dplyr::summarize(
+        start = min(start1),
+        end = max(end1)
+      ) |>
+      dplyr::reframe(range = glue::glue("{seqnames1}:{start}-{end}")) |>
+      dplyr::pull(range) |>
+      GenomicRanges::GRanges()
+    env$has_chr <- any(stringr::str_detect(data$seqnames1, "^chr")) ||
+      any(stringr::str_detect(data$seqnames2, "^chr"))
+
+    if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
+      chroms_add <- data |>
+        calculate_add_lengths()
+      chroms_sub <- data |>
+        calculate_subtract_lengths()
+      env$chroms_add <- chroms_add
+      env$chroms_sub <- chroms_sub
+    } else {
+      env$chroms_add <- NULL
+      env$chroms_sub <- NULL
+    }
 
     dat
   }
