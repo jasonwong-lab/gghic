@@ -3,7 +3,7 @@ __pycache__/
 /data/
 /code/
 /figs/
-vignettes/dummy.Rmd
+vignettes/_dummy.Rmd
 inst/.CITATION
 tests/test.R
 
@@ -58,3 +58,4 @@ po/*~
 rsconnect/
 /doc/
 /Meta/
+docs
