@@ -213,7 +213,9 @@ download_example_files <- function(check_exists = FALSE) {
     "track2.bigWig" = "bigwig/track2.bigWig",
     "gencode-chr4_11.gtf.gz" = "gtf/gencode-chr4_11.gtf.gz",
     "TADs_500kb-chr4_11.tsv" = "tad/TADs_500kb-chr4_11.tsv",
-    "loops-chr4_11.txt" = "loop/loops-chr4_11.txt"
+    "loops-chr4_11.txt" = "loop/loops-chr4_11.txt",
+    "gis_hic.rds" = "multiway/gis_hic.rds",
+    "concatemers.rds" = "multiway/concatemers.rds"
   )
 
   url_base <- paste0(
