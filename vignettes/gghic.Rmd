@@ -35,7 +35,13 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Load R Packages and Data
+## Introduction
+
+gghic is an R package designed for flexible and publication-ready visualization of 3D genome organization data, including Hi-C, topologically associating domains (TADs), chromatin loops, gene annotation, and more. This tutorial demonstrates how to use gghic to visualize various types of genomic interaction data.
+
+## Setup
+
+### Load Required Packages
 
 ```{r setup}
 load_pkg <- function(pkgs) {
@@ -50,17 +56,9 @@ load_pkg(
 )
 ```
 
-Download following example data:
+### Download Example data
 
-- `chr4_11-100kb.cool` and `chr4_11-5kb.cool`: cooler files of 100kb and 5kb resolution.
-
-- `track1.bigWig` and `track2.bigWig`: bigWig files.
-
-- `gencode-chr4_11.gtf.gz`: a GTF file.
-
-- `TADs_500kb-chr4_11.tsv`: a TAD file.
-
-- `loops-chr4_11.txt`: a loop file.
+Example data files are hosted at gghic-data to keep the package lightweight.
 
 ```{r message=FALSE, warning=FALSE}
 download_example_files()
@@ -73,7 +71,13 @@ path_gtf <- glue::glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
 paths_track <- glue::glue("{dir_cache_gghic}/track{1:2}.bigWig")
 path_tad <- glue::glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
 path_loop <- glue::glue("{dir_cache_gghic}/loops-chr4_11.txt")
+path_gis_hic <- glue::glue("{dir_cache_gghic}/gis_hic.rds")
+path_concatemers <- glue::glue("{dir_cache_gghic}/concatemers.rds")
 ```
+
+## Data Preparation
+
+### Import Hi-C Data
 
 ```{r}
 hic_100 <- path_cf_100 |>
@@ -85,11 +89,17 @@ hic_5 <- path_cf_5 |>
   HiCExperiment::import()
 ```
 
-Generate a tibble from the `HiCExperiment` object for visualisation.
+### Prepare Data for Visualisation
 
 ```{r}
-scale_data <- function(hic, score_column = "balanced", scale_method = log10) {
-  gis <- InteractionSet::interactions(hic)
+scale_data <- function(data, score_column = "balanced", scale_method = log10) {
+  if (inherits(data, "HiCExperiment")) {
+    gis <- InteractionSet::interactions(data)
+  } else if (inherits(data, "GInteractions")) {
+    gis <- data
+  } else {
+    stop("Input data must be a HiCExperiment or GInteractions object.")
+  }
 
   x <- gis |>
     tibble::as_tibble() |>
@@ -103,18 +113,20 @@ scale_data <- function(hic, score_column = "balanced", scale_method = log10) {
 
   x
 }
+```
 
-
+```{r}
 x_100 <- scale_data(hic_100)
-
 x_5 <- scale_data(hic_5)
 ```
 
-## Chromosomal Interaction Data Visualisation
+## Visualisations
 
-### Heatmap - `geom_hic`
+### Hi-C Heatmap
 
-`geom_hic()` is the main function to visualise Hi-C/-like data. It requires the following aesthetics: `seqnames1`, `start1`, `end1`, `seqnames2`, `start2`, `end2`, and `fill`.
+`geom_hic()` is the main function to visualise Hi-C/-like data. It requires the
+following aesthetics: `seqnames1`, `start1`, `end1`, `seqnames2`, `start2`,
+`end2`, and `fill`.
 
 ```{r}
 p <- x_100 |>
@@ -132,7 +144,8 @@ p <- x_100 |>
 p
 ```
 
-`theme_hic()` is a theme function for `geom_hic()` that enhances the appearance of the plot.
+`theme_hic()` is a theme function for `geom_hic()` that enhances the appearance
+of the plot.
 
 ```{r}
 p + theme_hic()
@@ -145,7 +158,7 @@ hic_100["chr11"] |>
   gghic()
 ```
 
-### Ideogram - `geom_ideogram`
+### Ideogram
 
 `geom_ideogram()` can be used to add chromosome ideograms to the plot.
 
@@ -186,7 +199,7 @@ hic_100["chr4:10000000-15000000"] |>
   )
 ```
 
-### Gene Annotation - `geom_annotation`
+### Gene Annotation
 
 Track-based gene annotation can be added to the plot by using `geom_annotation()`.
 
@@ -216,9 +229,7 @@ p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
 Some parameters can be set for `geom_annotation()`:
 
 - `style` can be set to `"arrow"` to change the annotation style.
-
 - `maxgap` is used to calculate how many non-overlapping tracks are needed for the annotation.
-
 - `gene_symbols` can be used to specify genes to plot.
 
 ```{r}
@@ -241,11 +252,98 @@ hic_5["chr11:67000000-67100000"] |>
   )
 ```
 
+### Chromatin Loops
+
+Chromatin loops can be visualised using `geom_loop()` or `geom_loop2()`. The former requires a path to a loop file, while the latter requires a `tibble`/`data.frame` containing the loop data which enables easy customization by adding additional aesthetics.
+
+```{r}
+df_loop <- path_loop |>
+  read.table(
+    sep = "\t",
+    col.names = c("seqnames1", "start1", "end1", "seqnames2", "start2", "end2")
+  ) |>
+  dplyr::filter(
+    seqnames1 == "chr11", seqnames2 == "chr11",
+    start1 > 61925000, end1 < 67480000,
+    start2 > 61925000, end2 < 67480000
+  )
+
+keep <- sample(nrow(df_loop), 6)
+df_loop <- df_loop |>
+  dplyr::slice(keep) |>
+  dplyr::mutate(
+    sample = c(rep("A", 3), rep("B", 3))
+  )
+
+hic_5["chr11:61915000-65000000"] |>
+  gghic() +
+  geom_loop2(
+    data = df_loop,
+    aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2,
+      colour = sample
+    ),
+    stroke = 1
+  )
+```
+
+### TADs
+
+Triangulers indicating TADs can be added using `geom_tad()`.
+
+```{r}
+x_100 |>
+  dplyr::filter(
+    seqnames1 == "chr4", seqnames2 == "chr4",
+    start1 > 60000000, end1 < 70000000,
+    start2 > 60000000, end2 < 70000000
+  ) |>
+  gghic(
+    tad = TRUE, tad_is_0based = TRUE, tad_path = path_tad, tad_colour = "#00ff83"
+  )
+```
+
+### Multi-way contacts
+
+Multi-way contacts from concatemers obtained from Pore-C data can be visualised using `geom_concatemer()` or `geom_concatemer2()`. The former requires a path to a concatemer file, while the latter requires a `tibble`/`data.frame` containing the concatemer data.
+
+```{r}
+gis <- path_gis_hic |>
+  readRDS() |>
+  scale_data("balanced", log10)
+
+names_read <- c(
+  "0c32bbce-24f8-4006-a75c-0e3504648971",
+  "10ae8263-cebc-4cbc-94c1-2c1dc5f22101",
+  "ced078ca-2d68-5217-a20e-7dc37dd2d786",
+  "06063b40-0271-4f4e-993d-2f202028b697",
+  "08bb8fe4-c54b-4a11-b9a0-c9eed2d18933"
+)
+df_concatemers <- path_concatemers |>
+  readRDS() |>
+  sort() |>
+  tibble::as_tibble() |>
+  dplyr::filter(read_name %in% names_read)
+
+gghic(gis) +
+  geom_concatemer2(
+    data = df_concatemers,
+    aes(
+      seqnames = seqnames, start = start, end = end, read_group = read_name,
+      colour = read_name
+    ),
+    check_concatemers = TRUE
+  ) +
+  ggplot2::theme(
+    legend.key.size = ggplot2::unit(2, "mm"),
+    legend.text = ggplot2::element_text(size = 4)
+  )
+```
+
 ### Visualisation of Interaction Data of Multiple Chromosomes
 
-Set `draw_boundary` to `TRUE` to draw the boundary of the chromosomes.
-
-Set `expand_xaxis` to `TRUE` to expand the x-axis if the plot is crowded.
+Set `draw_boundary` to `TRUE` to draw the boundary of the chromosomes. Set `expand_xaxis` to `TRUE` to expand the x-axis if the plot is crowded.
 
 ```{r}
 x_100 |>
