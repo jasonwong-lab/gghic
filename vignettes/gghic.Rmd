@@ -61,18 +61,47 @@ load_pkg(
 Example data files are hosted at gghic-data to keep the package lightweight.
 
 ```{r message=FALSE, warning=FALSE}
+download_example_files <- function(check_exists = FALSE) {
+  dir_cache <- rappdirs::user_cache_dir(appname = "gghic")
+
+  files <- list(
+    "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
+    "chr4_11-5kb.cool" = "cooler/chr4_11-5kb.cool",
+    "track1.bigWig" = "bigwig/track1.bigWig",
+    "track2.bigWig" = "bigwig/track2.bigWig",
+    "gencode-chr4_11.gtf.gz" = "gtf/gencode-chr4_11.gtf.gz",
+    "TADs_500kb-chr4_11.tsv" = "tad/TADs_500kb-chr4_11.tsv",
+    "loops-chr4_11.txt" = "loop/loops-chr4_11.txt",
+    "gis_hic.rds" = "multiway/gis_hic.rds",
+    "concatemers.rds" = "multiway/concatemers.rds"
+  )
+
+  url_base <- paste0(
+    "https://raw.githubusercontent.com/",
+    "mhjiang97/gghic-data/refs/heads/master/"
+  )
+
+  for (file_name in names(files)) {
+    file_path <- file.path(dir_cache, file_name)
+    if (check_exists && file.exists(file_path)) next
+    utils::download.file(paste0(url_base, files[[file_name]]), file_path)
+  }
+}
+```
+
+```{r message=FALSE, warning=FALSE}
 download_example_files()
 
 dir_cache_gghic <- rappdirs::user_cache_dir(appname = "gghic")
 
-path_cf_100 <- glue::glue("{dir_cache_gghic}/chr4_11-100kb.cool")
-path_cf_5 <- glue::glue("{dir_cache_gghic}/chr4_11-5kb.cool")
-path_gtf <- glue::glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
-paths_track <- glue::glue("{dir_cache_gghic}/track{1:2}.bigWig")
-path_tad <- glue::glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
-path_loop <- glue::glue("{dir_cache_gghic}/loops-chr4_11.txt")
-path_gis_hic <- glue::glue("{dir_cache_gghic}/gis_hic.rds")
-path_concatemers <- glue::glue("{dir_cache_gghic}/concatemers.rds")
+path_cf_100 <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
+path_cf_5 <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
+path_gtf <- file.path(dir_cache_gghic, "gencode-chr4_11.gtf.gz")
+paths_track <- file.path(dir_cache_gghic, glue::glue("track{1:2}.bigWig"))
+path_tad <- file.path(dir_cache_gghic, "TADs_500kb-chr4_11.tsv")
+path_loop <- file.path(dir_cache_gghic, "loops-chr4_11.txt")
+path_gis_hic <- file.path(dir_cache_gghic, "gis_hic.rds")
+path_concatemers <- file.path(dir_cache_gghic, "concatemers.rds")
 ```
 
 ## Data Preparation
