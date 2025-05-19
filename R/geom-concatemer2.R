@@ -210,6 +210,7 @@ GeomConcatemer2 <- ggplot2::ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
+#' # example usage
 #' }
 #' @export geom_concatemer2
 #' @aliases geom_concatemer2
