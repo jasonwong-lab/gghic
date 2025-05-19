@@ -10,12 +10,10 @@ Description: An easy way to create publication-ready figures for genomic
 License: GPL (>= 3)
 Imports:
     AnnotationDbi,
-    biovizBase,
     dplyr,
     GenomicFeatures,
     GenomicRanges,
     ggplot2,
-    ggrastr,
     glue,
     grid,
     Gviz,
@@ -48,6 +46,6 @@ LazyData: true
 Depends: R (>= 4.1.0)
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-URL: https://github.com/jasonwong-lab/gghic
+URL: https://github.com/jasonwong-lab/gghic, https://jasonwong-lab.github.io/gghic/
 BugReports: https://github.com/jasonwong-lab/gghic/issues
 Config/testthat/edition: 3
