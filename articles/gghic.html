@@ -100,18 +100,45 @@ visualize various types of genomic interaction data.</p>
 <p>Example data files are hosted at gghic-data to keep the package
 lightweight.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/download_example_files.html">download_example_files</a></span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">download_example_files</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">check_exists</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dir_cache</span> <span class="op">&lt;-</span> <span class="fu">rappdirs</span><span class="fu">::</span><span class="fu"><a href="https://rappdirs.r-lib.org/reference/user_cache_dir.html" class="external-link">user_cache_dir</a></span><span class="op">(</span>appname <span class="op">=</span> <span class="st">"gghic"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
+<span>    <span class="st">"chr4_11-100kb.cool"</span> <span class="op">=</span> <span class="st">"cooler/chr4_11-100kb.cool"</span>,</span>
+<span>    <span class="st">"chr4_11-5kb.cool"</span> <span class="op">=</span> <span class="st">"cooler/chr4_11-5kb.cool"</span>,</span>
+<span>    <span class="st">"track1.bigWig"</span> <span class="op">=</span> <span class="st">"bigwig/track1.bigWig"</span>,</span>
+<span>    <span class="st">"track2.bigWig"</span> <span class="op">=</span> <span class="st">"bigwig/track2.bigWig"</span>,</span>
+<span>    <span class="st">"gencode-chr4_11.gtf.gz"</span> <span class="op">=</span> <span class="st">"gtf/gencode-chr4_11.gtf.gz"</span>,</span>
+<span>    <span class="st">"TADs_500kb-chr4_11.tsv"</span> <span class="op">=</span> <span class="st">"tad/TADs_500kb-chr4_11.tsv"</span>,</span>
+<span>    <span class="st">"loops-chr4_11.txt"</span> <span class="op">=</span> <span class="st">"loop/loops-chr4_11.txt"</span>,</span>
+<span>    <span class="st">"gis_hic.rds"</span> <span class="op">=</span> <span class="st">"multiway/gis_hic.rds"</span>,</span>
+<span>    <span class="st">"concatemers.rds"</span> <span class="op">=</span> <span class="st">"multiway/concatemers.rds"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="va">url_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
+<span>    <span class="st">"https://raw.githubusercontent.com/"</span>,</span>
+<span>    <span class="st">"mhjiang97/gghic-data/refs/heads/master/"</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">file_name</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="va">file_name</span><span class="op">)</span></span>
+<span>    <span class="kw">if</span> <span class="op">(</span><span class="va">check_exists</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span><span class="op">)</span> <span class="kw">next</span></span>
+<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">url_base</span>, <span class="va">files</span><span class="op">[[</span><span class="va">file_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">file_path</span><span class="op">)</span></span>
+<span>  <span class="op">}</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">download_example_files</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dir_cache_gghic</span> <span class="op">&lt;-</span> <span class="fu">rappdirs</span><span class="fu">::</span><span class="fu"><a href="https://rappdirs.r-lib.org/reference/user_cache_dir.html" class="external-link">user_cache_dir</a></span><span class="op">(</span>appname <span class="op">=</span> <span class="st">"gghic"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">path_cf_100</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/chr4_11-100kb.cool"</span><span class="op">)</span></span>
-<span><span class="va">path_cf_5</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/chr4_11-5kb.cool"</span><span class="op">)</span></span>
-<span><span class="va">path_gtf</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/gencode-chr4_11.gtf.gz"</span><span class="op">)</span></span>
-<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/track{1:2}.bigWig"</span><span class="op">)</span></span>
-<span><span class="va">path_tad</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/TADs_500kb-chr4_11.tsv"</span><span class="op">)</span></span>
-<span><span class="va">path_loop</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/loops-chr4_11.txt"</span><span class="op">)</span></span>
-<span><span class="va">path_gis_hic</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/gis_hic.rds"</span><span class="op">)</span></span>
-<span><span class="va">path_concatemers</span> <span class="op">&lt;-</span> <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"{dir_cache_gghic}/concatemers.rds"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">path_cf_100</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"chr4_11-100kb.cool"</span><span class="op">)</span></span>
+<span><span class="va">path_cf_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"chr4_11-5kb.cool"</span><span class="op">)</span></span>
+<span><span class="va">path_gtf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"gencode-chr4_11.gtf.gz"</span><span class="op">)</span></span>
+<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"track{1:2}.bigWig"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">path_tad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"TADs_500kb-chr4_11.tsv"</span><span class="op">)</span></span>
+<span><span class="va">path_loop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"loops-chr4_11.txt"</span><span class="op">)</span></span>
+<span><span class="va">path_gis_hic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"gis_hic.rds"</span><span class="op">)</span></span>
+<span><span class="va">path_concatemers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"concatemers.rds"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -120,7 +147,7 @@ lightweight.</p>
 <div class="section level3">
 <h3 id="import-hi-c-data">Import Hi-C Data<a class="anchor" aria-label="anchor" href="#import-hi-c-data"></a>
 </h3>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hic_100</span> <span class="op">&lt;-</span> <span class="va">path_cf_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/HiCExperiment/man/CoolFile-class.html" class="external-link">CoolFile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocIO/man/IO.html" class="external-link">import</a></span><span class="op">(</span><span class="op">)</span></span>
@@ -132,7 +159,7 @@ lightweight.</p>
 <div class="section level3">
 <h3 id="prepare-data-for-visualisation">Prepare Data for Visualisation<a class="anchor" aria-label="anchor" href="#prepare-data-for-visualisation"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scale_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">score_column</span> <span class="op">=</span> <span class="st">"balanced"</span>, <span class="va">scale_method</span> <span class="op">=</span> <span class="va">log10</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"HiCExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">gis</span> <span class="op">&lt;-</span> <span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/interaction-accessors.html" class="external-link">interactions</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
@@ -154,7 +181,7 @@ lightweight.</p>
 <span></span>
 <span>  <span class="va">x</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">&lt;-</span> <span class="fu">scale_data</span><span class="op">(</span><span class="va">hic_100</span><span class="op">)</span></span>
 <span><span class="va">x_5</span> <span class="op">&lt;-</span> <span class="fu">scale_data</span><span class="op">(</span><span class="va">hic_5</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -169,7 +196,7 @@ lightweight.</p>
 data. It requires the following aesthetics: <code>seqnames1</code>,
 <code>start1</code>, <code>end1</code>, <code>seqnames2</code>,
 <code>start2</code>, <code>end2</code>, and <code>fill</code>.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -183,17 +210,17 @@ data. It requires the following aesthetics: <code>seqnames1</code>,
 <span>  <span class="fu"><a href="../reference/geom_hic.html">geom_hic</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
 <p><code><a href="../reference/theme_hic.html">theme_hic()</a></code> is a theme function for
 <code><a href="../reference/geom_hic.html">geom_hic()</a></code> that enhances the appearance of the plot.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/theme_hic.html">theme_hic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
 <p><code><a href="../reference/gghic.html">gghic()</a></code> is a wrapper function that can take either a
 <code>HiCExperiment</code> object, a <code>GenomicInteractions</code>
 object, or a <code>tibble</code>/<code>data.frame</code> as input.
 (exactly the same as above).</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -202,7 +229,7 @@ object, or a <code>tibble</code>/<code>data.frame</code> as input.
 </h3>
 <p><code><a href="../reference/geom_ideogram.html">geom_ideogram()</a></code> can be used to add chromosome ideograms
 to the plot.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
@@ -223,10 +250,10 @@ to the plot.</p>
 <span><span class="co">#&gt; Warning in getMethods(coerce, table = TRUE): 'getMethods' is deprecated.</span></span>
 <span><span class="co">#&gt; Use 'getMethodsForDispatch(f, TRUE)' instead.</span></span>
 <span><span class="co">#&gt; See help("Deprecated")</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
 <p>The wrapper function <code><a href="../reference/gghic.html">gghic()</a></code> can also add ideograms to
 the plot. (exactly the same as above).</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
@@ -234,20 +261,20 @@ the plot. (exactly the same as above).</p>
 <span>  <span class="op">)</span></span></code></pre></div>
 <p>The plotted region can be highlighted on the ideogram by setting
 <code>highlight = TRUE</code>.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr4:10000000-15000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
 <span>    ideogram_fontsize <span class="op">=</span> <span class="fl">8</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-11-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="gene-annotation">Gene Annotation<a class="anchor" aria-label="anchor" href="#gene-annotation"></a>
 </h3>
 <p>Track-based gene annotation can be added to the plot by using
 <code><a href="../reference/geom_annotation.html">geom_annotation()</a></code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span>,</span>
@@ -278,7 +305,7 @@ the plot. (exactly the same as above).</p>
 <span><span class="co">#&gt; OK</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
 <p>Some parameters can be set for <code><a href="../reference/geom_annotation.html">geom_annotation()</a></code>:</p>
 <ul>
 <li>
@@ -290,17 +317,17 @@ tracks are needed for the annotation.</li>
 <li>
 <code>gene_symbols</code> can be used to specify genes to plot.</li>
 </ul>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_annotation.html">geom_annotation</a></span><span class="op">(</span></span>
 <span>  gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
 <span>  gene_symbols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GRK2"</span>, <span class="st">"SSH3"</span>, <span class="st">"KDM2A"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
 <p><code><a href="../reference/gghic.html">gghic()</a></code> can also add gene annotation to the plot
 (exactly the same as above).</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hic_5</span><span class="op">[</span><span class="st">"chr11:67000000-67100000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
@@ -318,7 +345,7 @@ tracks are needed for the annotation.</li>
 while the latter requires a <code>tibble</code>/<code>data.frame</code>
 containing the loop data which enables easy customization by adding
 additional aesthetics.</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_loop</span> <span class="op">&lt;-</span> <span class="va">path_loop</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
 <span>    sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
@@ -348,14 +375,14 @@ additional aesthetics.</p>
 <span>    <span class="op">)</span>,</span>
 <span>    stroke <span class="op">=</span> <span class="fl">1</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-15-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="tads">TADs<a class="anchor" aria-label="anchor" href="#tads"></a>
 </h3>
 <p>Triangulers indicating TADs can be added using
 <code><a href="../reference/geom_tad.html">geom_tad()</a></code>.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
@@ -365,7 +392,7 @@ additional aesthetics.</p>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    tad <span class="op">=</span> <span class="cn">TRUE</span>, tad_is_0based <span class="op">=</span> <span class="cn">TRUE</span>, tad_path <span class="op">=</span> <span class="va">path_tad</span>, tad_colour <span class="op">=</span> <span class="st">"#00ff83"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="multi-way-contacts">Multi-way contacts<a class="anchor" aria-label="anchor" href="#multi-way-contacts"></a>
@@ -376,7 +403,7 @@ visualised using <code><a href="../reference/geom_concatemer.html">geom_concatem
 concatemer file, while the latter requires a
 <code>tibble</code>/<code>data.frame</code> containing the concatemer
 data.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gis</span> <span class="op">&lt;-</span> <span class="va">path_gis_hic</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">scale_data</span><span class="op">(</span><span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
@@ -407,7 +434,7 @@ data.</p>
 <span>    legend.key.size <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>    legend.text <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="visualisation-of-interaction-data-of-multiple-chromosomes">Visualisation of Interaction Data of Multiple Chromosomes<a class="anchor" aria-label="anchor" href="#visualisation-of-interaction-data-of-multiple-chromosomes"></a>
@@ -415,16 +442,16 @@ data.</p>
 <p>Set <code>draw_boundary</code> to <code>TRUE</code> to draw the
 boundary of the chromosomes. Set <code>expand_xaxis</code> to
 <code>TRUE</code> to expand the x-axis if the plot is crowded.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span>, expand_left <span class="op">=</span> <span class="fl">2000000</span>, expand_right <span class="op">=</span> <span class="fl">2000000</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
 <p>Chromosome ideograms and gene tracks can also be added to the plot
 when visualising multiple chromosomes.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
@@ -448,14 +475,14 @@ when visualising multiple chromosomes.</p>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="other-data-tracks---geom_track">Other Data Tracks - <code>geom_track</code><a class="anchor" aria-label="anchor" href="#other-data-tracks---geom_track"></a>
 </h3>
 <p><code><a href="../reference/geom_track.html">geom_track()</a></code> can be used to add other data tracks to the
 plot.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_track.html">geom_track</a></span><span class="op">(</span></span>
 <span>  data_paths <span class="op">=</span> <span class="va">paths_track</span>, width_ratio <span class="op">=</span> <span class="fl">0.3</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span>,</span>
 <span>  data_range <span class="op">=</span> <span class="st">"auto"</span></span>
@@ -464,10 +491,10 @@ plot.</p>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
 <p><code><a href="../reference/gghic.html">gghic()</a></code> is handy for adding all these features to the
 plot.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
@@ -491,13 +518,13 @@ plot.</p>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.0 (2025-04-11)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
