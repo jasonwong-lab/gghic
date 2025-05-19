@@ -31,7 +31,6 @@
 #' @importFrom tibble as_tibble is_tibble tibble
 #' @importFrom tidyr drop_na replace_na
 #' @importFrom txdbmaker makeTxDb makeTxDbFromGFF
-#' @importFrom utils download.file
 #' @importFrom vroom cols vroom
 ## usethis namespace: end
 NULL
