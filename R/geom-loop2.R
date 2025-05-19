@@ -88,6 +88,7 @@ GeomLoop2 <- ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
+#' # example usage
 #' }
 #' @export geom_loop2
 #' @aliases geom_loop2
