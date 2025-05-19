@@ -222,12 +222,14 @@ GeomHic <- ggplot2::ggproto(
 #' library(glue)
 #' library(rappdirs)
 #'
-#' download_example_files()
 #' dir_cache_gghic <- user_cache_dir(appname = "gghic")
+#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+#' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
+#' download.file(url_file, path_file)
 #'
-#' hic <- glue("{dir_cache_gghic}/chr4_11-5kb.cool") |>
+#' hic <- path_file |>
 #'   CoolFile() |>
-#'   import(cf)
+#'   import()
 #'
 #' gis <- interactions(hic)
 #' gis$score <- log10(gis$balanced)
