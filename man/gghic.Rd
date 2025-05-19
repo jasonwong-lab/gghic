@@ -157,6 +157,7 @@ the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
     \item{\code{fill}}{The fill color of the loops. Default is \code{NA}.}
     \item{\code{size}}{The size of the loops. Default is \code{NULL}.
 If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
+    \item{\code{linewidth}}{The line width of the loops. Default is \code{1}.}
     \item{\code{rasterize}}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
     \item{\code{dpi}}{The resolution of the rasterised plot. Default is \code{300}.}
     \item{\code{dev}}{The device to rasterise the plot. Default is \code{"cairo"}.}

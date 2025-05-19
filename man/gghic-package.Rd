@@ -5,12 +5,15 @@
 \alias{gghic-package}
 \title{gghic: Visualizing Genomic Interaction Data Using ggplot2}
 \description{
+\if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
+
 An easy way to create publication-ready figures for genomic interaction data using ggplot2.
 }
 \seealso{
 Useful links:
 \itemize{
   \item \url{https://github.com/jasonwong-lab/gghic}
+  \item \url{https://jasonwong-lab.github.io/gghic/}
   \item Report bugs at \url{https://github.com/jasonwong-lab/gghic/issues}
 }
 
