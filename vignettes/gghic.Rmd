@@ -1,6 +1,5 @@
 ---
 title: "Use gghic to Visualise Genomic Interaction Data"
-author: "Minghao Jiang"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_document:
@@ -8,15 +7,15 @@ output:
     toc_float: true
     number_sections: false
     center: false
-    theme: default
-    highlight: pygments
+    theme: cosmo
+    highlight: tango
     css: style.css
 vignette: >
   %\VignetteIndexEntry{gghic}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
   %\VignetteKeywords{genomics, visualisation, Hi-C}
-  %\VignetteAbstract{This vignette demonstrates how to use the gghic package to visualise genomic interaction data.}
+  %\VignetteAbstract{This vignette demonstrates how to use gghic to visualize genomic interaction data.}
 editor_options:
   markdown:
     wrap: 80
@@ -50,8 +49,8 @@ load_pkg <- function(pkgs) {
 
 load_pkg(
   c(
-    "gghic", "ggplot2", "tibble", "scales", "dplyr", "rappdirs",
-    "tidyr", "HiCExperiment", "InteractionSet", "glue"
+    "gghic", "ggplot2", "tibble", "scales", "dplyr", "tidyr", "glue",
+    "HiCExperiment", "GenomicRanges", "InteractionSet"
   )
 )
 ```
@@ -61,8 +60,8 @@ load_pkg(
 Example data files are hosted at gghic-data to keep the package lightweight.
 
 ```{r message=FALSE, warning=FALSE}
-download_example_files <- function(check_exists = FALSE) {
-  dir_cache <- rappdirs::user_cache_dir(appname = "gghic")
+download_example_files <- function(cache_dir, check_exists = TRUE) {
+  if (!file.exists(cache_dir)) dir.create(cache_dir)
 
   files <- list(
     "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
@@ -82,26 +81,28 @@ download_example_files <- function(check_exists = FALSE) {
   )
 
   for (file_name in names(files)) {
-    file_path <- file.path(dir_cache, file_name)
+    file_path <- file.path(cache_dir, file_name)
     if (check_exists && file.exists(file_path)) next
-    utils::download.file(paste0(url_base, files[[file_name]]), file_path)
+    download.file(
+      paste0(url_base, files[[file_name]]), file_path, method = "curl"
+    )
   }
 }
 ```
 
 ```{r message=FALSE, warning=FALSE}
-download_example_files()
+dir_cache <- "../data"
 
-dir_cache_gghic <- rappdirs::user_cache_dir(appname = "gghic")
+download_example_files(dir_cache)
 
-path_cf_100 <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
-path_cf_5 <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-path_gtf <- file.path(dir_cache_gghic, "gencode-chr4_11.gtf.gz")
-paths_track <- file.path(dir_cache_gghic, glue::glue("track{1:2}.bigWig"))
-path_tad <- file.path(dir_cache_gghic, "TADs_500kb-chr4_11.tsv")
-path_loop <- file.path(dir_cache_gghic, "loops-chr4_11.txt")
-path_gis_hic <- file.path(dir_cache_gghic, "gis_hic.rds")
-path_concatemers <- file.path(dir_cache_gghic, "concatemers.rds")
+path_cf_100 <- file.path(dir_cache, "chr4_11-100kb.cool")
+path_cf_5 <- file.path(dir_cache, "chr4_11-5kb.cool")
+path_gtf <- file.path(dir_cache, "gencode-chr4_11.gtf.gz")
+paths_track <- file.path(dir_cache, glue::glue("track{1:2}.bigWig"))
+path_tad <- file.path(dir_cache, "TADs_500kb-chr4_11.tsv")
+path_loop <- file.path(dir_cache, "loops-chr4_11.txt")
+path_gis_hic <- file.path(dir_cache, "gis_hic.rds")
+path_concatemers <- file.path(dir_cache, "concatemers.rds")
 ```
 
 ## Data Preparation
@@ -133,10 +134,6 @@ scale_data <- function(data, score_column = "balanced", scale_method = log10) {
   x <- gis |>
     tibble::as_tibble() |>
     dplyr::mutate(score = scale_method(.data[[score_column]])) |>
-    dplyr::filter(
-      InteractionSet::pairdist(gis) != 0,
-      !is.na(InteractionSet::pairdist(gis) != 0)
-    ) |>
     dplyr::filter(!is.na(score), !is.infinite(score)) |>
     dplyr::mutate(score = scales::oob_squish(score, c(min(score), max(score))))
 
@@ -286,6 +283,11 @@ hic_5["chr11:67000000-67100000"] |>
 Chromatin loops can be visualised using `geom_loop()` or `geom_loop2()`. The former requires a path to a loop file, while the latter requires a `tibble`/`data.frame` containing the loop data which enables easy customization by adding additional aesthetics.
 
 ```{r}
+hic_5["chr11:61915000-65000000"] |>
+  gghic(loop = TRUE, loop_path = path_loop, loop_is_0based = TRUE)
+```
+
+```{r}
 df_loop <- path_loop |>
   read.table(
     sep = "\t",
@@ -308,7 +310,7 @@ hic_5["chr11:61915000-65000000"] |>
   gghic() +
   geom_loop2(
     data = df_loop,
-    aes(
+    ggplot2::aes(
       seqnames1 = seqnames1, start1 = start1, end1 = end1,
       seqnames2 = seqnames2, start2 = start2, end2 = end2,
       colour = sample
@@ -319,18 +321,45 @@ hic_5["chr11:61915000-65000000"] |>
 
 ### TADs
 
-Triangulers indicating TADs can be added using `geom_tad()`.
+Triangulers indicating TADs can be added using `geom_tad()` or `geom_tad2()`. The former requires a path to a TAD file, while the latter requires a `tibble`/`data.frame` containing the TAD data.
 
 ```{r}
+x_100 |>
+  dplyr::filter(
+    seqnames1 == "chr4", seqnames2 == "chr4",
+    start1 > 50000000, end1 < 80000000,
+    start2 > 50000000, end2 < 80000000
+  ) |>
+  gghic(
+    tad = TRUE, tad_is_0based = TRUE, tad_path = path_tad, tad_colour = "#00ff83"
+  )
+```
+
+```{r}
+df_tad <- path_tad |>
+  read.table(
+    sep = "\t", header = FALSE, col.names = c("seqnames", "start", "end")
+  ) |>
+  dplyr::mutate(start = start + 1) |>
+  dplyr::filter(seqnames == "chr4", start > 60000000, end < 70000000) |>
+  dplyr::mutate(sample = c("A", "B"))
+
 x_100 |>
   dplyr::filter(
     seqnames1 == "chr4", seqnames2 == "chr4",
     start1 > 60000000, end1 < 70000000,
     start2 > 60000000, end2 < 70000000
   ) |>
-  gghic(
-    tad = TRUE, tad_is_0based = TRUE, tad_path = path_tad, tad_colour = "#00ff83"
-  )
+  gghic() +
+  geom_tad2(
+    data = df_tad,
+    ggplot2::aes(
+      seqnames = seqnames, start = start, end = end,
+      colour = sample
+    ),
+    stroke = 2
+  ) +
+  ggplot2::scale_color_grey()
 ```
 
 ### Multi-way contacts
@@ -351,14 +380,14 @@ names_read <- c(
 )
 df_concatemers <- path_concatemers |>
   readRDS() |>
-  sort() |>
+  GenomicRanges::sort() |>
   tibble::as_tibble() |>
   dplyr::filter(read_name %in% names_read)
 
 gghic(gis) +
   geom_concatemer2(
     data = df_concatemers,
-    aes(
+    ggplot2::aes(
       seqnames = seqnames, start = start, end = end, read_group = read_name,
       colour = read_name
     ),
@@ -412,8 +441,8 @@ p
 
 ```{r}
 p + geom_track(
-  data_paths = paths_track, width_ratio = 0.3, fill = c("#DC0000B2", "#00A087B2"),
-  data_range = "auto"
+  data_paths = paths_track, width_ratio = 0.3, data_range = "auto",
+  fill = c("#DC0000B2", "#00A087B2")
 )
 ```
 
