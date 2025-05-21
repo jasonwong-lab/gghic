@@ -17,7 +17,7 @@ StatConcatemer2 <- ggplot2::ggproto(
     n_track <- env$n_track
     n_concatemer <- env$n_concatemer
     if (env$n_hic <= 0) {
-      stop("geom_concatemer() requires a HiC plot to be drawn first.")
+      stop("geom_concatemer2() requires a HiC plot to be drawn first.")
     }
     max_y <- env$max_y
     max_x <- env$max_x
@@ -30,7 +30,7 @@ StatConcatemer2 <- ggplot2::ggproto(
       if (env$n_hic == 1 || env$n_track == 1 || env$n_annotation == 1) {
         maxs_x <- env$maxs_x
       } else {
-        stop("geom_concatemer() requires a HiC plot to be drawn first.")
+        stop("geom_concatemer2() requires a HiC plot to be drawn first.")
       }
     }
     min_y <- ifelse(
