@@ -12,9 +12,11 @@
 
 > :warning: `gghic` is in its early stages. Issues and PRs are welcome.
 
-## Author
+## Introduction
 
-Minghao Jiang, <mjhk@connect.hku.hk>
+**gghic** is a versatile R package for creating flexible, publication-ready visualizations of 3D genome organization data. With gghic, you can easily explore and present Hi-C/-like contact maps, topologically associating domains (TADs), chromatin loops, gene annotations, and other genomic features in a unified and customizable framework.
+
+Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromosome interactions, or integrating additional genomic tracks (such as ChIP-seq or BigWig data), gghic provides a tidyverse-friendly and extensible toolkit for your research.
 
 ## Features
 
@@ -24,8 +26,9 @@ Minghao Jiang, <mjhk@connect.hku.hk>
 4. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, concatemers, *etc.*, under the heatmap.
 5. [x] Plot compartments, TADs, and loops on the heatmap.
 6. [x] Allow for generating rasterized heatmaps and tracks to handle large datasets.
-7. [ ] Support duckplyr for faster data manipulation.
-8. [ ] ...
+7. [x] Plot concatemers indicating multi-way contacts.
+8. [ ] Support duckplyr for faster data manipulation.
+9. [ ] ...
 
 ## Installation
 
@@ -52,6 +55,10 @@ devtools::install_github("jasonwong-lab/gghic", build_vignettes = TRUE)
 ```r
 citation("gghic")
 ```
+
+## Author
+
+Minghao Jiang, <mjhk@connect.hku.hk>
 
 ## License
 
