@@ -41,7 +41,7 @@ devtools::install_github("jasonwong-lab/gghic", build_vignettes = TRUE)
 ## Usage
 
 - 📖 **Documentation:**
-  Visit the [gghic website](https://jasonwong-lab.github.io/gghic/) for comprehensive documentation, tutorials, and examples.
+  Visit the <a href="https://jasonwong-lab.github.io/gghic/" target="_blank">gghic website</a> for comprehensive documentation, tutorials, and examples.
 
 - 📚 **Vignettes:**
   After installation, you can explore the package vignettes directly in R:
