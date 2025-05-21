@@ -3,7 +3,6 @@ __pycache__/
 /data/
 /code/
 /figs/
-vignettes/_dummy.Rmd
 
 # History files
 .Rhistory
