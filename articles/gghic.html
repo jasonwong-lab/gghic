@@ -56,10 +56,8 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Use gghic to Visualise Genomic Interaction Data</h1>
-                        <h4 data-toc-skip class="author">Minghao
-Jiang</h4>
             
-            <h4 data-toc-skip class="date">2025-05-19</h4>
+            <h4 data-toc-skip class="date">2025-05-21</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/gghic.Rmd" class="external-link"><code>vignettes/gghic.Rmd</code></a></small>
       <div class="d-none name"><code>gghic.Rmd</code></div>
@@ -89,8 +87,8 @@ visualize various types of genomic interaction data.</p>
 <span></span>
 <span><span class="fu">load_pkg</span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"gghic"</span>, <span class="st">"ggplot2"</span>, <span class="st">"tibble"</span>, <span class="st">"scales"</span>, <span class="st">"dplyr"</span>, <span class="st">"rappdirs"</span>,</span>
-<span>    <span class="st">"tidyr"</span>, <span class="st">"HiCExperiment"</span>, <span class="st">"InteractionSet"</span>, <span class="st">"glue"</span></span>
+<span>    <span class="st">"gghic"</span>, <span class="st">"ggplot2"</span>, <span class="st">"tibble"</span>, <span class="st">"scales"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"glue"</span>,</span>
+<span>    <span class="st">"HiCExperiment"</span>, <span class="st">"GenomicRanges"</span>, <span class="st">"InteractionSet"</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -100,8 +98,8 @@ visualize various types of genomic interaction data.</p>
 <p>Example data files are hosted at gghic-data to keep the package
 lightweight.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">download_example_files</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">check_exists</span> <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">dir_cache</span> <span class="op">&lt;-</span> <span class="fu">rappdirs</span><span class="fu">::</span><span class="fu"><a href="https://rappdirs.r-lib.org/reference/user_cache_dir.html" class="external-link">user_cache_dir</a></span><span class="op">(</span>appname <span class="op">=</span> <span class="st">"gghic"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">download_example_files</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">cache_dir</span>, <span class="va">check_exists</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">cache_dir</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">cache_dir</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"chr4_11-100kb.cool"</span> <span class="op">=</span> <span class="st">"cooler/chr4_11-100kb.cool"</span>,</span>
@@ -121,24 +119,26 @@ lightweight.</p>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">file_name</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="va">file_name</span><span class="op">)</span></span>
+<span>    <span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">cache_dir</span>, <span class="va">file_name</span><span class="op">)</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="va">check_exists</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span><span class="op">)</span> <span class="kw">next</span></span>
-<span>    <span class="fu">utils</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">url_base</span>, <span class="va">files</span><span class="op">[[</span><span class="va">file_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">file_path</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">url_base</span>, <span class="va">files</span><span class="op">[[</span><span class="va">file_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">file_path</span>, method <span class="op">=</span> <span class="st">"curl"</span></span>
+<span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">download_example_files</span><span class="op">(</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">dir_cache</span> <span class="op">&lt;-</span> <span class="st">"../data"</span></span>
 <span></span>
-<span><span class="va">dir_cache_gghic</span> <span class="op">&lt;-</span> <span class="fu">rappdirs</span><span class="fu">::</span><span class="fu"><a href="https://rappdirs.r-lib.org/reference/user_cache_dir.html" class="external-link">user_cache_dir</a></span><span class="op">(</span>appname <span class="op">=</span> <span class="st">"gghic"</span><span class="op">)</span></span>
+<span><span class="fu">download_example_files</span><span class="op">(</span><span class="va">dir_cache</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">path_cf_100</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"chr4_11-100kb.cool"</span><span class="op">)</span></span>
-<span><span class="va">path_cf_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"chr4_11-5kb.cool"</span><span class="op">)</span></span>
-<span><span class="va">path_gtf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"gencode-chr4_11.gtf.gz"</span><span class="op">)</span></span>
-<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"track{1:2}.bigWig"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">path_tad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"TADs_500kb-chr4_11.tsv"</span><span class="op">)</span></span>
-<span><span class="va">path_loop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"loops-chr4_11.txt"</span><span class="op">)</span></span>
-<span><span class="va">path_gis_hic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"gis_hic.rds"</span><span class="op">)</span></span>
-<span><span class="va">path_concatemers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache_gghic</span>, <span class="st">"concatemers.rds"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">path_cf_100</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"chr4_11-100kb.cool"</span><span class="op">)</span></span>
+<span><span class="va">path_cf_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"chr4_11-5kb.cool"</span><span class="op">)</span></span>
+<span><span class="va">path_gtf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"gencode-chr4_11.gtf.gz"</span><span class="op">)</span></span>
+<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"track{1:2}.bigWig"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">path_tad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"TADs_500kb-chr4_11.tsv"</span><span class="op">)</span></span>
+<span><span class="va">path_loop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"loops-chr4_11.txt"</span><span class="op">)</span></span>
+<span><span class="va">path_gis_hic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"gis_hic.rds"</span><span class="op">)</span></span>
+<span><span class="va">path_concatemers</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"concatemers.rds"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -172,10 +172,6 @@ lightweight.</p>
 <span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">gis</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu">scale_method</span><span class="op">(</span><span class="va">.data</span><span class="op">[[</span><span class="va">score_column</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
-<span>      <span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/distances.html" class="external-link">pairdist</a></span><span class="op">(</span><span class="va">gis</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">0</span>,</span>
-<span>      <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/distances.html" class="external-link">pairdist</a></span><span class="op">(</span><span class="va">gis</span><span class="op">)</span> <span class="op">!=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span>    <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/oob.html" class="external-link">oob_squish</a></span><span class="op">(</span><span class="va">score</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -346,6 +342,10 @@ while the latter requires a <code>tibble</code>/<code>data.frame</code>
 containing the loop data which enables easy customization by adding
 additional aesthetics.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hic_5</span><span class="op">[</span><span class="st">"chr11:61915000-65000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>loop <span class="op">=</span> <span class="cn">TRUE</span>, loop_path <span class="op">=</span> <span class="va">path_loop</span>, loop_is_0based <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_loop</span> <span class="op">&lt;-</span> <span class="va">path_loop</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
 <span>    sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
@@ -368,31 +368,59 @@ additional aesthetics.</p>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_loop2.html">geom_loop2</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">df_loop</span>,</span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
 <span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>,</span>
 <span>      colour <span class="op">=</span> <span class="va">sample</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    stroke <span class="op">=</span> <span class="fl">1</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="tads">TADs<a class="anchor" aria-label="anchor" href="#tads"></a>
 </h3>
 <p>Triangulers indicating TADs can be added using
-<code><a href="../reference/geom_tad.html">geom_tad()</a></code>.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code><a href="../reference/geom_tad.html">geom_tad()</a></code> or <code><a href="../reference/geom_tad2.html">geom_tad2()</a></code>. The former requires
+a path to a TAD file, while the latter requires a
+<code>tibble</code>/<code>data.frame</code> containing the TAD data.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
+<span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
+<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">50000000</span>, <span class="va">end1</span> <span class="op">&lt;</span> <span class="fl">80000000</span>,</span>
+<span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">50000000</span>, <span class="va">end2</span> <span class="op">&lt;</span> <span class="fl">80000000</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
+<span>    tad <span class="op">=</span> <span class="cn">TRUE</span>, tad_is_0based <span class="op">=</span> <span class="cn">TRUE</span>, tad_path <span class="op">=</span> <span class="va">path_tad</span>, tad_colour <span class="op">=</span> <span class="st">"#00ff83"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df_tad</span> <span class="op">&lt;-</span> <span class="va">path_tad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>    sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">FALSE</span>, col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>start <span class="op">=</span> <span class="va">start</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">start</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end</span> <span class="op">&lt;</span> <span class="fl">70000000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
 <span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end1</span> <span class="op">&lt;</span> <span class="fl">70000000</span>,</span>
 <span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end2</span> <span class="op">&lt;</span> <span class="fl">70000000</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    tad <span class="op">=</span> <span class="cn">TRUE</span>, tad_is_0based <span class="op">=</span> <span class="cn">TRUE</span>, tad_path <span class="op">=</span> <span class="va">path_tad</span>, tad_colour <span class="op">=</span> <span class="st">"#00ff83"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_tad2.html">geom_tad2</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_tad</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>,</span>
+<span>      colour <span class="op">=</span> <span class="va">sample</span></span>
+<span>    <span class="op">)</span>,</span>
+<span>    stroke <span class="op">=</span> <span class="fl">2</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_grey.html" class="external-link">scale_color_grey</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="multi-way-contacts">Multi-way contacts<a class="anchor" aria-label="anchor" href="#multi-way-contacts"></a>
@@ -403,7 +431,7 @@ visualised using <code><a href="../reference/geom_concatemer.html">geom_concatem
 concatemer file, while the latter requires a
 <code>tibble</code>/<code>data.frame</code> containing the concatemer
 data.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gis</span> <span class="op">&lt;-</span> <span class="va">path_gis_hic</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">scale_data</span><span class="op">(</span><span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
@@ -417,14 +445,14 @@ data.</p>
 <span><span class="op">)</span></span>
 <span><span class="va">df_concatemers</span> <span class="op">&lt;-</span> <span class="va">path_concatemers</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">sort</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">read_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">names_read</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="va">gis</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_concatemer2.html">geom_concatemer2</a></span><span class="op">(</span></span>
 <span>    data <span class="op">=</span> <span class="va">df_concatemers</span>,</span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, read_group <span class="op">=</span> <span class="va">read_name</span>,</span>
 <span>      colour <span class="op">=</span> <span class="va">read_name</span></span>
 <span>    <span class="op">)</span>,</span>
@@ -434,7 +462,7 @@ data.</p>
 <span>    legend.key.size <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>    legend.text <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="visualisation-of-interaction-data-of-multiple-chromosomes">Visualisation of Interaction Data of Multiple Chromosomes<a class="anchor" aria-label="anchor" href="#visualisation-of-interaction-data-of-multiple-chromosomes"></a>
@@ -442,16 +470,16 @@ data.</p>
 <p>Set <code>draw_boundary</code> to <code>TRUE</code> to draw the
 boundary of the chromosomes. Set <code>expand_xaxis</code> to
 <code>TRUE</code> to expand the x-axis if the plot is crowded.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
 <span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span>, expand_left <span class="op">=</span> <span class="fl">2000000</span>, expand_right <span class="op">=</span> <span class="fl">2000000</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
 <p>Chromosome ideograms and gene tracks can also be added to the plot
 when visualising multiple chromosomes.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
@@ -475,26 +503,26 @@ when visualising multiple chromosomes.</p>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="other-data-tracks---geom_track">Other Data Tracks - <code>geom_track</code><a class="anchor" aria-label="anchor" href="#other-data-tracks---geom_track"></a>
 </h3>
 <p><code><a href="../reference/geom_track.html">geom_track()</a></code> can be used to add other data tracks to the
 plot.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_track.html">geom_track</a></span><span class="op">(</span></span>
-<span>  data_paths <span class="op">=</span> <span class="va">paths_track</span>, width_ratio <span class="op">=</span> <span class="fl">0.3</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span>,</span>
-<span>  data_range <span class="op">=</span> <span class="st">"auto"</span></span>
+<span>  data_paths <span class="op">=</span> <span class="va">paths_track</span>, width_ratio <span class="op">=</span> <span class="fl">0.3</span>, data_range <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-23-1.png" width="700"></p>
 <p><code><a href="../reference/gghic.html">gghic()</a></code> is handy for adding all these features to the
 plot.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
@@ -518,13 +546,13 @@ plot.</p>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span>
 <span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
 <span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-24-1.png" width="700"></p>
 </div>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.0 (2025-04-11)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -549,16 +577,16 @@ plot.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
 <span><span class="co">#&gt;  [1] GenomicFeatures_1.60.0      AnnotationDbi_1.70.0       </span></span>
-<span><span class="co">#&gt;  [3] glue_1.8.0                  InteractionSet_1.36.1      </span></span>
-<span><span class="co">#&gt;  [5] SummarizedExperiment_1.38.1 Biobase_2.68.0             </span></span>
-<span><span class="co">#&gt;  [7] MatrixGenerics_1.20.0       matrixStats_1.5.0          </span></span>
-<span><span class="co">#&gt;  [9] GenomicRanges_1.60.0        GenomeInfoDb_1.44.0        </span></span>
-<span><span class="co">#&gt; [11] IRanges_2.42.0              S4Vectors_0.46.0           </span></span>
-<span><span class="co">#&gt; [13] BiocGenerics_0.54.0         generics_0.1.4             </span></span>
-<span><span class="co">#&gt; [15] HiCExperiment_1.8.0         tidyr_1.3.1                </span></span>
-<span><span class="co">#&gt; [17] rappdirs_0.3.3              dplyr_1.1.4                </span></span>
-<span><span class="co">#&gt; [19] scales_1.4.0                tibble_3.2.1               </span></span>
-<span><span class="co">#&gt; [21] ggplot2_3.5.2               gghic_0.1.0                </span></span>
+<span><span class="co">#&gt;  [3] InteractionSet_1.36.1       SummarizedExperiment_1.38.1</span></span>
+<span><span class="co">#&gt;  [5] Biobase_2.68.0              MatrixGenerics_1.20.0      </span></span>
+<span><span class="co">#&gt;  [7] matrixStats_1.5.0           GenomicRanges_1.60.0       </span></span>
+<span><span class="co">#&gt;  [9] GenomeInfoDb_1.44.0         IRanges_2.42.0             </span></span>
+<span><span class="co">#&gt; [11] S4Vectors_0.46.0            BiocGenerics_0.54.0        </span></span>
+<span><span class="co">#&gt; [13] generics_0.1.4              HiCExperiment_1.8.0        </span></span>
+<span><span class="co">#&gt; [15] glue_1.8.0                  tidyr_1.3.1                </span></span>
+<span><span class="co">#&gt; [17] dplyr_1.1.4                 scales_1.4.0               </span></span>
+<span><span class="co">#&gt; [19] tibble_3.2.1                ggplot2_3.5.2              </span></span>
+<span><span class="co">#&gt; [21] gghic_0.1.0                </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;   [1] strawr_0.0.92            RColorBrewer_1.1-3       rstudioapi_0.17.1       </span></span>
@@ -579,28 +607,29 @@ plot.</p>
 <span><span class="co">#&gt;  [46] httr_1.4.7               abind_1.4-8              compiler_4.5.0          </span></span>
 <span><span class="co">#&gt;  [49] here_1.0.1               withr_3.0.2              bit64_4.6.0-1           </span></span>
 <span><span class="co">#&gt;  [52] htmlTable_2.4.3          backports_1.5.0          BiocParallel_1.42.0     </span></span>
-<span><span class="co">#&gt;  [55] DBI_1.2.3                biomaRt_2.64.0           DelayedArray_0.34.1     </span></span>
-<span><span class="co">#&gt;  [58] rjson_0.2.23             tools_4.5.0              foreign_0.8-90          </span></span>
-<span><span class="co">#&gt;  [61] nnet_7.3-20              restfulr_0.0.15          rhdf5filters_1.20.0     </span></span>
-<span><span class="co">#&gt;  [64] grid_4.5.0               checkmate_2.3.2          cluster_2.1.8.1         </span></span>
-<span><span class="co">#&gt;  [67] gtable_0.3.6             BSgenome_1.76.0          tzdb_0.5.0              </span></span>
-<span><span class="co">#&gt;  [70] ensembldb_2.32.0         data.table_1.17.2        hms_1.1.3               </span></span>
-<span><span class="co">#&gt;  [73] xml2_1.3.8               XVector_0.48.0           pillar_1.10.2           </span></span>
-<span><span class="co">#&gt;  [76] stringr_1.5.1            vroom_1.6.5              BiocFileCache_2.16.0    </span></span>
-<span><span class="co">#&gt;  [79] lattice_0.22-6           rtracklayer_1.68.0       bit_4.6.0               </span></span>
-<span><span class="co">#&gt;  [82] deldir_2.0-4             biovizBase_1.56.0        tidyselect_1.2.1        </span></span>
-<span><span class="co">#&gt;  [85] Biostrings_2.76.0        knitr_1.50               gridExtra_2.3           </span></span>
-<span><span class="co">#&gt;  [88] ProtGenerics_1.40.0      xfun_0.52                stringi_1.8.7           </span></span>
-<span><span class="co">#&gt;  [91] UCSC.utils_1.4.0         lazyeval_0.2.2           yaml_2.3.10             </span></span>
-<span><span class="co">#&gt;  [94] evaluate_1.0.3           codetools_0.2-20         interp_1.1-6            </span></span>
-<span><span class="co">#&gt;  [97] cli_3.6.5                rpart_4.1.24             reticulate_1.42.0       </span></span>
-<span><span class="co">#&gt; [100] systemfonts_1.2.3        jquerylib_0.1.4          dichromat_2.0-0.1       </span></span>
-<span><span class="co">#&gt; [103] Rcpp_1.0.14              dbplyr_2.5.0             png_0.1-8               </span></span>
-<span><span class="co">#&gt; [106] XML_3.99-0.18            parallel_4.5.0           pkgdown_2.1.2           </span></span>
-<span><span class="co">#&gt; [109] blob_1.2.4               prettyunits_1.2.0        latticeExtra_0.6-30     </span></span>
-<span><span class="co">#&gt; [112] jpeg_0.1-11              AnnotationFilter_1.32.0  bitops_1.0-9            </span></span>
-<span><span class="co">#&gt; [115] txdbmaker_1.4.1          VariantAnnotation_1.54.1 purrr_1.0.4             </span></span>
-<span><span class="co">#&gt; [118] crayon_1.5.3             rlang_1.1.6              KEGGREST_1.48.0</span></span></code></pre></div>
+<span><span class="co">#&gt;  [55] DBI_1.2.3                biomaRt_2.64.0           rappdirs_0.3.3          </span></span>
+<span><span class="co">#&gt;  [58] DelayedArray_0.34.1      rjson_0.2.23             tools_4.5.0             </span></span>
+<span><span class="co">#&gt;  [61] foreign_0.8-90           nnet_7.3-20              restfulr_0.0.15         </span></span>
+<span><span class="co">#&gt;  [64] rhdf5filters_1.20.0      grid_4.5.0               checkmate_2.3.2         </span></span>
+<span><span class="co">#&gt;  [67] cluster_2.1.8.1          gtable_0.3.6             BSgenome_1.76.0         </span></span>
+<span><span class="co">#&gt;  [70] tzdb_0.5.0               ensembldb_2.32.0         data.table_1.17.2       </span></span>
+<span><span class="co">#&gt;  [73] hms_1.1.3                xml2_1.3.8               XVector_0.48.0          </span></span>
+<span><span class="co">#&gt;  [76] pillar_1.10.2            stringr_1.5.1            vroom_1.6.5             </span></span>
+<span><span class="co">#&gt;  [79] BiocFileCache_2.16.0     lattice_0.22-6           rtracklayer_1.68.0      </span></span>
+<span><span class="co">#&gt;  [82] bit_4.6.0                deldir_2.0-4             biovizBase_1.56.0       </span></span>
+<span><span class="co">#&gt;  [85] tidyselect_1.2.1         Biostrings_2.76.0        knitr_1.50              </span></span>
+<span><span class="co">#&gt;  [88] gridExtra_2.3            ProtGenerics_1.40.0      xfun_0.52               </span></span>
+<span><span class="co">#&gt;  [91] stringi_1.8.7            UCSC.utils_1.4.0         lazyeval_0.2.2          </span></span>
+<span><span class="co">#&gt;  [94] yaml_2.3.10              evaluate_1.0.3           codetools_0.2-20        </span></span>
+<span><span class="co">#&gt;  [97] interp_1.1-6             cli_3.6.5                rpart_4.1.24            </span></span>
+<span><span class="co">#&gt; [100] reticulate_1.42.0        systemfonts_1.2.3        jquerylib_0.1.4         </span></span>
+<span><span class="co">#&gt; [103] dichromat_2.0-0.1        Rcpp_1.0.14              dbplyr_2.5.0            </span></span>
+<span><span class="co">#&gt; [106] png_0.1-8                XML_3.99-0.18            parallel_4.5.0          </span></span>
+<span><span class="co">#&gt; [109] pkgdown_2.1.2            blob_1.2.4               prettyunits_1.2.0       </span></span>
+<span><span class="co">#&gt; [112] latticeExtra_0.6-30      jpeg_0.1-11              AnnotationFilter_1.32.0 </span></span>
+<span><span class="co">#&gt; [115] bitops_1.0-9             txdbmaker_1.4.1          VariantAnnotation_1.54.1</span></span>
+<span><span class="co">#&gt; [118] purrr_1.0.4              crayon_1.5.3             rlang_1.1.6             </span></span>
+<span><span class="co">#&gt; [121] KEGGREST_1.48.0</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
