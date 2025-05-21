@@ -36,7 +36,14 @@ knitr::opts_chunk$set(
 
 ## Introduction
 
-gghic is an R package designed for flexible and publication-ready visualization of 3D genome organization data, including Hi-C, topologically associating domains (TADs), chromatin loops, gene annotation, and more. This tutorial demonstrates how to use gghic to visualize various types of genomic interaction data.
+**gghic** is a versatile R package for creating flexible, publication-ready visualizations of 3D genome organization data. With gghic, you can easily explore and present Hi-C contact maps, topologically associating domains (TADs), chromatin loops, gene annotations, and other genomic features in a unified and customizable framework.
+
+Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromosome interactions, or integrating additional genomic tracks (such as ChIP-seq or BigWig data), gghic provides a tidyverse-friendly and extensible toolkit for your research.
+
+This tutorial will guide you through the core features of gghic, from data preparation to advanced visualization. By the end, you'll be able to generate high-quality, informative figures for your genomics projects with just a few lines of code.
+
+> **Learn more:**
+> - [arXiv preprint](https://arxiv.org/abs/2412.03005)
 
 ## Setup
 
