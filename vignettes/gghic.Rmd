@@ -43,6 +43,7 @@ Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromo
 This tutorial will guide you through the core features of gghic, from data preparation to advanced visualization. By the end, you'll be able to generate high-quality, informative figures for your genomics projects with just a few lines of code.
 
 > **Learn more:**
+>
 > - [arXiv preprint](https://arxiv.org/abs/2412.03005)
 
 ## Setup
