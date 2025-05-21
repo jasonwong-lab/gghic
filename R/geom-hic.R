@@ -223,7 +223,10 @@ GeomHic <- ggplot2::ggproto(
 #' library(rappdirs)
 #'
 #' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+#' url_file <- paste0(
+#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+#'   "master/cooler/chr4_11-5kb.cool"
+#' )
 #' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
 #' download.file(url_file, path_file)
 #'
