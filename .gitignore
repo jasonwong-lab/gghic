@@ -4,8 +4,6 @@ __pycache__/
 /code/
 /figs/
 vignettes/_dummy.Rmd
-inst/.CITATION
-tests/test.R
 
 # History files
 .Rhistory
