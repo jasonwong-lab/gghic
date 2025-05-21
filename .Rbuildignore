@@ -10,7 +10,7 @@
 ^\.github$          # Contributing guidelines, CoC, issue templates, etc.
 ^vignettes/_dummy\.Rmd$
 ^vignettes/style\.css$
-^doc$
+^docs$
 ^Meta$
 ^cran-comments\.md$
 ^inst/\.CITATION$
@@ -18,3 +18,4 @@
 ^data$
 ^code$
 ^figs$
+^doc$
