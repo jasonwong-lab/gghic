@@ -179,7 +179,10 @@ GeomLoop <- ggproto(
 #' library(rappdirs)
 #'
 #' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-100kb.cool"
+#' url_file <- paste0(
+#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+#'   "master/cooler/chr4_11-100kb.cool"
+#' )
 #' path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
 #' download.file(url_file, path_file)
 #'
@@ -202,7 +205,10 @@ GeomLoop <- ggproto(
 #'   ) |>
 #'   gghic(expand_xaxis = TRUE)
 #'
-#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/loop/loops-chr4_11.txt"
+#' url_file <- paste0(
+#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+#'   "master/loop/loops-chr4_11.txt"
+#' )
 #' path_loop <- glue("{dir_cache_gghic}/loops-chr4_11.txt")
 #' download.file(url_file, path_loop)
 #'
