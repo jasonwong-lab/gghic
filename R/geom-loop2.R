@@ -13,7 +13,7 @@ StatLoop2 <- ggplot2::ggproto(
       chrom_add <- env$chrom_add
       chrom_sub <- env$chrom_sub
     } else {
-      stop("geom_loop() requires a HiC plot to be drawn first.")
+      stop("geom_loop2() requires a HiC plot to be drawn first.")
     }
 
     if (!is.null(chrom_add) && !is.null(chrom_sub)) {
