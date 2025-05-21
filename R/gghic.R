@@ -97,6 +97,11 @@ calculate_xrange <- function(data) {
 #' @param loop Whether to add loop or not. Default is `FALSE`.
 #' @param loop_is_0based Whether the loop coordinates are 0-based or not.
 #'   Default is `FALSE`.
+#' @param concatemer Whether to add concatemer or not. Default is `FALSE`.
+#' @param concatemer_width_ratio The width ratio of the concatemer.
+#'   Default is `1/100`.
+#' @param concatemer_spacing_ratio The spacing ratio of the concatemer.
+#'   Default is `1/5`.
 #' @param loop_colour The color of the loop. Default is `"black"`.
 #' @param loop_fill The fill color of the loop. Default is `NA`.
 #' @param expand_xaxis Whether to expand the x-axis or not. Default is `FALSE`.
@@ -121,7 +126,10 @@ calculate_xrange <- function(data) {
 #' library(scales)
 #'
 #' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+#' url_file <- paste0(
+#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+#'   "master/cooler/chr4_11-5kb.cool"
+#' )
 #' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
 #' download.file(url_file, path_file)
 #'
@@ -136,7 +144,10 @@ calculate_xrange <- function(data) {
 #' scores <- scores[!is.na(scores) & !is.infinite(scores)]
 #' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 #'
-#' url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/gtf/gencode-chr4_11.gtf.gz"
+#' url_file <- paste0(
+#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+#'   "master/gtf/gencode-chr4_11.gtf.gz"
+#' )
 #' path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
 #' download.file(url_file, path_gtf)
 #'
@@ -192,6 +203,10 @@ gghic <- function(
   loop_is_0based = FALSE,
   loop_colour = "black",
   loop_fill = NA,
+
+  concatemer = FALSE,
+  concatemer_width_ratio = 1 / 100,
+  concatemer_spacing_ratio = 1 / 5,
 
   expand_xaxis = FALSE,
   expand_left = NULL,
@@ -263,6 +278,15 @@ gghic <- function(
         is_0based = loop_is_0based,
         colour = loop_colour,
         fill = loop_fill,
+        ...
+      )
+  }
+
+  if (concatemer) {
+    p <- p +
+      geom_concatemer(
+        width_ratio = concatemer_width_ratio,
+        spacing_ratio = concatemer_spacing_ratio,
         ...
       )
   }
