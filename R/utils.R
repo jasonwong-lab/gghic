@@ -1,4 +1,3 @@
-# name_pkg <- "gghic"
 get_pkg_name <- function() "gghic"
 
 ensure_dir <- function(paths) {
@@ -117,7 +116,6 @@ tbl2gis <- function(data) {
 # *--------------------------------------------------------------------------* #
 # * Use the cache directory to store the cytoBand, TxDb, txdump, and tx2gene.  #
 # *--------------------------------------------------------------------------* #
-# dir_cache <- rappdirs::user_cache_dir(appname = name_pkg)
 get_cache_dir <- function() rappdirs::user_cache_dir(appname = get_pkg_name())
 
 stop_if_null <- function(object, message) if (is.null(object)) stop(message)
@@ -190,3 +188,15 @@ ensure_tx2gene <- function(tx2gene, gtf_path) {
   stop_if_null(tx2gene, "tx2gene data could not be created or loaded.")
   tx2gene
 }
+
+# *--------------------------------------------------------------------------* #
+# * Add global variables to bypass check warnings.                             #
+# *--------------------------------------------------------------------------* #
+globalVariables(
+  c(
+    ".data", "c(cols, posCols)", "chrom", "chromEnd", "chromStart", "cum_len",
+    "end1", "end2", "gene_id", "gene_symbol", "gieStain", "orignal_start",
+    "score", "seqnames1", "seqnames2", "start1", "start2", "width", "x", "xend",
+    "xmax", "xmin"
+  )
+)
