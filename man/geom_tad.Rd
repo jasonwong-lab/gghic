@@ -120,7 +120,10 @@ library(glue)
 library(rappdirs)
 
 dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-100kb.cool"
+url_file <- paste0(
+  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+  "master/cooler/chr4_11-100kb.cool"
+)
 path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
 download.file(url_file, path_file)
 
@@ -143,7 +146,10 @@ p <- x |>
   ) |>
   gghic(expand_xaxis = TRUE)
 
-url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/tad/TADs_500kb-chr4_11.tsv"
+url_file <- paste0(
+  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+  "master/tad/TADs_500kb-chr4_11.tsv"
+)
 path_tad <- glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
 download.file(url_file, path_tad)
 

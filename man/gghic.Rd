@@ -31,6 +31,9 @@ gghic(
   loop_is_0based = FALSE,
   loop_colour = "black",
   loop_fill = NA,
+  concatemer = FALSE,
+  concatemer_width_ratio = 1/100,
+  concatemer_spacing_ratio = 1/5,
   expand_xaxis = FALSE,
   expand_left = NULL,
   expand_right = NULL,
@@ -98,6 +101,14 @@ Default is \code{FALSE}.}
 \item{loop_colour}{The color of the loop. Default is \code{"black"}.}
 
 \item{loop_fill}{The fill color of the loop. Default is \code{NA}.}
+
+\item{concatemer}{Whether to add concatemer or not. Default is \code{FALSE}.}
+
+\item{concatemer_width_ratio}{The width ratio of the concatemer.
+Default is \code{1/100}.}
+
+\item{concatemer_spacing_ratio}{The spacing ratio of the concatemer.
+Default is \code{1/5}.}
 
 \item{expand_xaxis}{Whether to expand the x-axis or not. Default is \code{FALSE}.}
 
@@ -221,7 +232,10 @@ library(scales)
 library(scales)
 
 dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+url_file <- paste0(
+  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+  "master/cooler/chr4_11-5kb.cool"
+)
 path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
 download.file(url_file, path_file)
 
@@ -236,7 +250,10 @@ scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
 scores <- scores[!is.na(scores) & !is.infinite(scores)]
 x$score <- oob_squish(x$score, c(min(scores), max(scores)))
 
-url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/gtf/gencode-chr4_11.gtf.gz"
+url_file <- paste0(
+  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+  "master/gtf/gencode-chr4_11.gtf.gz"
+)
 path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
 download.file(url_file, path_gtf)
 

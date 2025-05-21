@@ -154,7 +154,10 @@ library(glue)
 library(rappdirs)
 
 dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/cooler/chr4_11-5kb.cool"
+url_file <- paste0(
+  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
+  "master/cooler/chr4_11-5kb.cool"
+)
 path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
 download.file(url_file, path_file)
 
@@ -188,7 +191,8 @@ p <- x |>
   )
 
 urls_file <- glue(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/master/bigwig/track{1:2}.bigWig"
+  "https://raw.githubusercontent.com/",
+  "mhjiang97/gghic-data/refs/heads/master/bigwig/track{1:2}.bigWig"
 )
 paths_track <- glue("{dir_cache_gghic}/track{1:2}.bigWig")
 for (i in seq_along(urls_file)) {
