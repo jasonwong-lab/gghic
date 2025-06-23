@@ -12,8 +12,8 @@ StatTad2 <- ggplot2::ggproto(
     }
     res <- env$res
     MIN_Y <- env$MIN_Y
-    chrom_add <- env$chrom_add
-    chrom_sub <- env$chrom_sub
+    chroms_add <- env$chroms_add
+    chroms_sub <- env$chroms_sub
 
     anchor1 <- GenomicRanges::GRanges(
       seqnames = data$seqnames,
@@ -36,7 +36,7 @@ StatTad2 <- ggplot2::ggproto(
       }
     }
 
-    if (!is.null(chrom_add) && !is.null(chrom_sub)) {
+    if (!is.null(chroms_add) && !is.null(chroms_sub)) {
       dat_tad <- dat_tad |>
         dplyr::rename(seqname = seqnames1) |>
         adjust_coordinates2(
