@@ -7,6 +7,7 @@
 theme_hic(
   hide_y = TRUE,
   coord_ratio = 1,
+  scale_fill_gradientn = TRUE,
   breaks = ggplot2::waiver(),
   labels = scales::unit_format(unit = "M", scale = 1e-06),
   xmin = NULL,
@@ -19,6 +20,9 @@ theme_hic(
 Default is \code{TRUE}.}
 
 \item{coord_ratio}{The ratio of the \link[ggplot2:coord_fixed]{ggplot2::coord_fixed}. Default is \code{1}.}
+
+\item{scale_fill_gradientn}{A logical value indicating whether to apply the
+gradient color scale. Default is \code{TRUE}.}
 
 \item{breaks}{This argument is passed to \link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous}.}
 
