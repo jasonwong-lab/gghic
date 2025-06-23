@@ -19,6 +19,21 @@ calculate_add_lengths <- function(data) {
   chroms_add
 }
 
+calculate_add_lengths_1d <- function(data) {
+  chroms_add <- data |>
+    dplyr::group_by(seqnames) |>
+    dplyr::summarise(end = max(end), start = min(start)) |>
+    dplyr::mutate(length = end - start + 1) |>
+    dplyr::ungroup() |>
+    dplyr::select(seqnames, length) |>
+    dplyr::distinct() |>
+    dplyr::mutate(cum_len = cumsum(c(0, length)[seq_len(dplyr::n())])) |>
+    dplyr::select(seqnames, cum_len) |>
+    dplyr::rename(seqname = seqnames)
+
+  chroms_add
+}
+
 calculate_subtract_lengths <- function(data) {
   chroms_sub <- data |>
     dplyr::group_by(seqnames1) |>
@@ -27,6 +42,18 @@ calculate_subtract_lengths <- function(data) {
     dplyr::select(seqnames1, start1) |>
     dplyr::distinct() |>
     dplyr::rename(seqname = seqnames1, orignal_start = start1)
+
+  chroms_sub
+}
+
+calculate_subtract_lengths_1d <- function(data) {
+  chroms_sub <- data |>
+    dplyr::group_by(seqnames) |>
+    dplyr::slice_min(order_by = start, n = 1) |>
+    dplyr::ungroup() |>
+    dplyr::select(seqnames, start) |>
+    dplyr::distinct() |>
+    dplyr::rename(seqname = seqnames, orignal_start = start)
 
   chroms_sub
 }
@@ -111,6 +138,40 @@ tbl2gis <- function(data) {
   )
 
   InteractionSet::GInteractions(anchor1, anchor2)
+}
+
+#' get_breaks_labels
+#'
+#' @description Get breaks and labels for axis from multiple chromosomes.
+#' @param data A data frame/tibble with columns `seqnames` and `end`.
+#' @return A list with `breaks` and `labels`.
+#' @export get_breaks_labels
+#' @aliases get_breaks_labels
+get_breaks_labels <- function(data) {
+  labels <- scales::unit_format(unit = "M", scale = 1e-6, accuracy = 0.01)
+
+  tmp <- data |>
+    dplyr::group_by(seqnames) |>
+    dplyr::reframe(
+      bin = seq(from = min(end), to = max(end), length.out = 5)
+    ) |>
+    dplyr::rename(seqname = seqnames)
+
+  chroms_add <- data |>
+    calculate_add_lengths_1d()
+  chroms_sub <- data |>
+    calculate_subtract_lengths_1d()
+
+  tmp2 <- tmp |>
+    adjust_coordinates2(chroms_add, chroms_sub, c(bin = "bin"))
+
+  breaks <- tmp2$bin
+  labels <- labels(tmp$bin)
+
+  indices <- match(unique(tmp$seqname), tmp$seqname)[-1]
+  labels[indices] <- paste0("\n", labels[indices])
+
+  list(breaks = breaks, labels = labels)
 }
 
 # *--------------------------------------------------------------------------* #
