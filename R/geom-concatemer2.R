@@ -24,8 +24,8 @@ StatConcatemer2 <- ggplot2::ggproto(
     min_x <- env$min_x
     res   <- env$res
     n_sn  <- env$n_sn
-    chrom_add <- env$chrom_add
-    chrom_sub <- env$chrom_sub
+    chroms_add <- env$chroms_add
+    chroms_sub <- env$chroms_sub
     if (n_sn > 1) {
       if (env$n_hic == 1 || env$n_track == 1 || env$n_annotation == 1) {
         maxs_x <- env$maxs_x
@@ -92,7 +92,7 @@ StatConcatemer2 <- ggplot2::ggproto(
         dplyr::mutate(seqname = stringr::str_remove(seqname, "^chr"))
     }
 
-    if (!is.null(chrom_add) && !is.null(chrom_sub)) {
+    if (!is.null(chroms_add) && !is.null(chroms_sub)) {
       data <- data |>
         adjust_coordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
     }
