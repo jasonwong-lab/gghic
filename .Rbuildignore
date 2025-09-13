@@ -9,6 +9,7 @@
 ^_pkgdown\.yml$     # Configuration info for the package website
 ^\.github$          # Contributing guidelines, CoC, issue templates, etc.
 ^vignettes/_dummy\.Rmd$
+^vignettes/test-*
 ^vignettes/style\.css$
 ^docs$
 ^Meta$
