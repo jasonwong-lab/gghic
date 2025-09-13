@@ -1,4 +1,4 @@
-calculate_hic_coordinates <- function(data) {
+calculate_hic_coordinates <- function(data, lower = FALSE) {
   n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
 
   if (n_sn == 1 || (n_sn == 2 && all(data$seqnames1 != data$seqnames2))) {
@@ -24,6 +24,16 @@ calculate_hic_coordinates <- function(data) {
       ymax = (xmax - start1),
       yend = (xend - end1)
     )
+
+  if (lower) {
+    dat <- dat |>
+      dplyr::mutate(
+        y = -1 * y,
+        ymin = -1 * ymin,
+        ymax = -1 * ymax,
+        yend = -1 * yend
+      )
+  }
 
   dat
 }
@@ -64,6 +74,7 @@ StatHic <- ggplot2::ggproto(
     env$n_annotation <- 0
     env$n_track <- 0
     env$n_concatemer <- 0
+    env$n_hic_under <- 0
     env$n_hic <- 1
     env$max_y <- max(dat$ymax, na.rm = TRUE)
     env$min_y <- min(dat$y, na.rm = TRUE)
