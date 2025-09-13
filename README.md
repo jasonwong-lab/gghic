@@ -27,8 +27,10 @@ Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromo
 5. [x] Plot compartments, TADs, and loops on the heatmap.
 6. [x] Allow for generating rasterized heatmaps and tracks to handle large datasets.
 7. [x] Plot concatemers indicating multi-way contacts.
-8. [ ] Support duckplyr for faster data manipulation.
-9. [ ] ...
+8. [x] Use concatemers only to plot pairwise interactions.
+9. [x] Plot a second heatmap below the main heatmap (lower triangle).
+10. [ ] Support duckplyr for faster data manipulation.
+11. [ ] ...
 
 ## Installation
 
