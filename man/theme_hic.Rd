@@ -46,48 +46,16 @@ If either \code{xmin} or \code{xmax} is \code{NULL}, the x-axis will not be expa
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-5kb.cool"
-)
-path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+# Apply default theme_hic
+gghic(cc) + theme_hic()
 
-x |>
-  filter(
-    seqnames1 == "chr11", seqnames2 == "chr11",
-    center1 > 67000000, center1 < 67100000,
-    center2 > 67000000, center2 < 67100000
-  ) |>
-  ggplot(
-    aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
-    )
-  ) +
-  geom_hic() +
-  theme_hic()
+# Disable default color scale
+gghic(cc) +
+  theme_hic(scale_fill_gradientn = FALSE) +
+  scale_fill_viridis_c()
 }
 }

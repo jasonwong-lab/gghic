@@ -12,11 +12,11 @@ geom_tad(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   tad_path = NULL,
   tad_gis = NULL,
-  is_0based = FALSE,
-  colour = "grey"
+  is_0_based = FALSE,
+  colour = "grey",
+  ...
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -73,22 +73,24 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{tad_path}{A path to the TAD file. Default is \code{NULL}.}
 
 \item{tad_gis}{An InteractionSet object of TADs. Default is \code{NULL}.}
 
-\item{is_0based}{Whether the TAD file is 0-based or not. Default is \code{FALSE}.}
+\item{is_0_based}{Whether the TAD file is 0-based or not. Default is \code{FALSE}.}
 
 \item{colour}{The color of the TADs. Default is \code{grey}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -110,49 +112,14 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-100kb.cool"
-)
-path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+# Load TAD boundaries from file
+tad_file <- "path/to/tads.bed"
 
-p <- x |>
-  filter(
-    seqnames1 == "chr4", seqnames2 == "chr4",
-    center1 > 11000000 & center1 < 21000000,
-    center2 > 11000000 & center2 < 21000000
-  ) |>
-  gghic(expand_xaxis = TRUE)
-
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/tad/TADs_500kb-chr4_11.tsv"
-)
-path_tad <- glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
-download.file(url_file, path_tad)
-
-p + geom_tad(tad_path = path_tad, is_0based = TRUE)
+# Add TAD boundaries to Hi-C plot
+gghic(cc) + geom_tad(tad_path = tad_file)
 }
 }

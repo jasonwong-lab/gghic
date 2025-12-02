@@ -12,14 +12,14 @@ geom_hic_under(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
-  rasterize = FALSE,
+  rasterize = TRUE,
   dpi = 300,
   dev = "cairo",
   scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
-  linetype = "dashed"
+  linetype = "dashed",
+  ...
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -73,16 +73,16 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{...}{Parameters to be ignored.}
-
-\item{rasterize}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+\item{rasterize}{Whether to rasterize the plot or not. Default is \code{TRUE}.}
 
 \item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
 
@@ -96,6 +96,8 @@ multiple chromosomes. Default is \code{TRUE}.}
 \item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
 
 \item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -117,13 +119,34 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-library(gghic)
+# Load two Hi-C datasets for comparison
+cc1 <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+  import()
+
+# Simulate a second dataset (in practice, load a different sample)
+cc2 <- cc1
+
+# Compare two Hi-C maps with different color scales
 library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
+ggplot() +
+  geom_hic(
+    data = scaleData(cc1, "balanced", log10),
+    aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
+    )
+  ) +
+  geom_hic_under(
+    data = scaleData(cc2, "balanced", log10),
+    aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill2 = score
+    )
+  ) |>
+  renameGeomAes(new_aes = c("fiil" = "fill2")) +
+  scale_fill_gradientn(
+    aesthetics = "fill2", colors = c("white", "blue"), name = "Sample 2"
+  ) +
+  theme_hic()
 }
 }

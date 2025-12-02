@@ -12,15 +12,17 @@ geom_loop(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   loop_path = NULL,
   loop_gis = NULL,
-  is_0based = FALSE,
+  is_0_based = FALSE,
+  style = "circle",
+  n_arc_points = 50,
   colour = "black",
   shape = 21,
   fill = NA,
-  size = NULL,
-  linewidth = 1
+  size = grid::unit(1/80, "native"),
+  stroke = 1,
+  ...
 )
 }
 \arguments{
@@ -46,7 +48,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -77,31 +79,43 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{loop_path}{A path to the loop file. Default is \code{NULL}.}
 
 \item{loop_gis}{An InteractionSet object of loops. Default is \code{NULL}.}
 
-\item{is_0based}{Whether the loop file is 0-based or not. Default is \code{FALSE}.}
+\item{is_0_based}{Whether the loop file is 0-based or not.
+Default is \code{FALSE}.}
 
-\item{colour}{The color of the loops. Default is \code{grey}.}
+\item{style}{The style for drawing loops: \code{"circle"} for points/circles
+or \code{"arc"} for arcs under the Hi-C heatmap. Default is \code{"circle"}.}
 
-\item{shape}{The shape of the loops. Default is \code{21}.}
+\item{n_arc_points}{Number of points used to draw each arc (only used when
+\code{style = "arc"}). Default is \code{50}.}
 
-\item{fill}{The fill color of the loops. Default is \code{NA}.}
+\item{colour}{The color of the loops. Default is \code{"black"}.}
 
-\item{size}{The size of the loops. Default is \code{NULL}.
-If \code{NULL}, the size is \code{grid::unit(1 / 80, "native")}.}
+\item{shape}{The shape of the loops (only used when \code{style = "circle"}).
+Default is \code{21}.}
 
-\item{linewidth}{The line width of the loops. Default is \code{1}.}
+\item{fill}{The fill color of the loops
+(only used when \code{style = "circle"}).
+Default is \code{NA}.}
+
+\item{size}{The size of the loops (only used when \code{style = "circle"}).
+Default is \code{grid::unit(1 / 80, "native")}.}
+
+\item{stroke}{The line width of the loops. Default is \code{1}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -122,49 +136,15 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-100kb.cool"
-)
-path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+# Add loops from file
+loop_file <- "path/to/loops.bedpe"
+gghic(cc) + geom_loop(loop_path = loop_file)
 
-p <- x |>
-  filter(
-    seqnames1 == "chr4", seqnames2 == "chr4",
-    center1 > 11000000 & center1 < 21000000,
-    center2 > 11000000 & center2 < 21000000
-  ) |>
-  gghic(expand_xaxis = TRUE)
-
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/loop/loops-chr4_11.txt"
-)
-path_loop <- glue("{dir_cache_gghic}/loops-chr4_11.txt")
-download.file(url_file, path_loop)
-
-p + geom_loop(loop_path = path_loop, is_0based = TRUE)
+# Draw loops as arcs
+gghic(cc) + geom_loop(loop_path = loop_file, style = "arc")
 }
 }

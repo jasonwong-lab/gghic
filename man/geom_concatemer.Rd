@@ -12,13 +12,13 @@ geom_concatemer(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   width_ratio = 1/100,
   spacing_ratio = 1/5,
-  concatemer_granges = NULL,
-  concatemer_paths = NULL,
+  concatemer_grs = NULL,
+  concatemer_path = NULL,
   group_identifier = NULL,
-  fill = "black"
+  fill = "black",
+  ...
 )
 }
 \arguments{
@@ -44,7 +44,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -75,14 +75,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{width_ratio}{The ratio of the width of each concatemer track
 relative to the height of the Hi-C plot. Default is \code{1/100}.}
@@ -90,16 +90,18 @@ relative to the height of the Hi-C plot. Default is \code{1/100}.}
 \item{spacing_ratio}{The ratio of the spacing between two tracks.
 Default is \code{1/5}.}
 
-\item{concatemer_granges}{The GRanges object of the concatemer tracks.
+\item{concatemer_grs}{The GRanges object of the concatemer tracks.
 Default is \code{NULL}.}
 
-\item{concatemer_paths}{The paths to the concatemer files. Default is \code{NULL}.}
+\item{concatemer_path}{The paths to the concatemer files. Default is \code{NULL}.}
 
 \item{group_identifier}{A character indicating the column name in the
 concatemer GRanges object that identifies the group of
 concatemers. Default is \code{NULL}.}
 
 \item{fill}{The fill color of the gene model track. Default is \code{"black"}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -120,6 +122,19 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-# example usage
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+  import()
+
+# Load concatemer data (multi-way contacts from Pore-C)
+concatemers <- rtracklayer::import("path/to/concatemers.bed")
+
+# Add concatemer tracks to Hi-C plot
+gghic(cc) +
+  geom_concatemer(
+    concatemer_grs = concatemers,
+    group_identifier = "read_name",
+    fill = "blue"
+  )
 }
 }

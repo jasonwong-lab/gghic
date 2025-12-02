@@ -12,10 +12,10 @@ geom_concatemer2(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = FALSE,
-  ...,
   check_concatemers = TRUE,
   width_ratio = 1/100,
-  spacing_ratio = 1/5
+  spacing_ratio = 1/5,
+  ...
 )
 }
 \arguments{
@@ -41,7 +41,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -72,14 +72,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{check_concatemers}{Whether to subset the concatemers according to the
 main heatmap's range. Default is \code{TRUE}.}
@@ -89,6 +89,8 @@ relative to the height of the Hi-C plot. Default is \code{1/100}.}
 
 \item{spacing_ratio}{The ratio of the spacing between two tracks.
 Default is \code{1/5}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -107,6 +109,29 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-# example usage
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+  import()
+
+# Load concatemer data
+concat_df <- rtracklayer::import("path/to/concatemers.bed") |>
+  as.data.frame()
+
+concat_df <- as.data.frame(concatemers)
+
+# Custom styling
+gghic(cc) +
+  geom_concatemer2(
+    data = concat_df,
+    aes(
+      seqnames = seqnames,
+      start = start,
+      end = end,
+      read_group = read_name,
+      fill = read_name
+    ),
+    width_ratio = 1 / 80,
+    spacing_ratio = 1 / 3
+  )
 }
 }

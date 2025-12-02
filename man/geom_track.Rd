@@ -12,21 +12,21 @@ geom_track(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   data_paths = NULL,
-  data_granges = NULL,
+  track_grs = NULL,
   width_ratio = 1/20,
   spacing_ratio = 0.5,
   data_range = c("auto", "maximum"),
   fill = "black",
   fontsize = 5,
-  rasterize = FALSE,
+  rasterize = TRUE,
   dpi = 300,
   dev = "cairo",
   scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
-  linetype = "dashed"
+  linetype = "dashed",
+  ...
 )
 }
 \arguments{
@@ -52,7 +52,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -83,18 +83,18 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{data_paths}{The paths to the sequencing data files. Default is \code{NULL}.}
 
-\item{data_granges}{The GRanges object of the sequencing data.
+\item{track_grs}{The GRanges object of the sequencing data.
 Default is \code{NULL}.}
 
 \item{width_ratio}{The ratio of the width of each track relative to the
@@ -110,7 +110,7 @@ or a number (vector). Default is \code{"auto"}.}
 
 \item{fontsize}{The font size of the track names. Default is \code{5}.}
 
-\item{rasterize}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+\item{rasterize}{Whether to rasterize the plot or not. Default is \code{TRUE}.}
 
 \item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
 
@@ -118,12 +118,15 @@ or a number (vector). Default is \code{"auto"}.}
 
 \item{scale}{The scale of the rasterised plot. Default is \code{1}.}
 
-\item{draw_boundary}{Whether to draw the boundary line or not when plotting
-multiple chromosomes. Default is \code{TRUE}.}
+\item{draw_boundary}{Logical. Draw boundary lines between chromosomes in
+multi-chromosome plots. Default is \code{TRUE}.}
 
-\item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
+\item{boundary_colour}{Character. Color for boundary lines. Default is
+\code{"black"}.}
 
-\item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+\item{linetype}{Line type for boundaries. Default is \code{"dashed"}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -144,64 +147,16 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-5kb.cool"
-)
-path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+# Load track data from BigWig files
+track1 <- "path/to/track1.bw"
+track2 <- "path/to/track2.bw"
 
-p <- x |>
-  filter(
-    center1 > 10000000 & center1 < 11000000 &
-      center2 > 10000000 & center2 < 11000000
-  ) |>
-  gghic(
-    draw_boundary = TRUE,
-
-    ideogram = TRUE, genome = "hg19", highlight = TRUE,
-    ideogram_fontsize = 7, ideogram_width_ratio = 0.08,
-
-    annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
-    style = "arrow", maxgap = 100000, annotation_fontsize = 5,
-    annotation_width_ratio = 0.05,
-
-    expand_xaxis = TRUE
-  )
-
-urls_file <- glue(
-  "https://raw.githubusercontent.com/",
-  "mhjiang97/gghic-data/refs/heads/master/bigwig/track{1:2}.bigWig"
-)
-paths_track <- glue("{dir_cache_gghic}/track{1:2}.bigWig")
-for (i in seq_along(urls_file)) {
-  download.file(urls_file[i], paths_track[i])
-}
-
-p + geom_track(
-  data_paths = paths_track, width_ratio = 0.5,
-  fill = c("#DC0000B2", "#00A087B2"), data_range = "auto"
-)
+# Add tracks using file paths
+gghic(cc) +
+  geom_track(data_paths = c(track1, track2))
 }
 }

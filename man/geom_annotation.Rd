@@ -12,7 +12,6 @@ geom_annotation(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   txdb = NULL,
   tx2gene = NULL,
   gtf_path = NULL,
@@ -28,7 +27,8 @@ geom_annotation(
   fill = "#48CFCB",
   draw_boundary = TRUE,
   boundary_colour = "black",
-  linetype = "dashed"
+  linetype = "dashed",
+  ...
 )
 }
 \arguments{
@@ -54,7 +54,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -85,14 +85,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{txdb}{The TxDb object. Default is \code{NULL}.}
 
@@ -138,12 +138,15 @@ with prefix 'chr' or not. Default is \code{TRUE}.}
 
 \item{fill}{The fill color of the gene model track. Default is \code{"#48CFCB"}.}
 
-\item{draw_boundary}{Whether to draw the boundary line or not when plotting
-multiple chromosomes. Default is \code{TRUE}.}
+\item{draw_boundary}{Logical. Draw boundary lines between chromosomes in
+multi-chromosome plots. Default is \code{TRUE}.}
 
-\item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
+\item{boundary_colour}{Character. Color for boundary lines. Default is
+\code{"black"}.}
 
-\item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+\item{linetype}{Line type for boundaries. Default is \code{"dashed"}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -164,51 +167,35 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-5kb.cool"
-)
-path_file <- glue("{dir_cache}/chr4_11-5kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+gtf_file <- "path/to/genes.gtf"
+gghic(cc) + geom_annotation(gtf_path = gtf_file)
 
-p <- x |>
-  filter(
-    seqnames1 == "chr11", seqnames2 == "chr11",
-    center1 > 67000000, center1 < 67100000,
-    center2 > 67000000, center2 < 67100000
-  ) |>
-  ggplot(
-    aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
-    )
-  ) +
-  geom_hic()
+# Filter specific genes
+gghic(cc) +
+  geom_annotation(
+    gtf_path = gtf_file,
+    gene_symbols = c("BRCA1", "TP53", "MYC")
+  )
 
-path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+# Arrow style with custom colors
+gghic(cc) +
+  geom_annotation(
+    gtf_path = gtf_file,
+    style = "arrow",
+    colour = "darkblue",
+    fill = "lightblue",
+    fontsize = 8
+  )
 
-p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
+# Exclude non-coding RNAs
+gghic(cc) +
+  geom_annotation(
+    gtf_path = gtf_file,
+    include_ncrna = FALSE
+  )
 }
 }

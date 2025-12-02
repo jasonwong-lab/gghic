@@ -38,7 +38,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -69,12 +69,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{...}{Parameters to be ignored.}
 }
@@ -94,6 +96,31 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
-# example usage
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+  import()
+
+# Load TAD data
+tad_file <- "path/to/tads.bed"
+tads <- read.table(tad_file, col.names = c("seqnames", "start", "end"))
+
+# Add TAD boundaries using data frame
+library(ggplot2)
+gghic(cc) +
+  geom_tad2(data = tads, aes(seqnames = seqnames, start = start, end = end))
+
+# Multiple TAD types with different colors
+tads1 <- tads[1:5, ]
+tads1$type <- "Strong"
+tads2 <- tads[6:10, ]
+tads2$type <- "Weak"
+all_tads <- rbind(tads1, tads2)
+
+gghic(cc) +
+  geom_tad2(
+    data = all_tads,
+    aes(seqnames = seqnames, start = start, end = end, colour = type)
+  ) +
+  scale_colour_manual(values = c("Strong" = "red", "Weak" = "grey"))
 }
 }

@@ -12,14 +12,14 @@ geom_hic(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
-  rasterize = FALSE,
+  rasterize = TRUE,
   dpi = 300,
   dev = "cairo",
   scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
-  linetype = "dashed"
+  linetype = "dashed",
+  ...
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -73,92 +73,90 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{...}{Parameters to be ignored.}
+\item{rasterize}{Logical. Rasterize the heatmap for better performance with
+large datasets. Default is \code{TRUE}.}
 
-\item{rasterize}{Whether to rasterize the plot or not. Default is \code{FALSE}.}
+\item{dpi}{Numeric. Resolution for rasterization. Default is \code{300}.}
 
-\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
+\item{dev}{Character. Graphics device for rasterization. Default is
+\code{"cairo"}.}
 
-\item{dev}{The device to rasterise the plot. Default is \code{"cairo"}.}
+\item{scale}{Numeric. Scaling factor for rasterization. Default is \code{1}.}
 
-\item{scale}{The scale of the rasterised plot. Default is \code{1}.}
+\item{draw_boundary}{Logical. Draw boundary lines between chromosomes in
+multi-chromosome plots. Default is \code{TRUE}.}
 
-\item{draw_boundary}{Whether to draw the boundary line or not when plotting
-multiple chromosomes. Default is \code{TRUE}.}
+\item{boundary_colour}{Character. Color for boundary lines. Default is
+\code{"black"}.}
 
-\item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
+\item{linetype}{Line type for boundaries. Default is \code{"dashed"}.}
 
-\item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+\item{...}{Additional parameters (currently unused).}
 }
 \value{
-A ggplot object.
+A ggplot2 layer.
 }
 \description{
-A ggplot2 geom for Hi-C data.
+Creates a Hi-C contact heatmap layer using diamond/rotated square geometry.
+This is the core visualization layer for displaying chromatin interaction
+frequencies.
 }
 \details{
-Requires the following aesthetics:
+\code{geom_hic()} transforms rectangular interaction data into diamond-shaped
+heatmap tiles. Each interaction is plotted as a rotated square at 45 degrees,
+creating the characteristic triangular Hi-C heatmap visualization.
+
+\strong{Required aesthetics:}
 \itemize{
-\item seqnames1
-\item start1
-\item end1
-\item seqnames2
-\item start2
-\item end2
-\item fill
+\item \code{seqnames1} - Chromosome name for first anchor
+\item \code{start1} - Start position for first anchor
+\item \code{end1} - End position for first anchor
+\item \code{seqnames2} - Chromosome name for second anchor
+\item \code{start2} - Start position for second anchor
+\item \code{end2} - End position for second anchor
+\item \code{fill} - Value to map to color (typically scaled contact frequency)
 }
 }
 \examples{
 \dontrun{
-library(gghic)
-library(ggplot2)
-library(dplyr)
-library(HiCExperiment)
-library(InteractionSet)
-library(scales)
-library(glue)
-library(rappdirs)
-
-dir_cache_gghic <- user_cache_dir(appname = "gghic")
-url_file <- paste0(
-  "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-  "master/cooler/chr4_11-5kb.cool"
-)
-path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-download.file(url_file, path_file)
-
-hic <- path_file |>
-  CoolFile() |>
+# Load and import Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool") |>
   import()
 
-gis <- interactions(hic)
-gis$score <- log10(gis$balanced)
-x <- as_tibble(gis)
-scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-scores <- scores[!is.na(scores) & !is.infinite(scores)]
-x$score <- oob_squish(x$score, c(min(scores), max(scores)))
-
-x |>
-  filter(
-    seqnames1 == "chr11", seqnames2 == "chr11",
-    center1 > 67000000, center1 < 67100000,
-    center2 > 67000000, center2 < 67100000
-  ) |>
-  ggplot(
-    aes(
+# Basic Hi-C heatmap using geom_hic
+library(ggplot2)
+ggplot() +
+  geom_hic(
+    data = scaleData(cc["chr4"], "balanced", log10), aes(
       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
     )
   ) +
-  geom_hic() +
+  scale_fill_gradientn(colors = c("white", "red")) +
+  theme_hic()
+
+# Multi-chromosome plot
+cc_multi <- cc[c("chr4", "chr11")]
+ggplot() +
+  geom_hic(
+    data = scaleData(cc_multi, "balanced", log10), aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
+    ), draw_boundary = TRUE, boundary_colour = "blue"
+  ) +
   theme_hic()
 }
+
+}
+\seealso{
+\code{\link[=gghic]{gghic()}}, \code{\link[=theme_hic]{theme_hic()}}, \code{\link[=scaleData]{scaleData()}}
 }

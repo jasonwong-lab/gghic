@@ -12,7 +12,6 @@ geom_track2(
   na.rm = FALSE,
   show.legend = NA,
   inherit.aes = TRUE,
-  ...,
   width_ratio = 1/20,
   spacing_ratio = 0.5,
   data_range = c("auto", "maximum"),
@@ -22,7 +21,8 @@ geom_track2(
   scale = 1,
   draw_boundary = TRUE,
   boundary_colour = "black",
-  linetype = "dashed"
+  linetype = "dashed",
+  ...
 )
 }
 \arguments{
@@ -48,7 +48,7 @@ from a \code{formula} (e.g. \code{~ head(.x, 10)}).}
 
 \item{stat}{The statistical transformation to use on the data for this layer.
 When using a \verb{geom_*()} function to construct a layer, the \code{stat}
-argument can be used the override the default coupling between geoms and
+argument can be used to override the default coupling between geoms and
 stats. The \code{stat} argument accepts the following:
 \itemize{
 \item A \code{Stat} ggproto subclass, for example \code{StatCount}.
@@ -79,14 +79,14 @@ a warning. If \code{TRUE}, missing values are silently removed.}
 \code{NA}, the default, includes if any aesthetics are mapped.
 \code{FALSE} never includes, and \code{TRUE} always includes.
 It can also be a named logical vector to finely select the aesthetics to
-display.}
+display. To include legend keys for all levels, even
+when no data exists, use \code{TRUE}.  If \code{NA}, all levels are shown in legend,
+but unobserved levels are omitted.}
 
 \item{inherit.aes}{If \code{FALSE}, overrides the default aesthetics,
 rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
-the default plot specification, e.g. \code{\link[ggplot2:borders]{borders()}}.}
-
-\item{...}{Parameters to be ignored.}
+the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
 \item{width_ratio}{The ratio of the width of each track relative to the
 height of the Hi-C plot. Default is \code{1/20}.}
@@ -111,6 +111,8 @@ multiple chromosomes. Default is \code{TRUE}.}
 \item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
 
 \item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+
+\item{...}{Parameters to be ignored.}
 }
 \value{
 A ggplot object.
@@ -130,5 +132,43 @@ Requires the following aesthetics:
 }
 \examples{
 \dontrun{
+# Load Hi-C data
+cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+  import()
+
+# Load track data from BigWig
+track1 <- rtracklayer::import("path/to/track1.bw")
+track1$name <- "ChIP-seq"
+
+# Add track using data frame with aesthetics
+library(ggplot2)
+gghic(cc) +
+  geom_track2(
+    data = as.data.frame(track1),
+    aes(
+      seqnames = seqnames,
+      start = start,
+      end = end,
+      score = score,
+      name = name
+    )
+  )
+
+# Multiple tracks with different colors
+track2 <- track1
+track2$name <- "ATAC-seq"
+tracks_df <- rbind(
+  as.data.frame(track1),
+  as.data.frame(track2)
+)
+
+gghic(cc) +
+  geom_track2(
+    data = tracks_df, aes(
+      seqnames = seqnames, start = start, end = end, score = score,
+      name = name, fill = name
+    ), width_ratio = 1 / 25
+  ) +
+  scale_fill_manual(values = c("ChIP-seq" = "blue", "ATAC-seq" = "red"))
 }
 }
