@@ -1,5 +1,6 @@
 ---
 title: "Visualizing 3D Genome Organization with gghic"
+author: "Minghao Jiang"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_document:
