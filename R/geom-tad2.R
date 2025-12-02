@@ -2,10 +2,9 @@ StatTad2 <- ggplot2::ggproto(
   "StatTad",
   ggplot2::Stat,
   required_aes = c("seqnames", "start", "end"),
-  extra_params = c(ggplot2::Stat$extra_params),
-  dropped_aes = c("seqnames", "start", "end"),
+  setup_params = function(data, params) params,
   compute_panel = function(data, scales) {
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic <= 0) {
       stop("geom_tad2() requires a HiC plot to be drawn first.")
@@ -39,11 +38,11 @@ StatTad2 <- ggplot2::ggproto(
     if (!is.null(chroms_add) && !is.null(chroms_sub)) {
       dat_tad <- dat_tad |>
         dplyr::rename(seqname = seqnames1) |>
-        adjust_coordinates2(
+        .adjustCoordinates2(
           chroms_add, chroms_sub, c(start1 = "start1", end1 = "end1")
         ) |>
         dplyr::rename(seqname1 = seqname, seqname = seqnames2) |>
-        adjust_coordinates2(
+        .adjustCoordinates2(
           chroms_add, chroms_sub, c(start2 = "start2", end2 = "end2")
         ) |>
         dplyr::rename(seqname2 = seqname)
@@ -63,11 +62,10 @@ StatTad2 <- ggplot2::ggproto(
   }
 )
 
-GeomTad2 <- ggproto(
+GeomTad2 <- ggplot2::ggproto(
   "GeomTad",
   ggplot2::Geom,
   required_aes = c("xmin", "xmax", "xend", "ymin", "ymax", "yend"),
-  extra_params = c(ggplot2::Geom$extra_params),
   draw_key = ggplot2::draw_key_path,
   default_aes = ggplot2::aes(
     colour = "black", fill = NA, linetype = 1, alpha = 1, stroke = 0.5
@@ -104,9 +102,34 @@ GeomTad2 <- ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' # example usage
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+#'   import()
+#'
+#' # Load TAD data
+#' tad_file <- "path/to/tads.bed"
+#' tads <- read.table(tad_file, col.names = c("seqnames", "start", "end"))
+#'
+#' # Add TAD boundaries using data frame
+#' library(ggplot2)
+#' gghic(cc) +
+#'   geom_tad2(data = tads, aes(seqnames = seqnames, start = start, end = end))
+#'
+#' # Multiple TAD types with different colors
+#' tads1 <- tads[1:5, ]
+#' tads1$type <- "Strong"
+#' tads2 <- tads[6:10, ]
+#' tads2$type <- "Weak"
+#' all_tads <- rbind(tads1, tads2)
+#'
+#' gghic(cc) +
+#'   geom_tad2(
+#'     data = all_tads,
+#'     aes(seqnames = seqnames, start = start, end = end, colour = type)
+#'   ) +
+#'   scale_colour_manual(values = c("Strong" = "red", "Weak" = "grey"))
 #' }
-#' @export geom_tad2
+#' @export
 #' @aliases geom_tad2
 geom_tad2 <- function(
   mapping = NULL, data = NULL, stat = StatTad2, position = "identity",

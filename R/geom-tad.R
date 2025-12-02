@@ -4,16 +4,9 @@ StatTad <- ggplot2::ggproto(
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "tad_path", "tad_gis", "is_0based"
-  ),
-  dropped_aes = c(
-    "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
-  ),
+  setup_params = function(data, params) params,
   compute_panel = function(
-    data, scales,
-    tad_path, tad_gis, is_0based
+    data, scales, tad_path = NULL, tad_gis = NULL, is_0_based = FALSE
   ) {
     # ======================================================================== #
     #   ^        /\ (xmax, ymax)                                               #
@@ -27,7 +20,7 @@ StatTad <- ggplot2::ggproto(
     # --+--------------------------------------------------------------------> #
     #   |                                                                      #
     # ======================================================================== #
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic == 1) {
       res <- env$res
@@ -35,21 +28,18 @@ StatTad <- ggplot2::ggproto(
       MIN_Y <- env$MIN_Y
     } else {
       dat_hic <- data |>
-        calculate_hic_coordinates()
+        .calculateHicCoordinates()
       res <- data$end1[1] - data$start1[1] + 1
       n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
       MIN_Y <- min(dat_hic$y, na.rm = TRUE)
     }
 
     if (!is.null(tad_path)) {
-      tmp <- tad_path |>
-        vroom::vroom(
-          delim = "\t",
-          col_types = vroom::cols(),
-          col_names = c("chrom", "start", "end")
-        )
+      tmp <- read.delim(
+        tad_path, header = FALSE, col.names = c("chrom", "start", "end")
+      )
 
-      if (is_0based) tmp$start <- tmp$start + 1
+      if (is_0_based) tmp$start <- tmp$start + 1
 
       anchor1 <- GenomicRanges::GRanges(
         seqnames = tmp$chrom,
@@ -64,7 +54,7 @@ StatTad <- ggplot2::ggproto(
     if (!is.null(tad_gis)) gis_tad <- tad_gis
 
     if (is.null(env$gis)) {
-      gis_data <- tbl2gis(data)
+      gis_data <- .tbl2Gis(data)
     } else {
       gis_data <- env$gis
     }
@@ -78,17 +68,17 @@ StatTad <- ggplot2::ggproto(
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
-        calculate_add_lengths()
+        .calculateAddLengths()
       chroms_sub <- data |>
-        calculate_subtract_lengths()
+        .calculateSubtractLengths()
 
       dat_tad <- dat_tad |>
         dplyr::rename(seqname = seqnames1) |>
-        adjust_coordinates2(
+        .adjustCoordinates2(
           chroms_add, chroms_sub, c(start1 = "start1", end1 = "end1")
         ) |>
         dplyr::rename(seqname1 = seqname, seqname = seqnames2) |>
-        adjust_coordinates2(
+        .adjustCoordinates2(
           chroms_add, chroms_sub, c(start2 = "start2", end2 = "end2")
         ) |>
         dplyr::rename(seqname2 = seqname)
@@ -108,21 +98,13 @@ StatTad <- ggplot2::ggproto(
   }
 )
 
-GeomTad <- ggproto(
+GeomTad <- ggplot2::ggproto(
   "GeomTad",
   ggplot2::Geom,
-  required_aes = c(
-    "xmin", "xmax", "xend", "ymin", "ymax", "yend"
-  ),
-  extra_params = c(
-    ggplot2::Geom$extra_params,
-    "colour"
-  ),
+  required_aes = c("xmin", "xmax", "xend", "ymin", "ymax", "yend"),
+  default_aes = ggplot2::aes(colour = "grey"),
   draw_key = ggplot2::draw_key_path,
-  draw_panel = function(
-    data, panel_params, coord,
-    colour
-  ) {
+  draw_panel = function(data, panel_params, coord, colour = "grey") {
     coords <- coord$transform(data, panel_params)
     grob1 <- grid::pathGrob(
       x = c(coords$xmin, coords$xmax),
@@ -151,7 +133,7 @@ GeomTad <- ggproto(
 #' @inheritParams geom_hic
 #' @param tad_path A path to the TAD file. Default is `NULL`.
 #' @param tad_gis An InteractionSet object of TADs. Default is `NULL`.
-#' @param is_0based Whether the TAD file is 0-based or not. Default is `FALSE`.
+#' @param is_0_based Whether the TAD file is 0-based or not. Default is `FALSE`.
 #' @param colour The color of the TADs. Default is `grey`.
 #' @param ... Parameters to be ignored.
 #' @details
@@ -165,67 +147,30 @@ GeomTad <- ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' library(gghic)
-#' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
-#'
-#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/cooler/chr4_11-100kb.cool"
-#' )
-#' path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
-#' download.file(url_file, path_file)
-#'
-#' hic <- path_file |>
-#'   CoolFile() |>
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
-#' gis <- interactions(hic)
-#' gis$score <- log10(gis$balanced)
-#' x <- as_tibble(gis)
-#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+#' # Load TAD boundaries from file
+#' tad_file <- "path/to/tads.bed"
 #'
-#' p <- x |>
-#'   filter(
-#'     seqnames1 == "chr4", seqnames2 == "chr4",
-#'     center1 > 11000000 & center1 < 21000000,
-#'     center2 > 11000000 & center2 < 21000000
-#'   ) |>
-#'   gghic(expand_xaxis = TRUE)
-#'
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/tad/TADs_500kb-chr4_11.tsv"
-#' )
-#' path_tad <- glue("{dir_cache_gghic}/TADs_500kb-chr4_11.tsv")
-#' download.file(url_file, path_tad)
-#'
-#' p + geom_tad(tad_path = path_tad, is_0based = TRUE)
+#' # Add TAD boundaries to Hi-C plot
+#' gghic(cc) + geom_tad(tad_path = tad_file)
 #' }
-#' @export geom_tad
+#' @export
 #' @aliases geom_tad
 geom_tad <- function(
   mapping = NULL, data = NULL, stat = StatTad, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  tad_path = NULL, tad_gis = NULL, is_0based = FALSE,
-  colour = "grey"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, tad_path = NULL,
+  tad_gis = NULL, is_0_based = FALSE, colour = "grey", ...
 ) {
   ggplot2::layer(
     geom = GeomTad, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE,
     params = list(
-      na.rm = na.rm, ...,
-      tad_path = tad_path, tad_gis = tad_gis, is_0based = is_0based,
-      colour = colour
+      na.rm = na.rm, tad_path = tad_path, tad_gis = tad_gis,
+      is_0_based = is_0_based, colour = colour, ...
     )
   )
 }
