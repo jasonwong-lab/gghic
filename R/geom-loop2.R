@@ -168,7 +168,8 @@ geom_loop2 <- function(
     geom = GeomLoop2, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = TRUE,
-    params = list(na.rm = na.rm, style = style,
-                  n_arc_points = n_arc_points, ...)
+    params = list(
+      na.rm = na.rm, style = style, n_arc_points = n_arc_points, ...
+    )
   )
 }

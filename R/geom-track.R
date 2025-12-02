@@ -22,7 +22,7 @@ StatTrack <- ggplot2::ggproto(
     #     | |   |     \    /    \                    |    |                    #
     # 0 --+ | --       ---       --           (x, y) +----+ (xmax, y)          #
     # ======================================================================== #
-    # data_range <- data_range[1]
+    data_range <- match.arg(data_range)
     if (is.null(data_paths) && is.null(track_grs)) {
       stop("Either data_paths or track_grs must be provided.")
     }

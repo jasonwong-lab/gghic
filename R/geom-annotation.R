@@ -36,6 +36,7 @@ StatAnnotation <- ggplot2::ggproto(
     #   | +---------------------------------------------------- ,              #
     #   |                          [gene name]                                 #
     # ======================================================================== #
+    style <- match.arg(style)
     if (is.null(gtf_path) && (is.null(txdb) || is.null(tx2gene))) {
       stop("Either gtf_path or txdb and tx2gene must be provided.")
     }
@@ -112,7 +113,7 @@ StatAnnotation <- ggplot2::ggproto(
         xmax = end
       )
 
-    if (style[1] == "basic") {
+    if (style == "basic") {
       dat_cds <- genes |>
         dplyr::filter(feature == "CDS") |>
         dplyr::left_join(ys, by = "line") |>
@@ -142,7 +143,7 @@ StatAnnotation <- ggplot2::ggproto(
         )
       dat <- dplyr::bind_rows(dat_cds, dat_intron, dat_others, dat_text)
     }
-    if (style[1] == "arrow") {
+    if (style == "arrow") {
       dat <- genes |>
         dplyr::left_join(ys, by = "line") |>
         dplyr::group_by(gene_symbol) |>
@@ -192,7 +193,7 @@ StatAnnotation <- ggplot2::ggproto(
       dat <- dat |>
         .adjustCoordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
 
-      if (style[1] == "arrow") {
+      if (style == "arrow") {
         dat <- dat |>
           .adjustCoordinates2(chroms_add, chroms_sub, c(xend = "xend"))
       }
@@ -236,6 +237,7 @@ GeomAnnotation <- ggplot2::ggproto(
     colour = "#48CFCB", fill = "#48CFCB", draw_boundary = TRUE,
     boundary_colour = "black", linetype = "dashed"
   ) {
+    style <- match.arg(style)
     coords <- coord$transform(data, panel_params)
 
     coords_text <- coords |>
@@ -248,7 +250,7 @@ GeomAnnotation <- ggplot2::ggproto(
       default.units = "native"
     )
 
-    if (style[1] == "basic") {
+    if (style == "basic") {
       coords_exon <- coords |>
         dplyr::filter(feature %in% c("CDS", "utr3", "utr5", "ncRNA"))
       grob_exon <- grid::polygonGrob(
@@ -297,7 +299,7 @@ GeomAnnotation <- ggplot2::ggproto(
         grob_exon, grob_intron_line, grob_intron_arrow, grob_text
       )
     }
-    if (style[1] == "arrow") {
+    if (style == "arrow") {
       coords_arrow_p <- coords |>
         dplyr::filter(feature == "arrow", strand == "+")
       grob_arrow_p <- grid::nullGrob()
