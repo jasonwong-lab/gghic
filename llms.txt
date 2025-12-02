@@ -35,12 +35,11 @@ devtools::install_github("jasonwong-lab/gghic")
 ## Documentation
 
 - [Get started with gghic for Hi-C/-like data
-  visualization](https://jasonwong-lab.github.io/gghic/gghic.md)
-- Articles
-  1.  [Hi-C/-like data quality
-      assessment](https://jasonwong-lab.github.io/gghic/depth.md)
-  2.  [Pore-C/-like multi-way contact
-      analysis](https://jasonwong-lab.github.io/gghic/hypergraph.md)
+  visualization](https://jasonwong-lab.github.io/gghic/articles/gghic.md)
+- [Hi-C/-like data quality
+  assessment](https://jasonwong-lab.github.io/gghic/articles/depth.md)
+- [Pore-C/-like multi-way contact
+  analysis](https://jasonwong-lab.github.io/gghic/articles/hypergraph.md)
 
 ## Getting Help
 
