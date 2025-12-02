@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Use gghic to Visualise Genomic Interaction Data • gghic</title>
+<title>Visualizing 3D Genome Organization with gghic • gghic</title>
 <!-- favicons --><link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
 <link rel="icon" type="”image/svg+xml”" href="../favicon.svg">
 <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
@@ -15,7 +15,7 @@
 <link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Use gghic to Visualise Genomic Interaction Data">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Visualizing 3D Genome Organization with gghic">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gghic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,6 +36,13 @@
       <ul class="navbar-nav me-auto">
 <li class="active nav-item"><a class="nav-link" href="../articles/gghic.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="../articles/depth.html">Resolution Depth Analysis for Hi-C/-like Data</a></li>
+    <li><a class="dropdown-item" href="../articles/hypergraph.html">Multi-way Contact Analysis with Hypergraphs</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -55,9 +62,9 @@
 
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
-      <img src="../logo.png" class="logo" alt=""><h1>Use gghic to Visualise Genomic Interaction Data</h1>
+      <img src="../logo.png" class="logo" alt=""><h1>Visualizing 3D Genome Organization with gghic</h1>
             
-            <h4 data-toc-skip class="date">2025-09-13</h4>
+            <h4 data-toc-skip class="date">2025-12-02</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/gghic.Rmd" class="external-link"><code>vignettes/gghic.Rmd</code></a></small>
       <div class="d-none name"><code>gghic.Rmd</code></div>
@@ -68,29 +75,96 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><strong>gghic</strong> is a versatile R package for creating
-flexible, publication-ready visualizations of 3D genome organization
-data. With gghic, you can easily explore and present Hi-C contact maps,
-topologically associating domains (TADs), chromatin loops, gene
-annotations, and other genomic features in a unified and customizable
-framework.</p>
-<p>Whether you are analyzing large-scale Hi-C experiments, visualizing
-multi-chromosome interactions, or integrating additional genomic tracks
-(such as ChIP-seq or BigWig data), gghic provides a tidyverse-friendly
-and extensible toolkit for your research.</p>
-<p>This tutorial will guide you through the core features of gghic, from
-data preparation to advanced visualization. By the end, you’ll be able
-to generate high-quality, informative figures for your genomics projects
-with just a few lines of code.</p>
+<p><strong>gghic</strong> is an R package for creating publication-ready
+visualizations of 3D genome organization data. It seamlessly integrates
+Hi-C contact maps, topologically associating domains (TADs), chromatin
+loops, gene annotations, and genomic tracks into unified, customizable
+plots.</p>
+<div class="section level3">
+<h3 id="why-gghic">Why gghic?<a class="anchor" aria-label="anchor" href="#why-gghic"></a>
+</h3>
+<ul>
+<li>
+<strong>Easy to use</strong>: Simple, intuitive syntax with sensible
+defaults for quick plotting</li>
+<li>
+<strong>Flexible</strong>: Choose between high-level
+<code><a href="../reference/gghic.html">gghic()</a></code> wrapper or low-level <code>geom_*</code> layers for
+fine control</li>
+<li>
+<strong>Memory efficient</strong>: Smart <code>focus</code>
+mechanism loads only the genomic regions you need</li>
+<li>
+<strong>Publication-ready</strong>: High-quality figures with
+minimal code</li>
+<li>
+<strong>Extensible</strong>: Built on <code>ggplot2</code>
+ecosystem—use standard <code>ggplot2</code> functions for
+customization</li>
+</ul>
+</div>
+<div class="section level3">
+<h3 id="key-features">Key Features<a class="anchor" aria-label="anchor" href="#key-features"></a>
+</h3>
+<ul>
+<li>
+<strong><code>ChromatinContacts</code> S4 class</strong>: Robust
+object-oriented framework for managing Hi-C/-like data</li>
+<li>
+<strong>Flexible focusing</strong>: Efficiently subset genomic
+regions before or after loading data</li>
+<li>
+<strong>Feature integration</strong>: Seamlessly combine TADs,
+loops, genes, and signal tracks</li>
+<li>
+<strong>Multiple visualization modes</strong>: Single chromosome,
+multi-chromosome, inter-chromosomal, and multi-way contacts</li>
+<li>
+<strong>Hypergraph analysis</strong>: Specialized tools for
+visualizing Pore-C/-like multi-way chromatin interactions</li>
+</ul>
 <blockquote>
-<p><strong>Learn more:</strong></p>
+<p><strong>Resources:</strong></p>
 <ul>
 <li><a href="https://arxiv.org/abs/2412.03005" class="external-link">arXiv preprint</a></li>
+<li><a href="https://github.com/mhjiang97/gghic" class="external-link">GitHub
+repository</a></li>
+<li>
+<a href="depth.html">Depth by resolution vignette</a> for Hi-C/-like
+data quality assessment</li>
+<li>
+<a href="hypergraph.html">Hypergraph vignette</a> for Pore-C/-like
+multi-way contact analysis</li>
 </ul>
 </blockquote>
 </div>
+<div class="section level3">
+<h3 id="typical-workflow">Typical Workflow<a class="anchor" aria-label="anchor" href="#typical-workflow"></a>
+</h3>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Load data</strong>: Create <code>ChromatinContacts</code>
+object from Cooler files</li>
+<li>
+<strong>Focus</strong>: Specify genomic regions of interest
+(optional but recommended)</li>
+<li>
+<strong>Import</strong>: Load interaction data into memory</li>
+<li>
+<strong>Add features</strong>: Attach TADs, loops, genes, and tracks
+(optional)</li>
+<li>
+<strong>Visualize</strong>: Use <code><a href="../reference/gghic.html">gghic()</a></code> wrapper or
+custom <code>ggplot2</code> layers</li>
+<li>
+<strong>Customize</strong>: Refine with standard
+<code>ggplot2</code> functions and themes</li>
+</ol>
+<hr>
+</div>
+</div>
 <div class="section level2">
-<h2 id="setup">Setup<a class="anchor" aria-label="anchor" href="#setup"></a>
+<h2 id="getting-started">Getting Started<a class="anchor" aria-label="anchor" href="#getting-started"></a>
 </h2>
 <div class="section level3">
 <h3 id="load-required-packages">Load Required Packages<a class="anchor" aria-label="anchor" href="#load-required-packages"></a>
@@ -101,20 +175,17 @@ with just a few lines of code.</p>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="fu">load_pkg</span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"gghic"</span>, <span class="st">"ggplot2"</span>, <span class="st">"tibble"</span>, <span class="st">"scales"</span>, <span class="st">"dplyr"</span>, <span class="st">"tidyr"</span>, <span class="st">"glue"</span>,</span>
-<span>    <span class="st">"HiCExperiment"</span>, <span class="st">"GenomicRanges"</span>, <span class="st">"InteractionSet"</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, <span class="st">"dplyr"</span>, <span class="st">"GenomicRanges"</span>, <span class="st">"InteractionSet"</span>, <span class="st">"gghic"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="download-example-data">Download Example data<a class="anchor" aria-label="anchor" href="#download-example-data"></a>
 </h3>
-<p>Example data files are hosted at gghic-data to keep the package
-lightweight.</p>
+<p>The example data files are hosted on the <a href="https://github.com/mhjiang97/gghic-data" class="external-link">gghic-data</a>
+repository. This function downloads files to a local cache:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">download_example_files</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">cache_dir</span>, <span class="va">check_exists</span> <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">cache_dir</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">cache_dir</span><span class="op">)</span></span>
+<span>  <span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.exists</a></span><span class="op">(</span><span class="va">cache_dir</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">cache_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span></span>
 <span>  <span class="va">files</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>    <span class="st">"chr4_11-100kb.cool"</span> <span class="op">=</span> <span class="st">"cooler/chr4_11-100kb.cool"</span>,</span>
@@ -128,28 +199,28 @@ lightweight.</p>
 <span>    <span class="st">"concatemers.rds"</span> <span class="op">=</span> <span class="st">"multiway/concatemers.rds"</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span>  <span class="va">url_base</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
-<span>    <span class="st">"https://raw.githubusercontent.com/"</span>,</span>
-<span>    <span class="st">"mhjiang97/gghic-data/refs/heads/master/"</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="va">url_base</span> <span class="op">&lt;-</span> <span class="st">"https://raw.githubusercontent.com/mhjiang97/gghic-data/master/"</span></span>
 <span></span>
 <span>  <span class="kw">for</span> <span class="op">(</span><span class="va">file_name</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">files</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="va">file_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">cache_dir</span>, <span class="va">file_name</span><span class="op">)</span></span>
 <span>    <span class="kw">if</span> <span class="op">(</span><span class="va">check_exists</span> <span class="op">&amp;&amp;</span> <span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">file_path</span><span class="op">)</span><span class="op">)</span> <span class="kw">next</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Downloading "</span>, <span class="va">file_name</span>, <span class="st">"..."</span><span class="op">)</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">url_base</span>, <span class="va">files</span><span class="op">[[</span><span class="va">file_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">file_path</span>, method <span class="op">=</span> <span class="st">"curl"</span></span>
+<span>      <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">url_base</span>, <span class="va">files</span><span class="op">[[</span><span class="va">file_name</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">file_path</span>,</span>
+<span>      method <span class="op">=</span> <span class="st">"curl"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dir_cache</span> <span class="op">&lt;-</span> <span class="st">"../data"</span></span>
-<span></span>
+<code class="sourceCode R"><span><span class="co"># Define a cache directory and download the files</span></span>
+<span><span class="va">dir_cache</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="st">".."</span>, <span class="st">"data"</span><span class="op">)</span></span>
 <span><span class="fu">download_example_files</span><span class="op">(</span><span class="va">dir_cache</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Set up paths to the downloaded files</span></span>
 <span><span class="va">path_cf_100</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"chr4_11-100kb.cool"</span><span class="op">)</span></span>
 <span><span class="va">path_cf_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"chr4_11-5kb.cool"</span><span class="op">)</span></span>
 <span><span class="va">path_gtf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"gencode-chr4_11.gtf.gz"</span><span class="op">)</span></span>
-<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="fu">glue</span><span class="fu">::</span><span class="fu"><a href="https://glue.tidyverse.org/reference/glue.html" class="external-link">glue</a></span><span class="op">(</span><span class="st">"track{1:2}.bigWig"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">paths_track</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"track"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="st">".bigWig"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">path_tad</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"TADs_500kb-chr4_11.tsv"</span><span class="op">)</span></span>
 <span><span class="va">path_loop</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"loops-chr4_11.txt"</span><span class="op">)</span></span>
 <span><span class="va">path_gis_hic</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">dir_cache</span>, <span class="st">"gis_hic.rds"</span><span class="op">)</span></span>
@@ -157,208 +228,749 @@ lightweight.</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="data-preparation">Data Preparation<a class="anchor" aria-label="anchor" href="#data-preparation"></a>
+<h2 id="working-with-chromatincontacts-objects">Working with ChromatinContacts Objects<a class="anchor" aria-label="anchor" href="#working-with-chromatincontacts-objects"></a>
 </h2>
 <div class="section level3">
-<h3 id="import-hi-c-data">Import Hi-C Data<a class="anchor" aria-label="anchor" href="#import-hi-c-data"></a>
+<h3 id="understanding-chromatincontacts">Understanding ChromatinContacts<a class="anchor" aria-label="anchor" href="#understanding-chromatincontacts"></a>
 </h3>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_100</span> <span class="op">&lt;-</span> <span class="va">path_cf_100</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/HiCExperiment/man/CoolFile-class.html" class="external-link">CoolFile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocIO/man/IO.html" class="external-link">import</a></span><span class="op">(</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">hic_5</span> <span class="op">&lt;-</span> <span class="va">path_cf_5</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/HiCExperiment/man/CoolFile-class.html" class="external-link">CoolFile</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">HiCExperiment</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/BiocIO/man/IO.html" class="external-link">import</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>The <code>ChromatinContacts</code> object is the central data
+structure in <code>gghic</code>. It acts as a lightweight pointer to
+your Hi-C data (Cooler files), storing resolution and sequence
+information without loading the massive interaction matrix into memory
+immediately.</p>
+<p>A key feature is the <code>focus</code> argument. This allows you to
+specify chromosomes or regions of interest <em>before</em> importing the
+data.</p>
+<p><strong>Why use focus?</strong></p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Speed</strong>: Only reads relevant parts of the Hi-C
+matrix.</li>
+<li>
+<strong>Memory Efficiency</strong>: Prevents loading genome-wide
+matrices when you only need a specific locus.</li>
+</ol>
 </div>
 <div class="section level3">
-<h3 id="prepare-data-for-visualisation">Prepare Data for Visualisation<a class="anchor" aria-label="anchor" href="#prepare-data-for-visualisation"></a>
+<h3 id="creating-chromatincontacts-objects">Creating ChromatinContacts Objects<a class="anchor" aria-label="anchor" href="#creating-chromatincontacts-objects"></a>
 </h3>
+<div class="section level4">
+<h4 id="no-focus-genome-wide">No Focus (Genome-Wide)<a class="anchor" aria-label="anchor" href="#no-focus-genome-wide"></a>
+</h4>
+<p>Without a <code>focus</code>, the object references the entire
+genome:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span>cooler_path <span class="op">=</span> <span class="va">path_cf_100</span><span class="op">)</span></span>
+<span><span class="va">cc_100_all</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: genome-wide</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="focusing-on-specific-regions">Focusing on Specific Regions<a class="anchor" aria-label="anchor" href="#focusing-on-specific-regions"></a>
+</h4>
+<p>The <code>focus</code> argument accepts flexible region
+specifications. This is the <strong>recommended approach</strong> for
+working with large Hi-C datasets.</p>
+<div class="section level5">
+<h5 id="single-region-or-chromosome">Single Region or Chromosome<a class="anchor" aria-label="anchor" href="#single-region-or-chromosome"></a>
+</h5>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">scale_data</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">score_column</span> <span class="op">=</span> <span class="st">"balanced"</span>, <span class="va">scale_method</span> <span class="op">=</span> <span class="va">log10</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"HiCExperiment"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">gis</span> <span class="op">&lt;-</span> <span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/interaction-accessors.html" class="external-link">interactions</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span>  <span class="op">}</span> <span class="kw">else</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">inherits</a></span><span class="op">(</span><span class="va">data</span>, <span class="st">"GInteractions"</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">gis</span> <span class="op">&lt;-</span> <span class="va">data</span></span>
-<span>  <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>    <span class="kw"><a href="https://rdrr.io/r/base/stop.html" class="external-link">stop</a></span><span class="op">(</span><span class="st">"Input data must be a HiCExperiment or GInteractions object."</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span></span>
-<span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="va">gis</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu">scale_method</span><span class="op">(</span><span class="va">.data</span><span class="op">[[</span><span class="va">score_column</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span>, <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/is.finite.html" class="external-link">is.infinite</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="fu">scales</span><span class="fu">::</span><span class="fu"><a href="https://scales.r-lib.org/reference/oob.html" class="external-link">oob_squish</a></span><span class="op">(</span><span class="va">score</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="va">x</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Focus on entire chromosome (includes all intra-chromosomal interactions)</span></span>
+<span><span class="va">cc_chr11</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span>cooler_path <span class="op">=</span> <span class="va">path_cf_100</span>, focus <span class="op">=</span> <span class="st">"chr11"</span><span class="op">)</span></span>
+<span><span class="va">cc_chr11</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">&lt;-</span> <span class="fu">scale_data</span><span class="op">(</span><span class="va">hic_100</span><span class="op">)</span></span>
-<span><span class="va">x_5</span> <span class="op">&lt;-</span> <span class="fu">scale_data</span><span class="op">(</span><span class="va">hic_5</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="co"># Focus on specific 10 Mb region</span></span>
+<span><span class="va">cc_chr11_region</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span></span>
+<span>  cooler_path <span class="op">=</span> <span class="va">path_cf_100</span>, focus <span class="op">=</span> <span class="st">"chr11:60000000-70000000"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cc_chr11_region</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:60,000,000:70,000,000 &lt;-&gt; chr11:60,000,000:70,000,000</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="multiple-regions-with-operators">Multiple Regions with Operators<a class="anchor" aria-label="anchor" href="#multiple-regions-with-operators"></a>
+</h5>
+<p>Use <code>|</code> (OR) for multiple regions and <code>&amp;</code>
+(AND) for inter-regional interactions:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Multiple chromosomes</span></span>
+<span><span class="co"># Returns: chr4-chr4, chr11-chr11, AND chr4-chr11 interactions</span></span>
+<span><span class="va">cc_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span></span>
+<span>  cooler_path <span class="op">=</span> <span class="va">path_cf_100</span>, focus <span class="op">=</span> <span class="st">"chr4 | chr11"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cc_multi</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 3 regions</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt;   [2] chr11:1:135,006,516 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt;   [3] chr4:1:191,154,276 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Inter-chromosomal interactions ONLY (no intra-chromosomal)</span></span>
+<span><span class="va">cc_inter</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span></span>
+<span>  cooler_path <span class="op">=</span> <span class="va">path_cf_100</span>,</span>
+<span>  focus <span class="op">=</span> <span class="st">"chr4:10000000-15000000 &amp; chr11:60000000-65000000"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cc_inter</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:60,000,000:65,000,000 &lt;-&gt; chr4:10,000,000:15,000,000</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level5">
+<h5 id="complex-focus-patterns">Complex Focus Patterns<a class="anchor" aria-label="anchor" href="#complex-focus-patterns"></a>
+</h5>
+<p>Combine operators for sophisticated queries:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example 1: Multiple intra-chromosomal + one trans-chromosomal</span></span>
+<span><span class="co"># Returns: chr1-chr1, chr2-chr2, chr3-chr3, chr1-chr2, chr1-chr3, chr2-chr3, AND chr4-chr5</span></span>
+<span><span class="va">focus_complex</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr1 | chr2 | chr3"</span>, <span class="st">"chr4 &amp; chr5"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example 2: Specific regions with trans interactions</span></span>
+<span><span class="va">focus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  <span class="st">"chr1:1000000-5000000 | chr2:3000000-8000000"</span>,</span>
+<span>  <span class="st">"chr3:10000000-15000000 &amp; chr4:20000000-25000000"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Example 3: Multiple trans-chromosomal pairs</span></span>
+<span><span class="va">focus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr1 &amp; chr2"</span>, <span class="st">"chr3 &amp; chr4"</span>, <span class="st">"chr5 &amp; chr6"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>💡 Practical Tips:</strong></p>
+<ul>
+<li>Use <code>focus</code> when working with genome-wide data files
+(saves time and memory)</li>
+<li>For exploratory analysis, start with whole chromosome, then zoom to
+regions</li>
+<li>Use <code>&amp;</code> operator when specifically studying
+trans-chromosomal interactions</li>
+<li>Combine focusing with subsetting (next section) for iterative
+analysis</li>
+</ul>
+</div>
+<div class="section level5">
+<h5 id="using-ginteractions-objects">Using GInteractions Objects<a class="anchor" aria-label="anchor" href="#using-ginteractions-objects"></a>
+</h5>
+<p>For programmatic region definition (useful in pipelines):</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Create a GInteractions object to specify the focus</span></span>
+<span><span class="va">focus_gi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/warning.html" class="external-link">suppressWarnings</a></span><span class="op">(</span><span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/GInteractions-class.html" class="external-link">GInteractions</a></span><span class="op">(</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr4:10000000-12000000"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr11:61000000-63000000"</span><span class="op">)</span></span>
+<span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cc_gis_focus</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span></span>
+<span>  cooler_path <span class="op">=</span> <span class="va">path_cf_100</span>,</span>
+<span>  focus <span class="op">=</span> <span class="va">focus_gi</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">cc_gis_focus</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr4:10,000,000:12,000,000 &lt;-&gt; chr11:61,000,000:63,000,000</span></span>
+<span><span class="co">#&gt; Interactions: not loaded (use import() to load)</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="import-interaction-data">Import Interaction Data<a class="anchor" aria-label="anchor" href="#import-interaction-data"></a>
+</h3>
+<p>After creating the object, use <code>import()</code> to load the
+actual data:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span> <span class="op">&lt;-</span> <span class="fu">import</span><span class="op">(</span><span class="va">cc_100_all</span><span class="op">)</span></span>
+<span><span class="va">cc_100</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: genome-wide</span></span>
+<span><span class="co">#&gt; Interactions: 1,150,956 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Chain operations with pipe operator</span></span>
+<span><span class="va">cc_5</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/ChromatinContacts.html">ChromatinContacts</a></span><span class="op">(</span>cooler_path <span class="op">=</span> <span class="va">path_cf_5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">cc_5</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-5kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 5,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: genome-wide</span></span>
+<span><span class="co">#&gt; Interactions: 4,825,031 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="adding-genomic-features">Adding Genomic Features<a class="anchor" aria-label="anchor" href="#adding-genomic-features"></a>
+</h3>
+<p>Attach genomic features (TADs, loops, tracks) to your
+<code>ChromatinContacts</code> object for integrated visualization.</p>
+<p><strong>Key Benefits:</strong></p>
+<ul>
+<li>
+<strong>Automatic synchronization</strong>: Features are
+automatically subsetted when you zoom or change regions</li>
+<li>
+<strong>Consistent context</strong>: All features stay aligned with
+the contact map</li>
+<li>
+<strong>Simplified plotting</strong>: Pass a single object to
+<code><a href="../reference/gghic.html">gghic()</a></code> instead of managing multiple data sources</li>
+</ul>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load TADs, loops, and tracks from files</span></span>
+<span><span class="va">tads</span> <span class="op">&lt;-</span> <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span><span class="va">path_tad</span>, format <span class="op">=</span> <span class="st">"bed"</span><span class="op">)</span></span>
+<span><span class="va">loops</span> <span class="op">&lt;-</span> <span class="va">path_loop</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">rtracklayer</span><span class="fu">::</span><span class="fu">import</span><span class="op">(</span>format <span class="op">=</span> <span class="st">"bedpe"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">makeGInteractionsFromGRangesPairs</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">tracks</span> <span class="op">&lt;-</span> <span class="va">paths_track</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">purrr</span><span class="fu">::</span><span class="fu"><a href="https://purrr.tidyverse.org/reference/map.html" class="external-link">map</a></span><span class="op">(</span><span class="fu">rtracklayer</span><span class="fu">::</span><span class="va">import</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/setNames.html" class="external-link">setNames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"track"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">paths_track</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRangesList-class.html" class="external-link">GRangesList</a></span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add features to the ChromatinContacts object</span></span>
+<span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_100</span>, <span class="st">"TADs"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">tads</span></span>
+<span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_100</span>, <span class="st">"loops"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">loops</span></span>
+<span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_100</span>, <span class="st">"tracks"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">tracks</span></span>
+<span></span>
+<span><span class="va">cc_100</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: genome-wide</span></span>
+<span><span class="co">#&gt; Interactions: 1,150,956 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 245 regions</span></span>
+<span><span class="co">#&gt;   Loops: 255 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 2,403,441 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 1,884,707 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_5</span>, <span class="st">"TADs"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">tads</span></span>
+<span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_5</span>, <span class="st">"loops"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">loops</span></span>
+<span><span class="fu"><a href="../reference/generics.html">features</a></span><span class="op">(</span><span class="va">cc_5</span>, <span class="st">"tracks"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">tracks</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="manipulating-chromatincontacts-objects">Manipulating ChromatinContacts Objects<a class="anchor" aria-label="anchor" href="#manipulating-chromatincontacts-objects"></a>
+</h3>
+<p><code>ChromatinContacts</code> objects support flexible subsetting
+after data import. This is useful for:</p>
+<ul>
+<li>
+<strong>Iterative exploration</strong>: Start broad, then zoom to
+interesting regions</li>
+<li>
+<strong>Comparative analysis</strong>: Extract same region from
+multiple samples</li>
+<li>
+<strong>Quality filtering</strong>: Remove low-quality or
+extreme-valued interactions</li>
+</ul>
+<p><strong>Automatic updates:</strong> Subsetting filters interactions
+AND updates:</p>
+<ul>
+<li>Associated features (TADs, loops, tracks)</li>
+<li>The <code>focus</code> slot (tracks current genomic context)</li>
+<li>Sequence information (<code>seqinfo</code>)</li>
+</ul>
+<div class="section level4">
+<h4 id="subsetting-by-genomic-regions-character">Subsetting by Genomic Regions (character)<a class="anchor" aria-label="anchor" href="#subsetting-by-genomic-regions-character"></a>
+</h4>
+<p>The most intuitive way to subset is by providing a character string
+representing a genomic region:</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Subset to keep only interactions on chromosome 11</span></span>
+<span><span class="va">cc_chr11</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span></span>
+<span><span class="va">cc_chr11</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt; Interactions: 328,865 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 107 regions</span></span>
+<span><span class="co">#&gt;   Loops: 134 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 1,332,687 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 985,360 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Subset to a specific 20 Mb region on chromosome 4</span></span>
+<span><span class="va">cc_chr4_sub</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="st">"chr4:20000000-40000000"</span><span class="op">]</span></span>
+<span><span class="va">cc_chr4_sub</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr4:1:191,154,276 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt; Interactions: 17,012 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 17 regions</span></span>
+<span><span class="co">#&gt;   Loops: 7 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 111,157 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 89,885 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="subsetting-with-granges">Subsetting with GRanges<a class="anchor" aria-label="anchor" href="#subsetting-with-granges"></a>
+</h4>
+<p>You can use a <code>GRanges</code> object to subset interactions
+where at least one anchor overlaps the given ranges:</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define a region of interest</span></span>
+<span><span class="va">roi</span> <span class="op">&lt;-</span> <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr11:60000000-70000000"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Subset the ChromatinContacts object</span></span>
+<span><span class="va">cc_gr_sub</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="va">roi</span><span class="op">]</span></span>
+<span><span class="va">cc_gr_sub</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt; Interactions: 4,215 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 8 regions</span></span>
+<span><span class="co">#&gt;   Loops: 58 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 299,741 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 165,088 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="subsetting-with-ginteractions">Subsetting with GInteractions<a class="anchor" aria-label="anchor" href="#subsetting-with-ginteractions"></a>
+</h4>
+<p>To select a specific set of interactions, you can subset using a
+<code>GInteractions</code> object. This will keep only the interactions
+from the <code>ChromatinContacts</code> object that overlap with the
+query <code>GInteractions</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Define a specific inter-chromosomal interaction to query</span></span>
+<span><span class="va">query_gi</span> <span class="op">&lt;-</span> <span class="fu">InteractionSet</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/InteractionSet/man/GInteractions-class.html" class="external-link">GInteractions</a></span><span class="op">(</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr11:60000000-65000000"</span><span class="op">)</span>,</span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/GenomicRanges/man/GRanges-class.html" class="external-link">GRanges</a></span><span class="op">(</span><span class="st">"chr4:10000000-15000000"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Subset the object</span></span>
+<span><span class="va">cc_gi_sub</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="va">query_gi</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">cc_gi_sub</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 1 region</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt; Interactions: 89 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 10 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 108,442 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 70,400 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
+<div class="section level4">
+<h4 id="subsetting-by-index-or-logical-vector">Subsetting by Index or Logical Vector<a class="anchor" aria-label="anchor" href="#subsetting-by-index-or-logical-vector"></a>
+</h4>
+<p>You can also use numeric indices or logical vectors for subsetting,
+similar to how you would subset a <code>data.frame</code> or a
+vector:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Subset by numeric index (e.g., first 1000 interactions)</span></span>
+<span><span class="va">cc_numeric_sub</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">cc_numeric_sub</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 2 regions</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt;   [2] chr11:1:135,006,516 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt; Interactions: 100 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 55 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 123,248 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 79,981 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Subset using a logical vector (e.g., interactions with a score &gt; -0.1)</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scaleData.html">scaleData</a></span><span class="op">(</span><span class="va">cc_100</span>, <span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Then subset based on the score</span></span>
+<span><span class="va">logical_vec</span> <span class="op">&lt;-</span> <span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">score</span> <span class="op">&gt;</span> <span class="op">-</span><span class="fl">0.1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">score</span><span class="op">)</span></span>
+<span><span class="va">cc_logical_sub</span> <span class="op">&lt;-</span> <span class="va">cc_100</span><span class="op">[</span><span class="va">logical_vec</span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">cc_logical_sub</span></span>
+<span><span class="co">#&gt; ChromatinContacts object</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span>
+<span><span class="co">#&gt; File: chr4_11-100kb.cool</span></span>
+<span><span class="co">#&gt; Resolution: 100,000 bp</span></span>
+<span><span class="co">#&gt; Sequences: 2 (chr11, chr4)</span></span>
+<span><span class="co">#&gt; Focus: 2 regions</span></span>
+<span><span class="co">#&gt;   [1] chr11:1:135,006,516 &lt;-&gt; chr11:1:135,006,516</span></span>
+<span><span class="co">#&gt;   [2] chr4:1:191,154,276 &lt;-&gt; chr4:1:191,154,276</span></span>
+<span><span class="co">#&gt; Interactions: 25 interactions</span></span>
+<span><span class="co">#&gt;   Metadata columns: bin_id1, bin_id2, count, balanced</span></span>
+<span><span class="co">#&gt; Features:</span></span>
+<span><span class="co">#&gt;   TADs: 13 regions</span></span>
+<span><span class="co">#&gt;   Loops: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 regions</span></span>
+<span><span class="co">#&gt;   Tracks: 2 tracks</span></span>
+<span><span class="co">#&gt;     [1] track1: 53,256 ranges</span></span>
+<span><span class="co">#&gt;     [2] track2: 30,979 ranges</span></span>
+<span><span class="co">#&gt; --------------------------------------------------</span></span></code></pre></div>
+</div>
 </div>
 </div>
 <div class="section level2">
-<h2 id="visualisations">Visualisations<a class="anchor" aria-label="anchor" href="#visualisations"></a>
+<h2 id="creating-visualizations">Creating Visualizations<a class="anchor" aria-label="anchor" href="#creating-visualizations"></a>
 </h2>
+<p><code>gghic</code> provides two complementary approaches for
+plotting:</p>
 <div class="section level3">
-<h3 id="hi-c-heatmap">Hi-C Heatmap<a class="anchor" aria-label="anchor" href="#hi-c-heatmap"></a>
+<h3 id="visualization-approaches">Visualization Approaches<a class="anchor" aria-label="anchor" href="#visualization-approaches"></a>
 </h3>
-<p><code><a href="../reference/geom_hic.html">geom_hic()</a></code> is the main function to visualise Hi-C/-like
-data. It requires the following aesthetics: <code>seqnames1</code>,
-<code>start1</code>, <code>end1</code>, <code>seqnames2</code>,
-<code>start2</code>, <code>end2</code>, and <code>fill</code>.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_100</span> <span class="op">|&gt;</span></span>
+<div class="section level4">
+<h4 id="high-level-wrapper-gghic">1. High-Level Wrapper: <code>gghic()</code><a class="anchor" aria-label="anchor" href="#high-level-wrapper-gghic"></a>
+</h4>
+<p><strong>Best for:</strong> Quick plots, standard layouts, exploratory
+analysis</p>
+<ul>
+<li>Single function call with sensible defaults</li>
+<li>Automatically handles data scaling and transformation</li>
+<li>Optional arguments for ideograms, genes, TADs, loops, and
+tracks</li>
+<li>Returns a <code>ggplot2</code> object for further customization</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="low-level-layers-geom_">2. Low-Level Layers: <code>geom_*()</code><a class="anchor" aria-label="anchor" href="#low-level-layers-geom_"></a>
+</h4>
+<p><strong>Best for:</strong> Custom layouts, complex multi-panel
+figures, precise control</p>
+<ul>
+<li>Build plots layer-by-layer like standard <code>ggplot2</code>
+</li>
+<li>Full control over aesthetics, scales, and themes</li>
+<li>Mix with other <code>ggplot2</code> geoms and extensions</li>
+<li>Ideal for publication figures with specific requirements</li>
+</ul>
+<hr>
+</div>
+</div>
+<div class="section level3">
+<h3 id="basic-hi-c-heatmap">Basic Hi-C Heatmap<a class="anchor" aria-label="anchor" href="#basic-hi-c-heatmap"></a>
+</h3>
+<div class="section level4">
+<h4 id="using-geom_hic-layer">Using <code>geom_hic()</code> Layer<a class="anchor" aria-label="anchor" href="#using-geom_hic-layer"></a>
+</h4>
+<p><code><a href="../reference/geom_hic.html">geom_hic()</a></code> creates the triangle heatmap visualization.
+It works with standard data frames/tibbles:</p>
+<p><strong>Required aesthetics:</strong> - <code>seqnames1</code>,
+<code>start1</code>, <code>end1</code>: First genomic anchor -
+<code>seqnames2</code>, <code>start2</code>, <code>end2</code>: Second
+genomic anchor - <code>fill</code>: Interaction strength (typically
+log-transformed)</p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df_100</span> <span class="op">&lt;-</span> <span class="va">cc_100</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/scaleData.html">scaleData</a></span><span class="op">(</span><span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">df_100</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">tidyr</span><span class="fu">::</span><span class="fu"><a href="https://tidyr.tidyverse.org/reference/drop_na.html" class="external-link">drop_na</a></span><span class="op">(</span><span class="va">score</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
 <span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
-<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>,</span>
-<span>      fill <span class="op">=</span> <span class="va">score</span></span>
+<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>, fill <span class="op">=</span> <span class="va">score</span></span>
 <span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_hic.html">geom_hic</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-7-1.png" width="700"></p>
-<p><code><a href="../reference/theme_hic.html">theme_hic()</a></code> is a theme function for
-<code><a href="../reference/geom_hic.html">geom_hic()</a></code> that enhances the appearance of the plot.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<p><img src="gghic_files/figure-html/unnamed-chunk-22-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+<p><code><a href="../reference/theme_hic.html">theme_hic()</a></code> provides a clean, publication-ready
+appearance:</p>
+<ul>
+<li>Removes axis labels and tick marks</li>
+<li>Eliminates grid lines</li>
+<li>Focuses attention on the contact map</li>
+<li>Suitable for most Hi-C visualizations</li>
+</ul>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/theme_hic.html">theme_hic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-8-1.png" width="700"></p>
-<p><code><a href="../reference/gghic.html">gghic()</a></code> is a wrapper function that can take either a
-<code>HiCExperiment</code> object, a <code>GenomicInteractions</code>
-object, or a <code>tibble</code>/<code>data.frame</code> as input.
-(exactly the same as above).</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<p><img src="gghic_files/figure-html/unnamed-chunk-23-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-gghic-wrapper">Using <code>gghic()</code> Wrapper<a class="anchor" aria-label="anchor" href="#using-gghic-wrapper"></a>
+</h4>
+<p>The wrapper handles scaling and plotting automatically:</p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
 </div>
-<div class="section level3">
-<h3 id="ideogram">Ideogram<a class="anchor" aria-label="anchor" href="#ideogram"></a>
-</h3>
-<p><code><a href="../reference/geom_ideogram.html">geom_ideogram()</a></code> can be used to add chromosome ideograms
-to the plot.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
-<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
-<span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
-<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>,</span>
-<span>      fill <span class="op">=</span> <span class="va">score</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hic.html">geom_hic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/theme_hic.html">theme_hic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_ideogram.html">geom_ideogram</a></span><span class="op">(</span></span>
-<span>    genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>, fontsize <span class="op">=</span> <span class="fl">8</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-10-1.png" width="700"></p>
-<p>The wrapper function <code><a href="../reference/gghic.html">gghic()</a></code> can also add ideograms to
-the plot. (exactly the same as above).</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr11"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    ideogram_fontsize <span class="op">=</span> <span class="fl">8</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p>The plotted region can be highlighted on the ideogram by setting
-<code>highlight = TRUE</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_100</span><span class="op">[</span><span class="st">"chr4:10000000-15000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    ideogram_fontsize <span class="op">=</span> <span class="fl">8</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
 </div>
 <div class="section level3">
-<h3 id="gene-annotation">Gene Annotation<a class="anchor" aria-label="anchor" href="#gene-annotation"></a>
+<h3 id="adding-chromosome-ideograms">Adding Chromosome Ideograms<a class="anchor" aria-label="anchor" href="#adding-chromosome-ideograms"></a>
 </h3>
-<p>Track-based gene annotation can be added to the plot by using
-<code><a href="../reference/geom_annotation.html">geom_annotation()</a></code>.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_5</span> <span class="op">|&gt;</span></span>
+<p>Chromosome ideograms provide genomic context by showing: - The entire
+chromosome with cytogenetic bands - Current viewing region highlighted -
+Chromosome name and position</p>
+<div class="section level4">
+<h4 id="using-geom_ideogram-layer">Using <code>geom_ideogram()</code> Layer<a class="anchor" aria-label="anchor" href="#using-geom_ideogram-layer"></a>
+</h4>
+<p><strong>Key parameters:</strong> - <code>genome</code>: Reference
+genome (“hg19”, “hg38”, “mm10”, “mm39”) - <code>highlight</code>:
+Whether to show the current region as a colored bar -
+<code>length_ratio</code>: Ideogram height relative to plot (0-1) -
+<code>fontsize</code>: Text size for chromosome labels</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span><span class="op">[</span><span class="st">"chr4:10000000-15000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_ideogram.html">geom_ideogram</a></span><span class="op">(</span></span>
+<span>    genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>, fontsize <span class="op">=</span> <span class="fl">8</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-25-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-the-ideogram-argument-in-gghic">Using the <code>ideogram</code> Argument in
+<code>gghic()</code><a class="anchor" aria-label="anchor" href="#using-the-ideogram-argument-in-gghic"></a>
+</h4>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span><span class="op">[</span><span class="st">"chr4:10000000-15000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
+<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    length_ratio <span class="op">=</span> <span class="fl">0.7</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">8</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level3">
+<h3 id="adding-gene-annotations">Adding Gene Annotations<a class="anchor" aria-label="anchor" href="#adding-gene-annotations"></a>
+</h3>
+<p>Visualize gene structures to correlate chromatin interactions with
+genomic features.</p>
+<p><strong>Annotation features:</strong> - Exon blocks (thick
+rectangles) - Introns (connecting lines) - Gene directionality (arrows
+for <code>style = "arrow"</code>) - Multiple gene tracks for overlapping
+genes - Automatic collision detection and layout</p>
+<div class="section level4">
+<h4 id="using-geom_annotation-layer">Using <code>geom_annotation()</code> Layer<a class="anchor" aria-label="anchor" href="#using-geom_annotation-layer"></a>
+</h4>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Prepare data at 5kb resolution</span></span>
+<span><span class="va">df_5</span> <span class="op">&lt;-</span> <span class="va">cc_5</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/scaleData.html">scaleData</a></span><span class="op">(</span><span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create a base plot for a small region</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">df_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span>,</span>
-<span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">67000000</span>, <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">67100000</span>,</span>
-<span>    <span class="va">center2</span> <span class="op">&gt;</span> <span class="fl">67000000</span>, <span class="va">center2</span> <span class="op">&lt;</span> <span class="fl">67100000</span></span>
+<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">67000000</span>, <span class="va">start1</span> <span class="op">&lt;</span> <span class="fl">67100000</span>,</span>
+<span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">67000000</span>, <span class="va">start2</span> <span class="op">&lt;</span> <span class="fl">67100000</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
-<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
-<span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
-<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>,</span>
-<span>      fill <span class="op">=</span> <span class="va">score</span></span>
-<span>    <span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
+<span>    seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>, fill <span class="op">=</span> <span class="va">score</span></span>
+<span>  <span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_hic.html">geom_hic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/theme_hic.html">theme_hic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_ideogram.html">geom_ideogram</a></span><span class="op">(</span></span>
-<span>    genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>, fontsize <span class="op">=</span> <span class="fl">8</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="fu"><a href="../reference/theme_hic.html">theme_hic</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_annotation.html">geom_annotation</a></span><span class="op">(</span>gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"basic"</span>, maxgap <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Import genomic features from the file as a GRanges object ... OK</span></span>
-<span><span class="co">#&gt; Prepare the 'metadata' data frame ... OK</span></span>
-<span><span class="co">#&gt; Make the TxDb object ...</span></span>
-<span><span class="co">#&gt; Warning in .get_cds_IDX(mcols0$type, mcols0$phase): The "phase" metadata column contains non-NA values for features of type</span></span>
-<span><span class="co">#&gt;   stop_codon. This information was ignored.</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span>
-<span><span class="co">#&gt; OK</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
-<p>Some parameters can be set for <code><a href="../reference/geom_annotation.html">geom_annotation()</a></code>:</p>
+<span><span class="co"># Add the annotation layer</span></span>
+<span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_annotation.html">geom_annotation</a></span><span class="op">(</span>gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"basic"</span>, maxgap <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-27-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+<p><strong>Key parameters:</strong></p>
 <ul>
 <li>
-<code>style</code> can be set to <code>"arrow"</code> to change the
-annotation style.</li>
+<code>gtf_path</code>: Path to GTF/GFF annotation file</li>
 <li>
-<code>maxgap</code> is used to calculate how many non-overlapping
-tracks are needed for the annotation.</li>
+<code>style</code>:
+<ul>
 <li>
-<code>gene_symbols</code> can be used to specify genes to plot.</li>
+<code>"basic"</code>: Simple exon-intron structure</li>
+<li>
+<code>"arrow"</code>: Adds directional arrows showing transcription
+direction</li>
 </ul>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+</li>
+<li>
+<code>maxgap</code>:
+<ul>
+<li>Positive integer: Maximum gap between gene tracks (in bp)</li>
+<li>
+<code>-1</code>: Force all genes on single track (may overlap)</li>
+<li>
+<code>100000</code>: Good default for most regions</li>
+</ul>
+</li>
+<li>
+<code>gene_symbols</code>: Character vector of specific genes to
+display (others hidden)</li>
+<li>
+<code>include_ncrna</code>: Include non-coding RNAs (lncRNA, miRNA,
+etc.)</li>
+</ul>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_annotation.html">geom_annotation</a></span><span class="op">(</span></span>
 <span>  gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
 <span>  gene_symbols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GRK2"</span>, <span class="st">"SSH3"</span>, <span class="st">"KDM2A"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
-<p><code><a href="../reference/gghic.html">gghic()</a></code> can also add gene annotation to the plot
-(exactly the same as above).</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_5</span><span class="op">[</span><span class="st">"chr11:67000000-67100000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-28-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-the-annotation-argument-in-gghic">Using the <code>annotation</code> Argument in
+<code>gghic()</code><a class="anchor" aria-label="anchor" href="#using-the-annotation-argument-in-gghic"></a>
+</h4>
+<p>Again, you can also use the <code>annotation</code> argument in
+<code><a href="../reference/gghic.html">gghic()</a></code> to add gene annotations directly.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_5</span><span class="op">[</span><span class="st">"chr11:67000000-67100000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    ideogram_fontsize <span class="op">=</span> <span class="fl">8</span>,</span>
-<span></span>
-<span>    annotation <span class="op">=</span> <span class="cn">TRUE</span>, gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>,</span>
-<span>    gene_symbols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GRK2"</span>, <span class="st">"SSH3"</span>, <span class="st">"KDM2A"</span><span class="op">)</span></span>
+<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">FALSE</span>, length_ratio <span class="op">=</span> <span class="fl">0.7</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>    annotation <span class="op">=</span> <span class="cn">TRUE</span>, gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="op">-</span><span class="fl">1</span>, gene_symbols <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"GRK2"</span>, <span class="st">"SSH3"</span>, <span class="st">"KDM2A"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
 </div>
+</div>
 <div class="section level3">
-<h3 id="chromatin-loops">Chromatin Loops<a class="anchor" aria-label="anchor" href="#chromatin-loops"></a>
+<h3 id="adding-tads-topologically-associating-domains">Adding TADs (Topologically Associating Domains)<a class="anchor" aria-label="anchor" href="#adding-tads-topologically-associating-domains"></a>
 </h3>
-<p>Chromatin loops can be visualised using <code><a href="../reference/geom_loop.html">geom_loop()</a></code> or
-<code><a href="../reference/geom_loop2.html">geom_loop2()</a></code>. The former requires a path to a loop file,
-while the latter requires a <code>tibble</code>/<code>data.frame</code>
-containing the loop data which enables easy customization by adding
-additional aesthetics.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hic_5</span><span class="op">[</span><span class="st">"chr11:61915000-65000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>loop <span class="op">=</span> <span class="cn">TRUE</span>, loop_path <span class="op">=</span> <span class="va">path_loop</span>, loop_is_0based <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-16-1.png" width="700"></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<p>TADs are visualized as triangles overlaid on the contact map,
+representing self-interacting genomic regions.</p>
+<p><strong>Visualization features:</strong> - Triangle apex points to
+TAD boundary - Triangle sides span the TAD region - Color and line style
+customizable - Automatically scaled to match heatmap coordinates</p>
+<p><strong>Two geoms available:</strong> - <code><a href="../reference/geom_tad.html">geom_tad()</a></code>:
+Reads TAD file directly (convenient) - <code><a href="../reference/geom_tad2.html">geom_tad2()</a></code>: Uses
+data frame (more flexible for customization)</p>
+<div class="section level4">
+<h4 id="using-tad-argument-in-gghic">Using <code>tad</code> Argument in <code>gghic()</code><a class="anchor" aria-label="anchor" href="#using-tad-argument-in-gghic"></a>
+</h4>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span><span class="op">[</span><span class="st">"chr4:50000000-80000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
+<span>    tad <span class="op">=</span> <span class="cn">TRUE</span>, tad_is_0based <span class="op">=</span> <span class="cn">TRUE</span>, tad_path <span class="op">=</span> <span class="va">path_tad</span>,</span>
+<span>    tad_colour <span class="op">=</span> <span class="st">"#00ff83"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-30-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-geom_tad-and-geom_tad2">Using <code>geom_tad()</code> and <code>geom_tad2()</code><a class="anchor" aria-label="anchor" href="#using-geom_tad-and-geom_tad2"></a>
+</h4>
+<p>Using <code><a href="../reference/geom_tad2.html">geom_tad2()</a></code> makes it easy to customize TAD
+aesthetics since you can provide a <code>data.frame</code> with
+additional columns.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df_tad</span> <span class="op">&lt;-</span> <span class="va">path_tad</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
+<span>    sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">FALSE</span>, col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>start <span class="op">=</span> <span class="va">start</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">start</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end</span> <span class="op">&lt;</span> <span class="fl">70000000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df_100</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
+<span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
+<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end1</span> <span class="op">&lt;</span> <span class="fl">70000000</span>,</span>
+<span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end2</span> <span class="op">&lt;</span> <span class="fl">70000000</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>scale_column <span class="op">=</span> <span class="st">"score"</span>, scale_method <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_tad2.html">geom_tad2</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_tad</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, colour <span class="op">=</span> <span class="va">sample</span></span>
+<span>    <span class="op">)</span>, stroke <span class="op">=</span> <span class="fl">2</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_grey.html" class="external-link">scale_color_grey</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-31-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="adding-chromatin-loops">Adding Chromatin Loops<a class="anchor" aria-label="anchor" href="#adding-chromatin-loops"></a>
+</h3>
+<p>Chromatin loops represent long-range interactions between specific
+genomic loci (e.g., enhancer-promoter contacts).</p>
+<p><strong>Visualization:</strong> - Drawn as arcs/semicircles
+connecting loop anchors - Arc height proportional to genomic distance -
+Customizable colors, line widths, and styles</p>
+<p><strong>Two geoms available:</strong> - <code><a href="../reference/geom_loop.html">geom_loop()</a></code>:
+Reads BEDPE file directly - <code><a href="../reference/geom_loop2.html">geom_loop2()</a></code>: Uses data frame
+with custom aesthetics (color, size by significance)</p>
+<div class="section level4">
+<h4 id="using-loop-argument-in-gghic">Using <code>loop</code> Argument in <code>gghic()</code><a class="anchor" aria-label="anchor" href="#using-loop-argument-in-gghic"></a>
+</h4>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_5</span><span class="op">[</span><span class="st">"chr11:61915000-65000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>loop <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-32-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-geom_loop-and-geom_loop2">Using <code>geom_loop()</code> and <code>geom_loop2()</code><a class="anchor" aria-label="anchor" href="#using-geom_loop-and-geom_loop2"></a>
+</h4>
+<p>Using <code><a href="../reference/geom_loop2.html">geom_loop2()</a></code> makes it easy to customize loop
+aesthetics since you can provide a <code>data.frame</code> with
+additional columns.</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df_loop</span> <span class="op">&lt;-</span> <span class="va">path_loop</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>    sep <span class="op">=</span> <span class="st">"\t"</span>,</span>
-<span>    col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames1"</span>, <span class="st">"start1"</span>, <span class="st">"end1"</span>, <span class="st">"seqnames2"</span>, <span class="st">"start2"</span>, <span class="st">"end2"</span><span class="op">)</span></span>
+<span>    sep <span class="op">=</span> <span class="st">"\t"</span>, col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>      <span class="st">"seqnames1"</span>, <span class="st">"start1"</span>, <span class="st">"end1"</span>, <span class="st">"seqnames2"</span>, <span class="st">"start2"</span>, <span class="st">"end2"</span></span>
+<span>    <span class="op">)</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
 <span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr11"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr11"</span>,</span>
@@ -373,78 +985,44 @@ additional aesthetics.</p>
 <span>    sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"B"</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="va">hic_5</span><span class="op">[</span><span class="st">"chr11:61915000-65000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
+<span><span class="va">cc_5</span><span class="op">[</span><span class="st">"chr11:61915000-65000000"</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_loop2.html">geom_loop2</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">df_loop</span>,</span>
-<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_loop</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
-<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>,</span>
-<span>      colour <span class="op">=</span> <span class="va">sample</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    stroke <span class="op">=</span> <span class="fl">1</span></span>
+<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>, colour <span class="op">=</span> <span class="va">sample</span></span>
+<span>    <span class="op">)</span>, stroke <span class="op">=</span> <span class="fl">1</span>, style <span class="op">=</span> <span class="st">"arc"</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-17-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-33-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="tads">TADs<a class="anchor" aria-label="anchor" href="#tads"></a>
+<h3 id="multi-way-contact-visualization">Multi-Way Contact Visualization<a class="anchor" aria-label="anchor" href="#multi-way-contact-visualization"></a>
 </h3>
-<p>Triangulers indicating TADs can be added using
-<code><a href="../reference/geom_tad.html">geom_tad()</a></code> or <code><a href="../reference/geom_tad2.html">geom_tad2()</a></code>. The former requires
-a path to a TAD file, while the latter requires a
-<code>tibble</code>/<code>data.frame</code> containing the TAD data.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
-<span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
-<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">50000000</span>, <span class="va">end1</span> <span class="op">&lt;</span> <span class="fl">80000000</span>,</span>
-<span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">50000000</span>, <span class="va">end2</span> <span class="op">&lt;</span> <span class="fl">80000000</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    tad <span class="op">=</span> <span class="cn">TRUE</span>, tad_is_0based <span class="op">=</span> <span class="cn">TRUE</span>, tad_path <span class="op">=</span> <span class="va">path_tad</span>, tad_colour <span class="op">=</span> <span class="st">"#00ff83"</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">df_tad</span> <span class="op">&lt;-</span> <span class="va">path_tad</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.table</a></span><span class="op">(</span></span>
-<span>    sep <span class="op">=</span> <span class="st">"\t"</span>, header <span class="op">=</span> <span class="cn">FALSE</span>, col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seqnames"</span>, <span class="st">"start"</span>, <span class="st">"end"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>start <span class="op">=</span> <span class="va">start</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">seqnames</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">start</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end</span> <span class="op">&lt;</span> <span class="fl">70000000</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A"</span>, <span class="st">"B"</span><span class="op">)</span><span class="op">)</span></span>
+<p>Pore-C and similar technologies capture multi-way contacts where a
+single DNA molecule contacts 3+ genomic loci simultaneously.</p>
+<p><strong>What are concatemers?</strong> - Long DNA molecules captured
+by nanopore sequencing - Each molecule contains multiple chromatin
+contact points - Represented as sets of genomic intervals with a shared
+read ID</p>
+<p><strong>Visualization approach:</strong> - Each read shown as a
+colored horizontal bar - Bar width indicates genomic span of contacts -
+Overlaid on Hi-C heatmap for context</p>
+<blockquote>
+<p>💡 <strong>See also:</strong> <a href="hypergraph.html">Hypergraph
+vignette</a> for network-based analysis of multi-way contacts</p>
+</blockquote>
+<div class="section level4">
+<h4 id="using-geom_concatemer-and-geom_concatemer2">Using <code>geom_concatemer()</code> and
+<code>geom_concatemer2()</code><a class="anchor" aria-label="anchor" href="#using-geom_concatemer-and-geom_concatemer2"></a>
+</h4>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Load the GInteractions object representing multi-way contacts</span></span>
+<span><span class="va">gis</span> <span class="op">&lt;-</span> <span class="va">path_gis_hic</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/scaleData.html">scaleData</a></span><span class="op">(</span><span class="va">gis</span>, <span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
-<span>    <span class="va">seqnames1</span> <span class="op">==</span> <span class="st">"chr4"</span>, <span class="va">seqnames2</span> <span class="op">==</span> <span class="st">"chr4"</span>,</span>
-<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end1</span> <span class="op">&lt;</span> <span class="fl">70000000</span>,</span>
-<span>    <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">60000000</span>, <span class="va">end2</span> <span class="op">&lt;</span> <span class="fl">70000000</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_tad2.html">geom_tad2</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">df_tad</span>,</span>
-<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
-<span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>,</span>
-<span>      colour <span class="op">=</span> <span class="va">sample</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    stroke <span class="op">=</span> <span class="fl">2</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_grey.html" class="external-link">scale_color_grey</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
-</div>
-<div class="section level3">
-<h3 id="multi-way-contacts">Multi-way contacts<a class="anchor" aria-label="anchor" href="#multi-way-contacts"></a>
-</h3>
-<p>Multi-way contacts from concatemers obtained from Pore-C data can be
-visualised using <code><a href="../reference/geom_concatemer.html">geom_concatemer()</a></code> or
-<code><a href="../reference/geom_concatemer2.html">geom_concatemer2()</a></code>. The former requires a path to a
-concatemer file, while the latter requires a
-<code>tibble</code>/<code>data.frame</code> containing the concatemer
-data.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">gis</span> <span class="op">&lt;-</span> <span class="va">path_gis_hic</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">scale_data</span><span class="op">(</span><span class="st">"balanced"</span>, <span class="va">log10</span><span class="op">)</span></span>
-<span></span>
+<span><span class="co"># Select a few reads to visualize</span></span>
 <span><span class="va">names_read</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
 <span>  <span class="st">"0c32bbce-24f8-4006-a75c-0e3504648971"</span>,</span>
 <span>  <span class="st">"10ae8263-cebc-4cbc-94c1-2c1dc5f22101"</span>,</span>
@@ -452,118 +1030,176 @@ data.</p>
 <span>  <span class="st">"06063b40-0271-4f4e-993d-2f202028b697"</span>,</span>
 <span>  <span class="st">"08bb8fe4-c54b-4a11-b9a0-c9eed2d18933"</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">df_concatemers</span> <span class="op">&lt;-</span> <span class="va">path_concatemers</span> <span class="op">|&gt;</span></span>
+<span><span class="va">grs_concatemer</span> <span class="op">&lt;-</span> <span class="va">path_concatemers</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/readRDS.html" class="external-link">readRDS</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">sort</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">sort</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">grs_concatemer</span> <span class="op">&lt;-</span> <span class="va">grs_concatemer</span><span class="op">[</span></span>
+<span>  <span class="fu">GenomicRanges</span><span class="fu">::</span><span class="fu">seqnames</span><span class="op">(</span><span class="va">grs_concatemer</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr22"</span><span class="op">)</span></span>
+<span><span class="op">]</span></span>
+<span><span class="va">df_concatemers</span> <span class="op">&lt;-</span> <span class="va">grs_concatemer</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">read_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">names_read</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="va">gis</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="../reference/geom_concatemer2.html">geom_concatemer2</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">df_concatemers</span>,</span>
-<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_concatemers</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
 <span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, read_group <span class="op">=</span> <span class="va">read_name</span>,</span>
 <span>      colour <span class="op">=</span> <span class="va">read_name</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    check_concatemers <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    <span class="op">)</span>, check_concatemers <span class="op">=</span> <span class="cn">TRUE</span>, width_ratio <span class="op">=</span> <span class="fl">0.03</span></span>
 <span>  <span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
 <span>    legend.key.size <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
 <span>    legend.text <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-20-1.png" width="700"></p>
+<p><img src="gghic_files/figure-html/unnamed-chunk-34-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="converting-concatemers-to-ginteractions">Converting Concatemers to GInteractions<a class="anchor" aria-label="anchor" href="#converting-concatemers-to-ginteractions"></a>
+</h4>
+<p>You can also generate a <code>GInteractions</code> object from a set
+of concatemers using <code><a href="../reference/concatemers2gis.html">concatemers2Gis()</a></code> to visualize the
+contact frequency of the concatemers.</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">grs_concatemer_sub</span> <span class="op">&lt;-</span> <span class="va">grs_concatemer</span><span class="op">[</span></span>
+<span>  <span class="va">grs_concatemer</span><span class="op">$</span><span class="va">read_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">names_read</span></span>
+<span><span class="op">]</span></span>
+<span></span>
+<span><span class="va">gis_concatemer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/concatemers2gis.html">concatemers2Gis</a></span><span class="op">(</span><span class="va">grs_concatemer_sub</span>, bin_size <span class="op">=</span> <span class="fl">100000</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">gis_concatemer</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>balanced <span class="op">=</span> <span class="va">count</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>scale_method <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span>, ideogram <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_concatemer2.html">geom_concatemer2</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_concatemers</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, read_group <span class="op">=</span> <span class="va">read_name</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    legend.key.size <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">2</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
+<span>    legend.text <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-35-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="combining-heatmaps">Combining Heatmaps<a class="anchor" aria-label="anchor" href="#combining-heatmaps"></a>
+</h4>
+<p>You can combine two heatmaps using <code><a href="../reference/geom_hic_under.html">geom_hic_under()</a></code> to
+visualize both pairwise interactions and multi-way contacts.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span><span class="va">gis</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_concatemer2.html">geom_concatemer2</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">df_concatemers</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      seqnames <span class="op">=</span> <span class="va">seqnames</span>, start <span class="op">=</span> <span class="va">start</span>, end <span class="op">=</span> <span class="va">end</span>, read_group <span class="op">=</span> <span class="va">read_name</span></span>
+<span>    <span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_hic_under.html">geom_hic_under</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="fu">tibble</span><span class="fu">::</span><span class="fu"><a href="https://tibble.tidyverse.org/reference/as_tibble.html" class="external-link">as_tibble</a></span><span class="op">(</span><span class="va">gis_concatemer</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>score <span class="op">=</span> <span class="va">count</span><span class="op">)</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
+<span>      seqnames1 <span class="op">=</span> <span class="va">seqnames1</span>, start1 <span class="op">=</span> <span class="va">start1</span>, end1 <span class="op">=</span> <span class="va">end1</span>,</span>
+<span>      seqnames2 <span class="op">=</span> <span class="va">seqnames2</span>, start2 <span class="op">=</span> <span class="va">start2</span>, end2 <span class="op">=</span> <span class="va">end2</span>, fill2 <span class="op">=</span> <span class="va">score</span></span>
+<span>    <span class="op">)</span>, draw_boundary <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/renameGeomAes.html">renameGeomAes</a></span><span class="op">(</span>new_aes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fill"</span> <span class="op">=</span> <span class="st">"fill2"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span></span>
+<span>    aesthetics <span class="op">=</span> <span class="st">"fill2"</span>, option <span class="op">=</span> <span class="st">"A"</span>, guide <span class="op">=</span> <span class="st">"legend"</span>, name <span class="op">=</span> <span class="st">"count"</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-36-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
 </div>
 <div class="section level3">
-<h3 id="visualisation-of-interaction-data-of-multiple-chromosomes">Visualisation of Interaction Data of Multiple Chromosomes<a class="anchor" aria-label="anchor" href="#visualisation-of-interaction-data-of-multiple-chromosomes"></a>
+<h3 id="multi-chromosome-visualization">Multi-Chromosome Visualization<a class="anchor" aria-label="anchor" href="#multi-chromosome-visualization"></a>
 </h3>
-<p>Set <code>draw_boundary</code> to <code>TRUE</code> to draw the
-boundary of the chromosomes. Set <code>expand_xaxis</code> to
-<code>TRUE</code> to expand the x-axis if the plot is crowded.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_100</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span>, expand_left <span class="op">=</span> <span class="fl">2000000</span>, expand_right <span class="op">=</span> <span class="fl">2000000</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
+<p>Visualize interactions across multiple chromosomes in a single
+unified plot.</p>
+<p><strong>Use cases:</strong> - Genome-wide interaction patterns -
+Trans-chromosomal contacts - Comparative Hi-C across chromosomes -
+Chromosome territory analysis</p>
+<p><strong>Layout features:</strong> - Each chromosome occupies a
+diagonal block - Inter-chromosomal interactions shown in off-diagonal
+blocks - Chromosome boundaries clearly demarcated</p>
+<p><strong>Key parameters:</strong> - <code>draw_boundary = TRUE</code>:
+Draws lines separating chromosomes - <code>expand_xaxis = TRUE</code>:
+Adds spacing between chromosomes for readability -
+<code>expand_left</code>: Additional left margin (in bp) when using
+ideograms/annotations</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cc_100</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span>draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>, expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-37-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
 <p>Chromosome ideograms and gene tracks can also be added to the plot
-when visualising multiple chromosomes.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">x_5</span> <span class="op">|&gt;</span></span>
+when visualizing multiple chromosomes.</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="va">df_5</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
-<span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">center2</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center2</span> <span class="op">&lt;</span> <span class="fl">11000000</span></span>
+<span>    <span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">start1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
+<span>      <span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">start2</span> <span class="op">&lt;</span> <span class="fl">11000000</span></span>
 <span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span></span>
-<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">7</span>,</span>
-<span>    ideogram_width_ratio <span class="op">=</span> <span class="fl">0.08</span>,</span>
-<span></span>
-<span>    annotation <span class="op">=</span> <span class="cn">TRUE</span>, include_ncrna <span class="op">=</span> <span class="cn">FALSE</span>, gtf_path <span class="op">=</span> <span class="va">path_gtf</span>,</span>
-<span>    style <span class="op">=</span> <span class="st">"basic"</span>, maxgap <span class="op">=</span> <span class="fl">100000</span>, annotation_fontsize <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    annotation_width_ratio <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span></span>
-<span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>    scale_column <span class="op">=</span> <span class="st">"score"</span>, scale_method <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="va">x</span>,</span>
+<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">7</span>, ideogram_width_ratio <span class="op">=</span> <span class="fl">0.08</span>,</span>
+<span>    annotation <span class="op">=</span> <span class="cn">TRUE</span>, include_ncrna <span class="op">=</span> <span class="cn">FALSE</span>, gtf_path <span class="op">=</span> <span class="va">path_gtf</span>, maxgap <span class="op">=</span> <span class="fl">100000</span>, annotation_fontsize <span class="op">=</span> <span class="fl">5</span>, annotation_width_ratio <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>, expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span>, expand_left <span class="op">=</span> <span class="fl">300000</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
-<span><span class="va">p</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
+<span><span class="va">p</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-38-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
 </div>
 <div class="section level3">
-<h3 id="other-data-tracks---geom_track">Other Data Tracks - <code>geom_track</code><a class="anchor" aria-label="anchor" href="#other-data-tracks---geom_track"></a>
+<h3 id="adding-signal-tracks">Adding Signal Tracks<a class="anchor" aria-label="anchor" href="#adding-signal-tracks"></a>
 </h3>
-<p><code><a href="../reference/geom_track.html">geom_track()</a></code> can be used to add other data tracks to the
-plot.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<p>Integrate 1D genomic signals (ChIP-seq, ATAC-seq, RNA-seq, etc.)
+alongside Hi-C data.</p>
+<p><strong>Supported formats:</strong> - BigWig files (<code>.bw</code>,
+<code>.bigWig</code>) - Automatic data range detection or manual
+specification - Multiple tracks with independent colors and scales</p>
+<p><strong>Visualization:</strong> - Tracks displayed as area/mountain
+plots - Positioned on left side of heatmap - Aligned with genomic
+coordinates - Rasterization option for large datasets</p>
+<div class="section level4">
+<h4 id="using-geom_track-layer">Using <code>geom_track()</code> Layer<a class="anchor" aria-label="anchor" href="#using-geom_track-layer"></a>
+</h4>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">+</span> <span class="fu"><a href="../reference/geom_track.html">geom_track</a></span><span class="op">(</span></span>
 <span>  data_paths <span class="op">=</span> <span class="va">paths_track</span>, width_ratio <span class="op">=</span> <span class="fl">0.3</span>, data_range <span class="op">=</span> <span class="st">"auto"</span>,</span>
-<span>  fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-23-1.png" width="700"></p>
+<span>  fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span>, rasterize <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-39-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
+<div class="section level4">
+<h4 id="using-track-argument-in-gghic">Using <code>track</code> Argument in <code>gghic()</code><a class="anchor" aria-label="anchor" href="#using-track-argument-in-gghic"></a>
+</h4>
 <p><code><a href="../reference/gghic.html">gghic()</a></code> is handy for adding all these features to the
 plot.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">x_5</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span></span>
-<span>    <span class="va">center1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
-<span>      <span class="va">center2</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">center2</span> <span class="op">&lt;</span> <span class="fl">11000000</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">keep</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span></span>
+<span>  <span class="va">df_5</span><span class="op">$</span><span class="va">start1</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">df_5</span><span class="op">$</span><span class="va">start1</span> <span class="op">&lt;</span> <span class="fl">11000000</span> <span class="op">&amp;</span></span>
+<span>    <span class="va">df_5</span><span class="op">$</span><span class="va">start2</span> <span class="op">&gt;</span> <span class="fl">10000000</span> <span class="op">&amp;</span> <span class="va">df_5</span><span class="op">$</span><span class="va">start2</span> <span class="op">&lt;</span> <span class="fl">11000000</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">cc_5</span><span class="op">[</span><span class="va">keep</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="../reference/gghic.html">gghic</a></span><span class="op">(</span></span>
-<span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span></span>
-<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">7</span>,</span>
-<span>    ideogram_width_ratio <span class="op">=</span> <span class="fl">0.08</span>,</span>
+<span>    draw_boundary <span class="op">=</span> <span class="cn">TRUE</span>, rasterize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    ideogram <span class="op">=</span> <span class="cn">TRUE</span>, genome <span class="op">=</span> <span class="st">"hg19"</span>, highlight <span class="op">=</span> <span class="cn">TRUE</span>, ideogram_fontsize <span class="op">=</span> <span class="fl">7</span>, ideogram_width_ratio <span class="op">=</span> <span class="fl">0.08</span>,</span>
 <span>    annotation <span class="op">=</span> <span class="cn">TRUE</span>, include_ncrna <span class="op">=</span> <span class="cn">FALSE</span>, gtf_path <span class="op">=</span> <span class="va">path_gtf</span>,</span>
-<span>    style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="fl">100000</span>, annotation_fontsize <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    annotation_width_ratio <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span></span>
-<span>    track <span class="op">=</span> <span class="cn">TRUE</span>, data_paths <span class="op">=</span> <span class="va">paths_track</span>, track_width_ratio <span class="op">=</span> <span class="fl">0.5</span>,</span>
-<span>    track_fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span>, data_range <span class="op">=</span> <span class="st">"maximum"</span>,</span>
-<span></span>
-<span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span>
-<span><span class="co">#&gt; Warning in .makeTxDb_normarg_chrominfo(chrominfo): genome version information</span></span>
-<span><span class="co">#&gt; is not available for this TxDb object</span></span></code></pre></div>
-<p><img src="gghic_files/figure-html/unnamed-chunk-24-1.png" width="700"></p>
+<span>    annotation_style <span class="op">=</span> <span class="st">"arrow"</span>, maxgap <span class="op">=</span> <span class="fl">100000</span>, annotation_fontsize <span class="op">=</span> <span class="fl">5</span>, annotation_width_ratio <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>    track <span class="op">=</span> <span class="cn">TRUE</span>, track_width_ratio <span class="op">=</span> <span class="fl">0.5</span>, track_fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#DC0000B2"</span>, <span class="st">"#00A087B2"</span><span class="op">)</span>, data_range <span class="op">=</span> <span class="st">"maximum"</span>,</span>
+<span>    loop <span class="op">=</span> <span class="cn">TRUE</span>, loop_style <span class="op">=</span> <span class="st">"arc"</span>, stroke <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>    expand_xaxis <span class="op">=</span> <span class="cn">TRUE</span>, expand_left <span class="op">=</span> <span class="fl">300000</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="gghic_files/figure-html/unnamed-chunk-40-1.png" class="r-plt" alt="Hi-C visualization" width="800" style="display: block; margin: auto;"></p>
+</div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="session-information">Session Information<a class="anchor" aria-label="anchor" href="#session-information"></a>
 </h2>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
-<span><span class="co">#&gt; R version 4.5.1 (2025-06-13)</span></span>
+<span><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
 <span><span class="co">#&gt; Running under: Ubuntu 24.04.3 LTS</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -585,60 +1221,57 @@ plot.</p>
 <span><span class="co">#&gt; [8] base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt;  [1] GenomicFeatures_1.60.0      AnnotationDbi_1.70.0       </span></span>
-<span><span class="co">#&gt;  [3] InteractionSet_1.36.1       SummarizedExperiment_1.38.1</span></span>
-<span><span class="co">#&gt;  [5] Biobase_2.68.0              MatrixGenerics_1.20.0      </span></span>
-<span><span class="co">#&gt;  [7] matrixStats_1.5.0           GenomicRanges_1.60.0       </span></span>
-<span><span class="co">#&gt;  [9] GenomeInfoDb_1.44.2         IRanges_2.42.0             </span></span>
-<span><span class="co">#&gt; [11] S4Vectors_0.46.0            BiocGenerics_0.54.0        </span></span>
-<span><span class="co">#&gt; [13] generics_0.1.4              HiCExperiment_1.8.0        </span></span>
-<span><span class="co">#&gt; [15] glue_1.8.0                  tidyr_1.3.1                </span></span>
-<span><span class="co">#&gt; [17] dplyr_1.1.4                 scales_1.4.0               </span></span>
-<span><span class="co">#&gt; [19] tibble_3.3.0                ggplot2_4.0.0              </span></span>
-<span><span class="co">#&gt; [21] gghic_0.1.0                </span></span>
+<span><span class="co">#&gt;  [1] GenomicFeatures_1.62.0      AnnotationDbi_1.72.0       </span></span>
+<span><span class="co">#&gt;  [3] gghic_0.2.0                 InteractionSet_1.38.0      </span></span>
+<span><span class="co">#&gt;  [5] SummarizedExperiment_1.40.0 Biobase_2.70.0             </span></span>
+<span><span class="co">#&gt;  [7] MatrixGenerics_1.22.0       matrixStats_1.5.0          </span></span>
+<span><span class="co">#&gt;  [9] GenomicRanges_1.62.0        Seqinfo_1.0.0              </span></span>
+<span><span class="co">#&gt; [11] IRanges_2.44.0              S4Vectors_0.48.0           </span></span>
+<span><span class="co">#&gt; [13] BiocGenerics_0.56.0         generics_0.1.4             </span></span>
+<span><span class="co">#&gt; [15] dplyr_1.1.4                 ggplot2_4.0.1              </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;   [1] strawr_0.0.92            RColorBrewer_1.1-3       rstudioapi_0.17.1       </span></span>
-<span><span class="co">#&gt;   [4] jsonlite_2.0.0           magrittr_2.0.4           farver_2.1.2            </span></span>
-<span><span class="co">#&gt;   [7] rmarkdown_2.29           fs_1.6.6                 BiocIO_1.18.0           </span></span>
-<span><span class="co">#&gt;  [10] ragg_1.5.0               vctrs_0.6.5              memoise_2.0.1           </span></span>
-<span><span class="co">#&gt;  [13] Rsamtools_2.24.1         RCurl_1.98-1.17          base64enc_0.1-3         </span></span>
-<span><span class="co">#&gt;  [16] htmltools_0.5.8.1        S4Arrays_1.8.1           progress_1.2.3          </span></span>
-<span><span class="co">#&gt;  [19] curl_7.0.0               Rhdf5lib_1.30.0          rhdf5_2.52.1            </span></span>
-<span><span class="co">#&gt;  [22] SparseArray_1.8.1        Formula_1.2-5            sass_0.4.10             </span></span>
-<span><span class="co">#&gt;  [25] bslib_0.9.0              htmlwidgets_1.6.4        desc_1.4.3              </span></span>
-<span><span class="co">#&gt;  [28] Gviz_1.52.0              httr2_1.2.1              cachem_1.1.0            </span></span>
-<span><span class="co">#&gt;  [31] GenomicAlignments_1.44.0 lifecycle_1.0.4          pkgconfig_2.0.3         </span></span>
-<span><span class="co">#&gt;  [34] Matrix_1.7-3             R6_2.6.1                 fastmap_1.2.0           </span></span>
-<span><span class="co">#&gt;  [37] GenomeInfoDbData_1.2.14  digest_0.6.37            colorspace_2.1-1        </span></span>
-<span><span class="co">#&gt;  [40] rprojroot_2.1.1          textshaping_1.0.3        Hmisc_5.2-3             </span></span>
-<span><span class="co">#&gt;  [43] RSQLite_2.4.3            labeling_0.4.3           filelock_1.0.3          </span></span>
-<span><span class="co">#&gt;  [46] httr_1.4.7               abind_1.4-8              compiler_4.5.1          </span></span>
-<span><span class="co">#&gt;  [49] here_1.0.1               withr_3.0.2              bit64_4.6.0-1           </span></span>
-<span><span class="co">#&gt;  [52] htmlTable_2.4.3          S7_0.2.0                 backports_1.5.0         </span></span>
-<span><span class="co">#&gt;  [55] BiocParallel_1.42.1      DBI_1.2.3                biomaRt_2.64.0          </span></span>
-<span><span class="co">#&gt;  [58] rappdirs_0.3.3           DelayedArray_0.34.1      rjson_0.2.23            </span></span>
-<span><span class="co">#&gt;  [61] tools_4.5.1              foreign_0.8-90           nnet_7.3-20             </span></span>
-<span><span class="co">#&gt;  [64] restfulr_0.0.16          rhdf5filters_1.20.0      grid_4.5.1              </span></span>
-<span><span class="co">#&gt;  [67] checkmate_2.3.3          cluster_2.1.8.1          gtable_0.3.6            </span></span>
-<span><span class="co">#&gt;  [70] BSgenome_1.76.0          tzdb_0.5.0               ensembldb_2.32.0        </span></span>
-<span><span class="co">#&gt;  [73] data.table_1.17.8        hms_1.1.3                xml2_1.4.0              </span></span>
-<span><span class="co">#&gt;  [76] XVector_0.48.0           pillar_1.11.0            stringr_1.5.2           </span></span>
-<span><span class="co">#&gt;  [79] vroom_1.6.5              BiocFileCache_2.16.2     lattice_0.22-7          </span></span>
-<span><span class="co">#&gt;  [82] rtracklayer_1.68.0       bit_4.6.0                deldir_2.0-4            </span></span>
-<span><span class="co">#&gt;  [85] biovizBase_1.56.0        tidyselect_1.2.1         Biostrings_2.76.0       </span></span>
-<span><span class="co">#&gt;  [88] knitr_1.50               gridExtra_2.3            ProtGenerics_1.40.0     </span></span>
-<span><span class="co">#&gt;  [91] xfun_0.53                stringi_1.8.7            UCSC.utils_1.4.0        </span></span>
-<span><span class="co">#&gt;  [94] lazyeval_0.2.2           yaml_2.3.10              evaluate_1.0.5          </span></span>
-<span><span class="co">#&gt;  [97] codetools_0.2-20         interp_1.1-6             cli_3.6.5               </span></span>
-<span><span class="co">#&gt; [100] rpart_4.1.24             reticulate_1.43.0        systemfonts_1.2.3       </span></span>
-<span><span class="co">#&gt; [103] jquerylib_0.1.4          dichromat_2.0-0.1        Rcpp_1.1.0              </span></span>
-<span><span class="co">#&gt; [106] dbplyr_2.5.1             png_0.1-8                XML_3.99-0.19           </span></span>
-<span><span class="co">#&gt; [109] parallel_4.5.1           pkgdown_2.1.3            blob_1.2.4              </span></span>
-<span><span class="co">#&gt; [112] prettyunits_1.2.0        latticeExtra_0.6-31      jpeg_0.1-11             </span></span>
-<span><span class="co">#&gt; [115] AnnotationFilter_1.32.0  bitops_1.0-9             txdbmaker_1.4.2         </span></span>
-<span><span class="co">#&gt; [118] VariantAnnotation_1.54.1 purrr_1.1.0              crayon_1.5.3            </span></span>
-<span><span class="co">#&gt; [121] rlang_1.1.6              KEGGREST_1.48.1</span></span></code></pre></div>
+<span><span class="co">#&gt;   [1] RColorBrewer_1.1-3       rstudioapi_0.17.1        jsonlite_2.0.0          </span></span>
+<span><span class="co">#&gt;   [4] magrittr_2.0.4           farver_2.1.2             rmarkdown_2.30          </span></span>
+<span><span class="co">#&gt;   [7] fs_1.6.6                 BiocIO_1.20.0            ragg_1.5.0              </span></span>
+<span><span class="co">#&gt;  [10] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.26.0        </span></span>
+<span><span class="co">#&gt;  [13] RCurl_1.98-1.17          base64enc_0.1-3          htmltools_0.5.8.1       </span></span>
+<span><span class="co">#&gt;  [16] S4Arrays_1.10.0          progress_1.2.3           curl_7.0.0              </span></span>
+<span><span class="co">#&gt;  [19] Rhdf5lib_1.32.0          rhdf5_2.54.0             SparseArray_1.10.3      </span></span>
+<span><span class="co">#&gt;  [22] Formula_1.2-5            sass_0.4.10              bslib_0.9.0             </span></span>
+<span><span class="co">#&gt;  [25] htmlwidgets_1.6.4        desc_1.4.3               Gviz_1.54.0             </span></span>
+<span><span class="co">#&gt;  [28] httr2_1.2.1              cachem_1.1.0             GenomicAlignments_1.46.0</span></span>
+<span><span class="co">#&gt;  [31] lifecycle_1.0.4          pkgconfig_2.0.3          Matrix_1.7-4            </span></span>
+<span><span class="co">#&gt;  [34] R6_2.6.1                 fastmap_1.2.0            digest_0.6.39           </span></span>
+<span><span class="co">#&gt;  [37] colorspace_2.1-2         textshaping_1.0.4        Hmisc_5.2-4             </span></span>
+<span><span class="co">#&gt;  [40] RSQLite_2.4.5            labeling_0.4.3           filelock_1.0.3          </span></span>
+<span><span class="co">#&gt;  [43] httr_1.4.7               abind_1.4-8              compiler_4.5.2          </span></span>
+<span><span class="co">#&gt;  [46] bit64_4.6.0-1            withr_3.0.2              htmlTable_2.4.3         </span></span>
+<span><span class="co">#&gt;  [49] S7_0.2.1                 backports_1.5.0          BiocParallel_1.44.0     </span></span>
+<span><span class="co">#&gt;  [52] DBI_1.2.3                biomaRt_2.66.0           rappdirs_0.3.3          </span></span>
+<span><span class="co">#&gt;  [55] DelayedArray_0.36.0      rjson_0.2.23             tools_4.5.2             </span></span>
+<span><span class="co">#&gt;  [58] foreign_0.8-90           nnet_7.3-20              glue_1.8.0              </span></span>
+<span><span class="co">#&gt;  [61] restfulr_0.0.16          rhdf5filters_1.22.0      grid_4.5.2              </span></span>
+<span><span class="co">#&gt;  [64] checkmate_2.3.3          cluster_2.1.8.1          gtable_0.3.6            </span></span>
+<span><span class="co">#&gt;  [67] BSgenome_1.78.0          tidyr_1.3.1              ensembldb_2.34.0        </span></span>
+<span><span class="co">#&gt;  [70] data.table_1.17.8        hms_1.1.4                XVector_0.50.0          </span></span>
+<span><span class="co">#&gt;  [73] pillar_1.11.1            stringr_1.6.0            BiocFileCache_3.0.0     </span></span>
+<span><span class="co">#&gt;  [76] lattice_0.22-7           rtracklayer_1.70.0       bit_4.6.0               </span></span>
+<span><span class="co">#&gt;  [79] deldir_2.0-4             biovizBase_1.58.0        tidyselect_1.2.1        </span></span>
+<span><span class="co">#&gt;  [82] Biostrings_2.78.0        knitr_1.50               gridExtra_2.3           </span></span>
+<span><span class="co">#&gt;  [85] ProtGenerics_1.42.0      xfun_0.54                stringi_1.8.7           </span></span>
+<span><span class="co">#&gt;  [88] UCSC.utils_1.6.0         lazyeval_0.2.2           yaml_2.3.11             </span></span>
+<span><span class="co">#&gt;  [91] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.0.0         </span></span>
+<span><span class="co">#&gt;  [94] interp_1.1-6             tibble_3.3.0             cli_3.6.5               </span></span>
+<span><span class="co">#&gt;  [97] rpart_4.1.24             systemfonts_1.3.1        jquerylib_0.1.4         </span></span>
+<span><span class="co">#&gt; [100] dichromat_2.0-0.1        Rcpp_1.1.0               GenomeInfoDb_1.46.1     </span></span>
+<span><span class="co">#&gt; [103] dbplyr_2.5.1             png_0.1-8                XML_3.99-0.20           </span></span>
+<span><span class="co">#&gt; [106] parallel_4.5.2           pkgdown_2.2.0            blob_1.2.4              </span></span>
+<span><span class="co">#&gt; [109] prettyunits_1.2.0        latticeExtra_0.6-31      jpeg_0.1-11             </span></span>
+<span><span class="co">#&gt; [112] AnnotationFilter_1.34.0  bitops_1.0-9             txdbmaker_1.6.0         </span></span>
+<span><span class="co">#&gt; [115] viridisLite_0.4.2        VariantAnnotation_1.56.0 scales_1.4.0            </span></span>
+<span><span class="co">#&gt; [118] purrr_1.2.0              crayon_1.5.3             rlang_1.1.6             </span></span>
+<span><span class="co">#&gt; [121] KEGGREST_1.50.0</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -651,7 +1284,7 @@ plot.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

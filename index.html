@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">gghic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -39,6 +39,13 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="articles/gghic.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
+<li><a class="dropdown-item" href="articles/depth.html">Resolution Depth Analysis for Hi-C/-like Data</a></li>
+    <li><a class="dropdown-item" href="articles/hypergraph.html">Multi-way Contact Analysis with Hypergraphs</a></li>
+  </ul>
+</li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -58,13 +65,44 @@
 <img src="logo.png" class="logo" alt=""><h1 id="gghic">gghic<a class="anchor" aria-label="anchor" href="#gghic"></a>
 </h1>
 </div>
-<p>A versatile R package for exploring and visualizing 3D genome organization</p>
+<p><strong>gghic</strong> is a powerful and flexible R package for visualizing 3D genome organization from Hi-C and multi-way contact data. Built on <code>ggplot2</code>, it provides publication-ready visualizations with minimal code while maintaining full customization capabilities.</p>
+<div class="section level2">
+<h2 id="features">Features<a class="anchor" aria-label="anchor" href="#features"></a>
+</h2>
+<ul>
+<li>🎨 <strong>Intuitive API</strong> - Simple high-level functions with sensible defaults</li>
+<li>🧬 <strong>Comprehensive</strong> - Visualize Hi-C heatmaps, TADs, loops, genes, and signal tracks</li>
+<li>🚀 <strong>Memory Efficient</strong> - Focused data loading for large datasets</li>
+<li>📊 <strong>Publication Ready</strong> - Generate high-quality figures with minimal effort</li>
+<li>🔧 <strong>Customizable</strong> - Full ggplot2 compatibility for advanced styling</li>
+<li>🧪 <strong>Multi-way Contacts</strong> - Native support for Pore-C and other multi-contact data</li>
+</ul>
+</div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>To install the <code>gghic</code> package from GitHub, use the following command:</p>
+<div class="section level3">
+<h3 id="from-github">From GitHub<a class="anchor" aria-label="anchor" href="#from-github"></a>
+</h3>
+<p>Install the development version using <code>devtools</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jasonwong-lab/gghic"</span>, build_vignettes <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://bioconductor.github.io/BiocManager/" class="external-link">"BiocManager"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"BiocManager"</span><span class="op">)</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="st"><a href="https://devtools.r-lib.org/" class="external-link">"devtools"</a></span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"devtools"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Install gghic</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jasonwong-lab/gghic"</span><span class="op">)</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="getting-help">Getting Help<a class="anchor" aria-label="anchor" href="#getting-help"></a>
+</h2>
+<ul>
+<li>🐛 <strong>Bug Reports:</strong> <a href="https://github.com/jasonwong-lab/gghic/issues" class="external-link">GitHub Issues</a>
+</li>
+<li>💡 <strong>Feature Requests:</strong> <a href="https://github.com/jasonwong-lab/gghic/discussions" class="external-link">GitHub Discussions</a>
+</li>
+<li>📧 <strong>Contact:</strong> Open an issue for questions and support</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
@@ -109,7 +147,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

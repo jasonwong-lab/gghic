@@ -1,0 +1,61 @@
+# Plot Resolution vs Coverage
+
+Generate a boxplot showing coverage of bins for different bin sizes.
+
+## Usage
+
+``` r
+plotResolutionCoverage(
+  pairs,
+  bin_sizes = c(1000, 2000, 5000, 10000, 20000, 25000, 50000, 1e+05, 150000, 2e+05,
+    250000, 5e+05, 1e+06),
+  min_contacts = 1000,
+  title = "Coverage by Resolution"
+)
+```
+
+## Arguments
+
+- pairs:
+
+  A data frame or tibble with columns: `read_name`, `chrom1`, `pos1`,
+  `chrom2`, `pos2`.
+
+- bin_sizes:
+
+  Integer vector of bin sizes to test (in base pairs). Default: c(1e3,
+  2e3, 5e3, 1e4, 2e4, 2.5e4, 5e4, 1e5, 1.5e5, 2e5, 2.5e5, 5e5, 1e6)
+
+- min_contacts:
+
+  Integer minimum number of contacts. Default: 1000.
+
+- title:
+
+  Character title for the plot. Default: "Coverage by Resolution".
+
+## Value
+
+A ggplot2 object showing coverage distribution across bin sizes.
+
+## Details
+
+Creates a boxplot visualization where each panel represents a bin size,
+and the distribution shows the number of contacts per bin. This helps
+visualize how resolution affects coverage across the genome.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# Plot coverage for default bin sizes
+p <- plotResolutionCoverage(pairs)
+print(p)
+
+# Custom bin sizes
+p <- plotResolutionCoverage(pairs,
+  bin_sizes = c(10000, 50000, 100000, 500000)
+)
+print(p)
+} # }
+```

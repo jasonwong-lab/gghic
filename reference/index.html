@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gghic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -17,6 +17,11 @@
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/gghic.html">Get started</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/depth.html">Resolution Depth Analysis for Hi-C/-like Data</a></li>
+    <li><a class="dropdown-item" href="../articles/hypergraph.html">Multi-way Contact Analysis with Hypergraphs</a></li>
+  </ul></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
@@ -36,108 +41,269 @@
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
 
       <dl><dt>
 
-          <code><a href="concatemers2gis.html">concatemers2gis()</a></code>
+          <code><a href="ChromatinContacts-class.html">ChromatinContacts-class</a></code>
 
         </dt>
-        <dd>concatemers2gis</dd>
-      </dl><dl><dt>
+        <dd>ChromatinContacts S4 class</dd>
+
+        <dt>
+
+          <code><a href="ChromatinContacts.html">ChromatinContacts()</a></code>
+
+        </dt>
+        <dd>Create a ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="as_tibble-ChromatinContacts-method.html">as_tibble(<i>&lt;ChromatinContacts&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Convert ChromatinContacts to tibble</dd>
+
+        <dt>
+
+          <code><a href="buildHypergraph.html">buildHypergraph()</a></code>
+
+        </dt>
+        <dd>Build Hypergraph from Multi-way Contacts</dd>
+
+        <dt>
+
+          <code><a href="concatemers2gis.html">concatemers2Gis()</a></code>
+
+        </dt>
+        <dd>Convert concatemer reads to pairwise interactions</dd>
+
+        <dt>
+
+          <code><a href="features-ChromatinContacts-character-method.html">features(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get specific genomic features from ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="features-set.html">`features&lt;-`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>,<i>&lt;GRanges&gt;</i>)</a></code> <code><a href="features-set.html">`features&lt;-`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>,<i>&lt;GInteractions&gt;</i>)</a></code> <code><a href="features-set.html">`features&lt;-`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>,<i>&lt;GRangesList&gt;</i>)</a></code> <code><a href="features-set.html">`features&lt;-`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>,<i>&lt;list&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Set genomic features in ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="features.html">features(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;missing&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get all genomic features from ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="focus-ChromatinContacts-method.html">focus(<i>&lt;ChromatinContacts&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get focus regions of ChromatinContacts object</dd>
+
+        <dt>
 
           <code><a href="geom_annotation.html">geom_annotation()</a></code>
 
         </dt>
         <dd>geom_annotation</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_concatemer.html">geom_concatemer()</a></code>
 
         </dt>
         <dd>geom_concatemer</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_concatemer2.html">geom_concatemer2()</a></code>
 
         </dt>
         <dd>geom_concatemer2</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_hic.html">geom_hic()</a></code>
 
         </dt>
         <dd>geom_hic</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_hic_under.html">geom_hic_under()</a></code>
 
         </dt>
         <dd>geom_hic_under</dd>
-      </dl><dl><dt>
+
+        <dt>
+
+          <code><a href="geom_hypergraph.html">geom_hypergraph()</a></code>
+
+        </dt>
+        <dd>Visualize Multi-way Contacts as Hypergraph</dd>
+
+        <dt>
 
           <code><a href="geom_ideogram.html">geom_ideogram()</a></code>
 
         </dt>
         <dd>geom_ideogram</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_loop.html">geom_loop()</a></code>
 
         </dt>
         <dd>geom_loop</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_loop2.html">geom_loop2()</a></code>
 
         </dt>
         <dd>geom_loop2</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_tad.html">geom_tad()</a></code>
 
         </dt>
         <dd>geom_tad</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_tad2.html">geom_tad2()</a></code>
 
         </dt>
         <dd>geom_tad2</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_track.html">geom_track()</a></code>
 
         </dt>
         <dd>geom_track</dd>
-      </dl><dl><dt>
+
+        <dt>
 
           <code><a href="geom_track2.html">geom_track2()</a></code>
 
         </dt>
         <dd>geom_track2</dd>
-      </dl><dl><dt>
 
-          <code><a href="get_breaks_labels.html">get_breaks_labels()</a></code>
+        <dt>
 
-        </dt>
-        <dd>get_breaks_labels</dd>
-      </dl><dl><dt>
-
-          <code><a href="gghic.html">gghic()</a></code>
+          <code><a href="getBreaksLabels.html">getBreaksLabels()</a></code>
 
         </dt>
-        <dd>gghic</dd>
-      </dl><dl><dt>
+        <dd>Generate axis breaks and labels for multi-chromosome plots</dd>
+
+        <dt>
+
+          <code><a href="gghic.html">gghic(<i>&lt;ChromatinContacts&gt;</i>)</a></code> <code><a href="gghic.html">gghic(<i>&lt;data.frame&gt;</i>)</a></code> <code><a href="gghic.html">gghic(<i>&lt;GInteractions&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Create Hi-C visualization plot</dd>
+
+        <dt>
+
+          <code><a href="import-ChromatinContacts.html">import(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Import chromatin contact data</dd>
+
+        <dt>
+
+          <code><a href="interactions-ChromatinContacts-method.html">interactions(<i>&lt;ChromatinContacts&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get interaction data from ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="plotCoverageCurve.html">plotCoverageCurve()</a></code>
+
+        </dt>
+        <dd>Plot Coverage Fraction by Resolution</dd>
+
+        <dt>
+
+          <code><a href="plotHypergraph.html">plotHypergraph()</a></code>
+
+        </dt>
+        <dd>Plot Hypergraph Visualization</dd>
+
+        <dt>
+
+          <code><a href="plotResolutionCoverage.html">plotResolutionCoverage()</a></code>
+
+        </dt>
+        <dd>Plot Resolution vs Coverage</dd>
+
+        <dt>
+
+          <code><a href="print.hypergraph.html">print(<i>&lt;hypergraph&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for hypergraph objects</dd>
+
+        <dt>
+
+          <code><a href="resolution-ChromatinContacts-method.html">resolution(<i>&lt;ChromatinContacts&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get resolution of ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="resolution-depth.html">calculateResolutionDepth()</a></code> <code><a href="resolution-depth.html">calculateGenomeCoverage()</a></code> <code><a href="resolution-depth.html">findOptimalResolution()</a></code> <code><a href="resolution-depth.html">readPairsCache()</a></code> <code><a href="resolution-depth.html">calculateResolutionDepthChunked()</a></code> <code><a href="resolution-depth.html">calculateGenomeCoverageChunked()</a></code> <code><a href="resolution-depth.html">findOptimalResolutionChunked()</a></code>
+
+        </dt>
+        <dd>Calculate Resolution and Depth for Pairs Data</dd>
+
+        <dt>
+
+          <code><a href="scaleData.html">scaleData()</a></code>
+
+        </dt>
+        <dd>Scale Hi-C interaction data</dd>
+
+        <dt>
+
+          <code><a href="seqinfo-ChromatinContacts-method.html">seqinfo(<i>&lt;ChromatinContacts&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Get sequence information from ChromatinContacts object</dd>
+
+        <dt>
+
+          <code><a href="subset-methods.html">subsetByOverlaps(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;numeric&gt;</i>)</a></code> <code><a href="subset-methods.html">subsetByOverlaps(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;logical&gt;</i>)</a></code> <code><a href="subset-methods.html">subsetByOverlaps(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;GRanges&gt;</i>)</a></code> <code><a href="subset-methods.html">subsetByOverlaps(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;GInteractions&gt;</i>)</a></code> <code><a href="subset-methods.html">`[`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;numeric&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="subset-methods.html">`[`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;logical&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="subset-methods.html">`[`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;GRanges&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="subset-methods.html">`[`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;GInteractions&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code> <code><a href="subset-methods.html">`[`(<i>&lt;ChromatinContacts&gt;</i>,<i>&lt;character&gt;</i>,<i>&lt;ANY&gt;</i>,<i>&lt;ANY&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Subset ChromatinContacts objects</dd>
+
+        <dt>
 
           <code><a href="theme_hic.html">theme_hic()</a></code>
 
         </dt>
         <dd>theme_hic</dd>
+
+        <dt>
+
+          <code><a href="tidyHypergraph.html">tidyHypergraph()</a></code>
+
+        </dt>
+        <dd>Convert Hypergraph to Long Format for Visualization</dd>
       </dl></div>
   </main></div>
 
@@ -147,7 +313,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>
