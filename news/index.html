@@ -38,15 +38,61 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="gghic-010">gghic 0.1.0<a class="anchor" aria-label="anchor" href="#gghic-010"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.2.0" id="gghic-020">gghic 0.2.0<a class="anchor" aria-label="anchor" href="#gghic-020"></a></h2>
 <div class="section level3">
-<h3 id="changes-in-this-version-0-1-0">Changes in this version<a class="anchor" aria-label="anchor" href="#changes-in-this-version-0-1-0"></a></h3>
-<ul><li>Initial submission to CRAN.</li>
-<li>Added core functionalities for visualising genomic interaction data.</li>
+<h3 id="major-changes-0-2-0">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-0-2-0"></a></h3>
+<ul><li>
+<strong>ChromatinContacts S4 Class</strong>: Introduced a new S4 class for managing Hi-C/-like data with improved object-oriented design.
+<ul><li>New <code>import()</code> methods for loading data from Cooler files.</li>
+<li>Setter methods for assigning genomic features (TADs, loops, tracks, compartments).</li>
+<li>Comprehensive subsetting methods supporting numeric, logical, character, GRanges, and GInteractions indexing.</li>
+<li>Enhanced <code><a href="https://rdrr.io/r/methods/show.html" class="external-link">show()</a></code> method for better object summaries.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-2-0">New Features<a class="anchor" aria-label="anchor" href="#new-features-0-2-0"></a></h3>
+<ul><li>
+<strong>Multi-way Contact Visualization</strong>: Added <code><a href="../reference/geom_hypergraph.html">geom_hypergraph()</a></code> for visualizing Pore-C/-like multi-way chromatin interactions.</li>
+<li>
+<strong>Lower Triangle Plots</strong>: New <code><a href="../reference/geom_hic_under.html">geom_hic_under()</a></code> for plotting flipped Hi-C heatmaps below the diagonal.</li>
+<li>
+<strong>Resolution Depth Analysis</strong>: Implemented C-based resolution depth calculation with caching support for improved performance.</li>
+<li>
+<strong>Pairs File Support</strong>: Added <code><a href="../reference/resolution-depth.html">readPairsCache()</a></code> for reading and caching pairs files with filtering capabilities.</li>
+<li>
+<strong>Concatemer Conversion</strong>: New <code><a href="../reference/concatemers2gis.html">concatemers2Gis()</a></code> function to convert concatemer reads to GInteractions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="performance-improvements-0-2-0">Performance Improvements<a class="anchor" aria-label="anchor" href="#performance-improvements-0-2-0"></a></h3>
+<ul><li>Implemented C code for resolution depth calculations with hash table-based bin tracking.</li>
+<li>Added comprehensive caching system for resolution and depth calculations.</li>
+<li>Memory-efficient pairs file I/O with filtering support.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-0-2-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-2-0"></a></h3>
+<ul><li>Added comprehensive hypergraph vignette for multi-way contact analysis.</li>
+<li>Enhanced main vignette with improved workflow examples and data loading.</li>
+<li>Refactored depth vignette with better caching explanations.</li>
+<li>Updated pkgdown website with better navigation and feature descriptions.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="enhancements-0-2-0">Enhancements<a class="anchor" aria-label="anchor" href="#enhancements-0-2-0"></a></h3>
+<ul><li>Refactored all <code>geom_*</code> functions for consistent parameter handling.</li>
+<li>Added <code><a href="../reference/renameGeomAes.html">renameGeomAes()</a></code> utility for remapping ggplot2 aesthetics (source: <a href="https://github.com/clauswilke/relayer" class="external-link uri">https://github.com/clauswilke/relayer</a>).</li>
+<li>Better error messages and validation throughout.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-changes-0-2-0">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-2-0"></a></h3>
+<ul><li>Refactored utility functions with consistent naming conventions.</li>
+<li>Added Makevars with compiler flags for C code compilation.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="gghic-010">gghic 0.1.0<a class="anchor" aria-label="anchor" href="#gghic-010"></a></h2>
+<ul><li>Added core functionalities for visualising genomic interaction data.</li>
 <li>Integrated with ggplot2 for flexible and customisable plotting.</li>
 <li>Included support for heatmaps, chromosome ideograms, gene tracks, and other genomic data tracks.</li>
 </ul></div>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 
