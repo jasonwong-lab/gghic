@@ -4,17 +4,10 @@ StatConcatemer <- ggplot2::ggproto(
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "width_ratio", "spacing_ratio"
-  ),
-  dropped_aes = c(
-    "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
-  ),
+  setup_params = function(data, params) params,
   compute_panel = function(
-    data, scales,
-    width_ratio, spacing_ratio, concatemer_granges, concatemer_paths,
-    group_identifier
+    data, scales, width_ratio = 1 / 100, spacing_ratio = 1 / 5,
+    concatemer_grs = NULL, concatemer_path = NULL, group_identifier = NULL
   ) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -28,8 +21,7 @@ StatConcatemer <- ggplot2::ggproto(
     #   | |           |        | (x, ymin)             (xmax, ymin) |          #
     #   | +-----------+        +------------------------------------+          #
     # ======================================================================== #
-
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
@@ -42,7 +34,7 @@ StatConcatemer <- ggplot2::ggproto(
       n_sn <- env$n_sn
     } else {
       dat_hic <- data |>
-        calculate_hic_coordinates()
+        .calculateHicCoordinates()
       max_y <- max(dat_hic$ymax, na.rm = TRUE)
       max_x <- max(dat_hic$xend, na.rm = TRUE)
       min_x <- min(dat_hic$xmin, na.rm = TRUE)
@@ -69,20 +61,20 @@ StatConcatemer <- ggplot2::ggproto(
         start = min(start1),
         end = max(end1)
       ) |>
-      dplyr::reframe(range = glue::glue("{seqnames1}:{start}-{end}")) |>
+      dplyr::reframe(range = paste0(seqnames1, ":", start, "-", end)) |>
       dplyr::pull(range) |>
       GenomicRanges::GRanges()
 
     .height <- max_y * width_ratio
 
-    if (!is.null(concatemer_granges)) {
-      concatemers <- concatemer_granges[
-        IRanges::overlapsAny(concatemer_granges, grs_range, ignore.strand = TRUE)
+    if (!is.null(concatemer_grs)) {
+      concatemers <- concatemer_grs[
+        IRanges::overlapsAny(concatemer_grs, grs_range, ignore.strand = TRUE)
       ] |>
         GenomicRanges::sort()
     }
-    if (!is.null(concatemer_paths)) {
-      concatemers <- concatemer_paths |>
+    if (!is.null(concatemer_path)) {
+      concatemers <- concatemer_path |>
         rtracklayer::import(which = grs_range) |>
         GenomicRanges::sort()
     }
@@ -90,15 +82,12 @@ StatConcatemer <- ggplot2::ggproto(
     ids <- mcols(concatemers)[[group_identifier]] |>
       as.character() |>
       unique()
-    # list_concatemer <- purrr::map(
-    #   ids, ~ concatemers[mcols(concatemers)[[group_identifier]] == .x] |>
-    #     tibble::as_tibble() |>
-    #     dplyr::mutate({{ group_identifier }} := as.character(.data[[group_identifier]])) |>
-    #     dplyr::rename(seqname = seqnames)
-    # )
+
     df_concatemer <- concatemers |>
       tibble::as_tibble() |>
-      dplyr::mutate({{ group_identifier }} := as.character(.data[[group_identifier]])) |>
+      dplyr::mutate(
+        {{ group_identifier }} := as.character(.data[[group_identifier]])
+      ) |>
       dplyr::rename(seqname = seqnames)
 
     ys <- ids |>
@@ -130,18 +119,20 @@ StatConcatemer <- ggplot2::ggproto(
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
-        calculate_add_lengths()
+        .calculateAddLengths()
       chroms_sub <- data |>
-        calculate_subtract_lengths()
+        .calculateSubtractLengths()
 
       dat <- dat |>
-        adjust_coordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
+        .adjustCoordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
     }
     dat_gap <- dat |>
       split(dat[[group_identifier]]) |>
       purrr::map_dfr(
         function(.x) {
-          if (nrow(.x) < 2) return(NULL)
+          if (nrow(.x) < 2) {
+            return(NULL)
+          }
           tibble::tibble(
             y = (.x$y[1] + .x$ymin[1]) * 0.5,
             x = .x$xmax[1],
@@ -168,15 +159,9 @@ GeomConcatemer <- ggplot2::ggproto(
   required_aes = c(
     "x", "y", "xmax", "ymin", "type", "seqname"
   ),
-  extra_params = c(
-    ggplot2::Geom$extra_params,
-    "fill"
-  ),
+  default_aes = ggplot2::aes(fill = "black"),
   draw_key = ggplot2::draw_key_blank,
-  draw_panel = function(
-    data, panel_params, coord,
-    fill
-  ) {
+  draw_panel = function(data, panel_params, coord, fill = "black") {
     coords <- coord$transform(data, panel_params)
 
     coords_concatemer <- coords |>
@@ -220,9 +205,9 @@ GeomConcatemer <- ggplot2::ggproto(
 #'   relative to the height of the Hi-C plot. Default is `1/100`.
 #' @param spacing_ratio The ratio of the spacing between two tracks.
 #'   Default is `1/5`.
-#' @param concatemer_granges The GRanges object of the concatemer tracks.
+#' @param concatemer_grs The GRanges object of the concatemer tracks.
 #'   Default is `NULL`.
-#' @param concatemer_paths The paths to the concatemer files. Default is `NULL`.
+#' @param concatemer_path The paths to the concatemer files. Default is `NULL`.
 #' @param group_identifier A character indicating the column name in the
 #'   concatemer GRanges object that identifies the group of
 #'   concatemers. Default is `NULL`.
@@ -239,26 +224,36 @@ GeomConcatemer <- ggplot2::ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' # example usage
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+#'   import()
+#'
+#' # Load concatemer data (multi-way contacts from Pore-C)
+#' concatemers <- rtracklayer::import("path/to/concatemers.bed")
+#'
+#' # Add concatemer tracks to Hi-C plot
+#' gghic(cc) +
+#'   geom_concatemer(
+#'     concatemer_grs = concatemers,
+#'     group_identifier = "read_name",
+#'     fill = "blue"
+#'   )
 #' }
-#' @export geom_concatemer
+#' @export
 #' @aliases geom_concatemer
 geom_concatemer <- function(
   mapping = NULL, data = NULL, stat = StatConcatemer, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  width_ratio = 1 / 100, spacing_ratio = 1 / 5,
-  concatemer_granges = NULL, concatemer_paths = NULL, group_identifier = NULL,
-  fill = "black"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, width_ratio = 1 / 100,
+  spacing_ratio = 1 / 5, concatemer_grs = NULL, concatemer_path = NULL,
+  group_identifier = NULL, fill = "black", ...
 ) {
   ggplot2::layer(
     geom = GeomConcatemer, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE, params = list(
-      na.rm = na.rm, ...,
-      width_ratio = width_ratio, spacing_ratio = spacing_ratio,
-      concatemer_granges = concatemer_granges,
-      concatemer_paths = concatemer_paths, group_identifier = group_identifier,
-      fill = fill
+      na.rm = na.rm, width_ratio = width_ratio, spacing_ratio = spacing_ratio,
+      concatemer_grs = concatemer_grs, concatemer_path = concatemer_path,
+      group_identifier = group_identifier, fill = fill, ...
     )
   )
 }
