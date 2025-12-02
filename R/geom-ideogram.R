@@ -1,65 +1,17 @@
-retrive_cytoband <- function(data, genome, chrom_prefix) {
-  bands_all <- ensure_cytoband(genome = genome)
-
-  if (!chrom_prefix) {
-    bands_all <- bands_all |>
-      dplyr::mutate(chrom = gsub("chr", "", chrom))
-  }
-
-  chroms <- unique(c(data$seqnames1, data$seqnames2)) |>
-    as.character()
-  bands <- bands_all |>
-    dplyr::filter(chrom %in% chroms)
-
-  bnames <- bands$name
-  indices <- is.na(bnames)
-  if (any(indices)) {
-    bnames[indices] <- glue::glue("band_na_{seq_len(sum(indices))}")
-  }
-  if (any(bnames == "")) {
-    bnames[bnames == ""] <- glue::glue("band_null_{which(bnames == '')}")
-  }
-
-  cols_all <- get_cytoband_colors()
-  cols <- c(
-    cols_all[c("gneg", "stalk", "acen")],
-    gpos = unname(cols_all["gpos100"]),
-    gvar = unname(cols_all["gpos100"])
-  )
-  gpcols <- unique(grep("gpos", bands$gieStain, value = TRUE))
-  crmp <- grDevices::colorRampPalette(c(cols["gneg"], cols["gpos"]))(100)
-  posCols <- stats::setNames(crmp[as.integer(gsub("gpos", "", gpcols))], gpcols)
-  cols <- c(cols, posCols) |>
-    as.data.frame() |>
-    tibble::rownames_to_column("type") |>
-    dplyr::rename(band_fill = `c(cols, posCols)`)
-
-  dat <- bands |>
-    dplyr::mutate(chromStart = chromStart + 1, name = bnames) |>
-    dplyr::rename(
-      type = gieStain, seqname = chrom, start = chromStart, end = chromEnd
-    ) |>
-    dplyr::left_join(cols, by = "type")
-
-  dat
-}
-
+#' @rdname geom_ideogram
+#' @format NULL
+#' @usage NULL
+#' @export
 StatIdeogram <- ggplot2::ggproto(
   "StatIdeogram",
   ggplot2::Stat,
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "genome", "chrom_prefix", "highlight", "width_ratio", "length_ratio"
-  ),
-  dropped_aes = c(
-    "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
-  ),
+  setup_params = function(data, params) params,
   compute_panel = function(
-    data, scales,
-    genome, chrom_prefix, highlight, width_ratio, length_ratio
+    data, scales, genome = "hg19", chrom_prefix = TRUE, highlight = TRUE,
+    width_ratio = 1 / 30, length_ratio = 0.8, show_coord = FALSE
   ) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -74,9 +26,9 @@ StatIdeogram <- ggplot2::ggproto(
     # --+--------------------------------------------------------------------> #
     #   | (0, 0)                                                               #
     # ======================================================================== #
-    bands <- retrive_cytoband(data, genome, chrom_prefix)
+    bands <- .retriveCytoband(data, genome, chrom_prefix)
 
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     if (env$n_hic == 1) {
       max_y <- env$max_y
@@ -85,7 +37,7 @@ StatIdeogram <- ggplot2::ggproto(
       res <- env$res
     } else {
       dat_hic <- data |>
-        calculate_hic_coordinates()
+        .calculateHicCoordinates()
       max_y <- max(dat_hic$ymax, na.rm = TRUE)
       max_x <- max(dat_hic$xend, na.rm = TRUE)
       min_x <- min(dat_hic$xmin, na.rm = TRUE)
@@ -95,8 +47,13 @@ StatIdeogram <- ggplot2::ggproto(
     .height <- max_y * width_ratio
     .scale <- ((max_x - min_x) * length_ratio) / max(bands$end)
 
+    chroms_ordered <- c(data$seqnames1, data$seqnames2) |>
+      unique() |>
+      sort()
     ys <- bands |>
       dplyr::distinct(seqname) |>
+      dplyr::mutate(seqname = factor(seqname, levels = chroms_ordered)) |>
+      dplyr::arrange(dplyr::desc(seqname)) |>
       dplyr::mutate(
         y = (.height * (dplyr::row_number() - 1)) +
           (dplyr::row_number() * (.height / 2)) +
@@ -122,6 +79,7 @@ StatIdeogram <- ggplot2::ggproto(
       dplyr::group_by(seqnames1) |>
       dplyr::summarise(start1 = min(start1), end1 = max(end1)) |>
       dplyr::rename(seqname = seqnames1, start = start1, end = end1)
+
     dat_text <- dat_band |>
       dplyr::group_by(seqname) |>
       dplyr::filter(xmax == max(xmax)) |>
@@ -129,7 +87,11 @@ StatIdeogram <- ggplot2::ggproto(
       dplyr::mutate(
         y = (ymax + y) / 2,
         x = xmax + (max(dat_band$xmax) - min(dat_band$x)) / 50,
-        info = glue::glue("{seqname}:{start}-{end}"),
+        info = if (show_coord) {
+          paste0(seqname, ":", start, "-", end)
+        } else {
+          seqname
+        },
         type = "text",
         band_fill = "black"
       )
@@ -154,15 +116,21 @@ StatIdeogram <- ggplot2::ggproto(
   }
 )
 
+#' @rdname geom_ideogram
+#' @format NULL
+#' @usage NULL
+#' @export
 GeomIdeogram <- ggplot2::ggproto(
   "GeomIdeogram",
   ggplot2::Geom,
   required_aes = c("x", "y", "xmax", "ymax", "type", "seqname", "band_fill"),
-  extra_params = c(ggplot2::Geom$extra_params, "fontsize"),
+  default_aes = ggplot2::aes(
+    colour = "red", fill = "#FFE3E680", fontsize = 10
+  ),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
-    data, panel_params, coord,
-    fontsize, colour, fill
+    data, panel_params, coord, fontsize = 10, colour = "red",
+    fill = "#FFE3E680"
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -211,6 +179,8 @@ GeomIdeogram <- ggplot2::ggproto(
 #' @param genome The genome name. Default is `"hg19"`.
 #' @param chrom_prefix Whether the input data has chromosome names
 #'   with prefix 'chr' or not. Default is `TRUE`.
+#' @param show_coord Whether to show coordinates on the right side of the
+#'   ideogram. Default is `FALSE`.
 #' @param highlight Whether to highlight the boundary of the chromosome.
 #'   Default is `TRUE`.
 #' @param width_ratio The ratio of the width of each chromosome ideogram
@@ -233,68 +203,40 @@ GeomIdeogram <- ggplot2::ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' library(gghic)
-#' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
-#'
-#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/cooler/chr4_11-100kb.cool"
-#' )
-#' path_file <- file.path(dir_cache_gghic, "chr4_11-100kb.cool")
-#' download.file(url_file, path_file)
-#'
-#' hic <- path_file |>
-#'   CoolFile() |>
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
-#' gis <- interactions(hic)
-#' gis$score <- log10(gis$balanced)
-#' x <- as_tibble(gis)
-#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+#' # Add ideogram with default hg19 genome
+#' gghic(cc) + geom_ideogram(genome = "hg19")
 #'
-#' p <- x |>
-#'   filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
-#'   ggplot(
-#'     aes(
-#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-#'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
-#'       fill = score
-#'     )
-#'   ) +
-#'   geom_hic() +
-#'   theme_hic()
+#' # Highlight region with custom colors
+#' gghic(cc) +
+#'   geom_ideogram(
+#'     genome = "hg19", highlight = TRUE, colour = "blue", fill = "#ADD8E680"
+#'   )
 #'
-#' p + geom_ideogram(
-#'   genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
-#' )
+#' # Show coordinates on ideogram
+#' gghic(cc) +
+#'   geom_ideogram(genome = "hg19", show_coord = TRUE, fontsize = 8)
 #' }
-#' @export geom_ideogram
+#' @export
 #' @aliases geom_ideogram
 geom_ideogram <- function(
   mapping = NULL, data = NULL, stat = StatIdeogram, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  genome = "hg19", chrom_prefix = TRUE, highlight = FALSE,
-  width_ratio = 1 / 30, length_ratio = 0.8,
-  fontsize = 10, colour = "red", fill = "#FFE3E680"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, genome = "hg19",
+  chrom_prefix = TRUE, highlight = TRUE, show_coord = FALSE,
+  width_ratio = 1 / 30, length_ratio = 0.8, fontsize = 10, colour = "red",
+  fill = "#FFE3E680", ...
 ) {
   ggplot2::layer(
     geom = GeomIdeogram, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
-    check.param = FALSE,
-    params = list(
-      na.rm = na.rm, ...,
-      genome = genome, chrom_prefix = chrom_prefix, highlight = highlight,
-      width_ratio = width_ratio, length_ratio = length_ratio,
-      fontsize = fontsize, colour = colour, fill = fill
+    check.param = FALSE, params = list(
+      na.rm = na.rm, genome = genome, chrom_prefix = chrom_prefix,
+      highlight = highlight, show_coord = show_coord, width_ratio = width_ratio,
+      length_ratio = length_ratio, fontsize = fontsize, colour = colour,
+      fill = fill, ...
     )
   )
 }
