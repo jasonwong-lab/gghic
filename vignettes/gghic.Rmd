@@ -86,7 +86,7 @@ load_pkg <- function(pkgs) {
 }
 
 load_pkg(
-  c("ggplot2", "dplyr", "GenomicRanges", "InteractionSet", "gghic") 
+  c("ggplot2", "dplyr", "GenomicRanges", "InteractionSet", "gghic")
 )
 ```
 
@@ -487,7 +487,8 @@ cc_100["chr4:10000000-15000000"] |>
 ```{r eval=FALSE, echo=TRUE}
 cc_100["chr4:10000000-15000000"] |>
   gghic(
-    ideogram = TRUE, genome = "hg19", highlight = TRUE, length_ratio = 0.7, ideogram_fontsize = 8
+    ideogram = TRUE, genome = "hg19", highlight = TRUE,
+    length_ratio = 0.7, ideogram_fontsize = 8
   )
 ```
 

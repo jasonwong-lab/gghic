@@ -50,7 +50,7 @@ load_pkg <- function(pkgs) {
   for (pkg in pkgs) suppressMessages(require(pkg, character.only = TRUE))
 }
 
-load_pkg(c("readr", "dplyr", "rappdirs")) # , "gghic"
+load_pkg(c("readr", "dplyr", "rappdirs", "gghic"))
 ```
 
 ### Example Data
