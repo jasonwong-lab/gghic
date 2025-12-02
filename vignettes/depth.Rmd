@@ -1,0 +1,359 @@
+---
+title: "Resolution Depth Analysis for Hi-C/-like Data"
+author: "gghic package"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Resolution Depth Analysis for Hi-C/-like Data}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  out.width = "100%",
+  fig.alt = "Resolution depth analysis plot"
+)
+```
+
+## Overview
+
+This vignette demonstrates how to analyze Hi-C pairs data to find optimal genomic resolutions using gghic's resolution depth functions. You'll learn how to:
+
+1. **Calculate contact depth** at different bin sizes
+2. **Assess genome coverage** across resolutions
+3. **Find optimal resolution** that balances detail and completeness
+4. **Visualize tradeoffs** between resolution and coverage
+
+### When to Use These Functions
+
+These functions are essential for:
+
+- **Pore-C & long-read data**: Determining the best resolution for long DNA-DNA interactions
+- **Hi-C QC**: Assessing data quality and sequencing depth
+- **Resource planning**: Finding the sweet spot before expensive downstream analysis
+- **Publication standards**: Communicating data completeness to reviewers
+
+## Getting Started
+
+Load required libraries:
+
+```{r setup}
+load_pkg <- function(pkgs) {
+  for (pkg in pkgs) suppressMessages(require(pkg, character.only = TRUE))
+}
+
+load_pkg(c("readr", "dplyr", "rappdirs", "gghic"))
+```
+
+### Example Data
+
+We'll create synthetic pairs data for demonstration. In practice, load from your contact matrix file:
+
+```{r}
+# Create example pairs dataset
+set.seed(42)
+n_interactions <- 10000
+
+pairs <- data.frame(
+  read_name = paste0("read_", seq_len(n_interactions)),
+  chrom1 = sample(c("chr1", "chr2", "chr3"), n_interactions, replace = TRUE),
+  pos1 = sample(1e6:10e6, n_interactions, replace = TRUE),
+  chrom2 = sample(c("chr1", "chr2", "chr3"), n_interactions, replace = TRUE),
+  pos2 = sample(1e6:10e6, n_interactions, replace = TRUE)
+)
+
+glimpse(pairs)
+```
+
+**Expected column format**:
+
+- `read_name`: Unique identifier for each interaction
+- `chrom1`, `chrom2`: Chromosome names (e.g., "chr1")
+- `pos1`, `pos2`: Genomic positions in base pairs
+- Optional: strand, mapping quality, fragment ID (ignored by analysis functions)
+
+## Choosing Your Approach
+
+The gghic package provides two complementary approaches for analyzing pairs data:
+
+| Approach | Memory | Speed | When to Use |
+|----------|--------|-------|-------------|
+| **In-memory** `calculateResolutionDepth()` | O(interactions) | Fastest | Files < 50% RAM, interactive analysis |
+| **Chunked** `calculateResolutionDepthChunked()` | O(unique bins) | Fast | Files > 50% RAM, automated pipelines |
+
+**In-Memory Processing (Smaller Files)**
+- Load entire dataset into memory
+- Single file read (fastest)
+- Typical memory: ~4 bytes per interaction
+- Best for: Interactive exploration, visualization
+
+**Chunked Streaming (Large Files)**
+- Read file in streaming fashion
+- Minimal memory footprint (~100 MB even for 100 GB files)
+- C-accelerated file I/O
+- Automatic gzip decompression
+- Best for: Production pipelines, server environments, very large datasets
+
+**Decision Rule**: If your file size > available RAM / 2, use chunked functions.
+
+## Step 1: Calculate Resolution Depth
+
+The `calculateResolutionDepth()` function bins genomic positions and counts unique interactions per bin:
+
+```{r}
+# Calculate depth at 10kb resolution
+depth_10kb <- calculateResolutionDepth(pairs, bin_size = 10000)
+
+depth_10kb
+```
+
+```{r}
+# Summary statistics
+summary(depth_10kb$count)
+```
+
+**What this returns**:
+
+- `chrom`: Chromosome name
+- `bin`: Bin number (position / bin_size, rounded up)
+- `count`: Number of unique interactions in this bin
+
+**Interpreting the results**:
+
+- High counts = well-sequenced regions
+- Low counts = sparse or unmappable regions
+- Zero-count bins = gaps (excluded from output)
+
+## Step 2: Assess Genome Coverage
+
+The `calculateGenomeCoverage()` function determines what fraction of bins meet a minimum contact threshold:
+
+```{r}
+# Calculate coverage at multiple resolutions
+resolutions <- c(5e3, 10e3, 25e3, 50e3, 100e3, 500e3)
+
+coverage_df <- data.frame(
+  resolution_kb = resolutions / 1e3,
+  n_bins = NA,
+  coverage = NA
+)
+
+for (i in seq_along(resolutions)) {
+  depth <- calculateResolutionDepth(pairs, resolutions[i])
+  coverage_df$n_bins[i] <- nrow(depth)
+  coverage_df$coverage[i] <- calculateGenomeCoverage(
+    pairs, resolutions[i],
+    min_contacts = 50
+  )
+}
+
+coverage_df$coverage_pct <- sprintf("%.1f%%", coverage_df$coverage * 100)
+
+coverage_df
+```
+
+**Interpreting coverage**:
+
+- **High coverage (>80%)** at small bins: Well-sequenced, good resolution potential
+- **Low coverage (<50%)** at large bins: Sparse data, may need deeper sequencing
+- **Coverage curve shape**: Shows sequencing depth and data quality
+
+## Step 3: Find Optimal Resolution
+
+Use binary search to find the **smallest bin size** achieving your target coverage:
+
+```{r}
+# Find resolution with ~80% coverage
+optimal_bin <- findOptimalResolution(
+  pairs,
+  min_bin = 1e3, # Start at 1 Kb
+  max_bin = 1e6, # Search up to 1 Mb
+  target_coverage = 0.8,
+  min_contacts = 50
+)
+
+cat(sprintf(
+  "Optimal bin size: %d bp (%.1f Kb)\n", optimal_bin, optimal_bin / 1000
+))
+
+# Verify the result
+actual_coverage <- calculateGenomeCoverage(
+  pairs, optimal_bin, min_contacts = 50
+)
+cat(sprintf("Actual coverage: %.2f%%\n", actual_coverage * 100))
+```
+
+**How it works**:
+
+1. Binary search across the bin size range
+2. Tests each candidate bin size
+3. Returns smallest bin that meets target coverage
+4. Typically completes in 10-15 iterations
+
+**Pro tip**: Start with `target_coverage = 0.8` (80%). Adjust based on your analysis needs.
+
+## Step 4: Visualize Coverage Distribution
+
+Create a boxplot showing how contact counts vary across resolutions:
+
+```{r fig.cap="Distribution of contacts per bin at different resolutions"}
+plotResolutionCoverage(
+  pairs,
+  bin_sizes = c(5e3, 10e3, 25e3, 50e3, 100e3, 500e3),
+  min_contacts = 50,
+  title = "Contact Distribution by Resolution"
+)
+```
+
+**What to look for**:
+
+- **Widening boxes**: Decreasing contacts with larger bins (expected)
+- **Outliers (dots)**: Unusually enriched regions (e.g., centromeres, pericentromeres)
+- **Median position**: Typical coverage at that resolution
+- **Whisker length**: Range of contact values (high whiskers = variable coverage)
+
+## Step 5: Plot Coverage vs Resolution
+
+Create a line plot showing how coverage changes with resolution:
+
+```{r fig.cap="Genome coverage as a function of bin size"}
+plotCoverageCurve(
+  pairs,
+  bin_sizes = c(5e3, 10e3, 25e3, 50e3, 100e3, 500e3, 1e6),
+  min_contacts = 50,
+  title = "Coverage vs Resolution"
+)
+```
+
+**Curve interpretation**:
+
+- **Sharp drop at small bins**: Limited sequencing depth
+- **Plateau region**: Where additional bin size doesn't improve coverage much
+- **"Knee" of curve**: The optimal resolution sweet spot
+- **Steep regions**: Good resolution potential at that bin size
+
+## Processing Large Files (100 GB+)
+
+> **⚠️ Note**: The code examples in this section are provided for reference but are **not executed** in this vignette.
+
+For files that don't fit in R memory, use the `_chunked` variants which stream the file with C-level I/O:
+
+```{r eval=FALSE}
+# Download example file with caching
+cache_dir <- rappdirs::user_cache_dir("gghic")
+dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
+
+pairs_file <- file.path(cache_dir, "test.txt.gz")
+download_url <- "https://www.dropbox.com/scl/fi/yc4axg1mf2i9zylg3d0oe/test.txt.gz?rlkey=sdsdhsnixo01koo38d242y4c8&st=t4rn0js0&dl=1"
+
+if (!file.exists(pairs_file)) {
+  message("Downloading test data to cache directory...")
+  download.file(
+    download_url, pairs_file,
+    method = "wget", extra = "-c", quiet = TRUE
+  )
+  message("Downloaded to: ", pairs_file)
+} else {
+  message("Using cached file: ", pairs_file)
+}
+```
+
+```{r eval=FALSE}
+# 1. FIND OPTIMAL RESOLUTION ----
+# Streams the file, performs binary search
+opt_bin <- findOptimalResolutionChunked(
+  pairs_file = pairs_file,
+  min_bin = 1e3,
+  max_bin = 5e4,
+  target_coverage = 0.8,
+  min_contacts = 1000
+)
+
+cat("Optimal resolution:", opt_bin / 1e3, "Kb\n")
+
+# 2. CHECK COVERAGE ----
+coverage <- calculateGenomeCoverageChunked(
+  pairs_file = pairs_file,
+  bin_size = opt_bin,
+  min_contacts = 1000
+)
+
+cat("Coverage:", sprintf("%.1f%%\n", coverage * 100))
+
+# 3. EXTRACT BINNED DEPTHS ----
+depth <- calculateResolutionDepthChunked(
+  pairs_file = pairs_file,
+  bin_size = opt_bin
+)
+
+depth
+```
+
+## Interpreting Your Results
+
+### What the Coverage Curve Tells You
+
+**Sharp drop at small bins**
+- Data is sparse at high resolution
+- Limited sequencing depth or short reads
+- Consider deeper sequencing or larger bins
+
+**Plateau region**
+- Coverage maxes out (can't improve by increasing bin size)
+- Indicates natural sequencing depth ceiling
+- Optimal resolution likely at transition point
+
+**High coverage at large bins (>80%)**
+- Well-sequenced dataset
+- Can use smaller bins safely
+- Good candidate for publication-quality analysis
+
+**Low coverage at large bins (<50%)**
+- Sparse data
+- May need additional sequencing
+- Consider quality filtering
+
+### Choosing Target Coverage
+
+- **Exploration**: 50-60% (quick, uses fewer bins)
+- **Standard analysis**: 75-85% (good balance)
+- **Publication**: 85-90%+ (most stringent)
+
+Higher coverage = higher confidence but requires more sequencing.
+
+## Next Steps
+
+Once you've found your optimal resolution, explore other gghic functions for visualization:
+
+- `geom_hic()`: Create interaction scatter plots
+- `geom_loop()`: Highlight chromatin loops
+- `geom_tad()`: Show topologically associating domains
+- `geom_ideogram()`: Add chromosome context
+- `theme_hic()`: Specialized theme for Hi-C plots
+
+See the main gghic vignette for complete examples.
+
+## FAQ
+
+**Q: Why does coverage decrease with larger bins?**
+A: By definition—larger bins aggregate more positions but contact counts don't increase proportionally. Coverage measures the fraction of bins with sufficient contacts.
+
+**Q: Should I use chunked functions for small files?**
+A: No, use in-memory functions—they're simpler and faster for files that fit in RAM.
+
+**Q: Can I use these functions on non-Hi-C data?**
+A: Yes, any "pairs" data with (chrom, position) coordinates works: Pore-C, 4C, 5C, etc.
+
+## Session Info
+
+```{r session}
+sessionInfo()
+```

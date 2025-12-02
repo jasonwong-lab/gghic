@@ -1,27 +1,24 @@
 ---
-title: "Use gghic to Visualise Genomic Interaction Data"
+title: "Visualizing 3D Genome Organization with gghic"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_document:
     toc: true
     toc_float: true
-    number_sections: false
-    center: false
+    toc_depth: 3
+    number_sections: true
     theme: cosmo
     highlight: tango
     css: style.css
 vignette: >
-  %\VignetteIndexEntry{gghic}
+  %\VignetteIndexEntry{gghic: Visualize Hi-C and Genomic Interactions}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-  %\VignetteKeywords{genomics, visualisation, Hi-C}
-  %\VignetteAbstract{This vignette demonstrates how to use gghic to visualize genomic interaction data.}
+  %\VignetteKeywords{genomics, visualization, Hi-C, 3D genome}
+  %\VignetteAbstract{A comprehensive guide to visualizing Hi-C contact maps, TADs, chromatin loops, and other 3D genome features using gghic.}
 editor_options:
   markdown:
     wrap: 80
-    code_folding: true
-    scroll_past_end: true
-    tab_size: 2
 ---
 
 ```{r, include = FALSE}
@@ -30,46 +27,76 @@ knitr::opts_chunk$set(
   comment = "#>",
   tidy = FALSE,
   cache = FALSE,
-  dev = "png"
+  dev = "png",
+  fig.width = 8,
+  fig.height = 6,
+  fig.align = "center",
+  dpi = 100,
+  message = FALSE,
+  warning = FALSE,
+  fig.alt = "Hi-C visualization"
 )
 ```
 
 ## Introduction
 
-**gghic** is a versatile R package for creating flexible, publication-ready visualizations of 3D genome organization data. With gghic, you can easily explore and present Hi-C contact maps, topologically associating domains (TADs), chromatin loops, gene annotations, and other genomic features in a unified and customizable framework.
+**gghic** is an R package for creating publication-ready visualizations of 3D genome organization data. It seamlessly integrates Hi-C contact maps, topologically associating domains (TADs), chromatin loops, gene annotations, and genomic tracks into unified, customizable plots.
 
-Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromosome interactions, or integrating additional genomic tracks (such as ChIP-seq or BigWig data), gghic provides a tidyverse-friendly and extensible toolkit for your research.
+### Why gghic?
 
-This tutorial will guide you through the core features of gghic, from data preparation to advanced visualization. By the end, you'll be able to generate high-quality, informative figures for your genomics projects with just a few lines of code.
+- **Easy to use**: Simple, intuitive syntax with sensible defaults for quick plotting
+- **Flexible**: Choose between high-level `gghic()` wrapper or low-level `geom_*` layers for fine control
+- **Memory efficient**: Smart `focus` mechanism loads only the genomic regions you need
+- **Publication-ready**: High-quality figures with minimal code
+- **Extensible**: Built on `ggplot2` ecosystem—use standard `ggplot2` functions for customization
 
-> **Learn more:**
+### Key Features
+
+- **`ChromatinContacts` S4 class**: Robust object-oriented framework for managing Hi-C/-like data
+- **Flexible focusing**: Efficiently subset genomic regions before or after loading data
+- **Feature integration**: Seamlessly combine TADs, loops, genes, and signal tracks
+- **Multiple visualization modes**: Single chromosome, multi-chromosome, inter-chromosomal, and multi-way contacts
+- **Hypergraph analysis**: Specialized tools for visualizing Pore-C/-like multi-way chromatin interactions
+
+> **Resources:**
 >
 > - [arXiv preprint](https://arxiv.org/abs/2412.03005)
+> - [GitHub repository](https://github.com/mhjiang97/gghic)
+> - [Depth by resolution vignette](depth.html) for Hi-C/-like data quality assessment
+> - [Hypergraph vignette](hypergraph.html) for Pore-C/-like multi-way contact analysis
 
-## Setup
+### Typical Workflow
+
+1. **Load data**: Create `ChromatinContacts` object from Cooler files
+2. **Focus**: Specify genomic regions of interest (optional but recommended)
+3. **Import**: Load interaction data into memory
+4. **Add features**: Attach TADs, loops, genes, and tracks (optional)
+5. **Visualize**: Use `gghic()` wrapper or custom `ggplot2` layers
+6. **Customize**: Refine with standard `ggplot2` functions and themes
+
+---
+
+## Getting Started
 
 ### Load Required Packages
 
-```{r setup}
+```{r setup, message=FALSE, warning=FALSE}
 load_pkg <- function(pkgs) {
   for (pkg in pkgs) suppressMessages(require(pkg, character.only = TRUE))
 }
 
 load_pkg(
-  c(
-    "gghic", "ggplot2", "tibble", "scales", "dplyr", "tidyr", "glue",
-    "HiCExperiment", "GenomicRanges", "InteractionSet"
-  )
+  c("ggplot2", "dplyr", "GenomicRanges", "InteractionSet", "gghic") 
 )
 ```
 
 ### Download Example data
 
-Example data files are hosted at gghic-data to keep the package lightweight.
+The example data files are hosted on the [gghic-data](https://github.com/mhjiang97/gghic-data) repository. This function downloads files to a local cache:
 
 ```{r message=FALSE, warning=FALSE}
 download_example_files <- function(cache_dir, check_exists = TRUE) {
-  if (!file.exists(cache_dir)) dir.create(cache_dir)
+  if (!dir.exists(cache_dir)) dir.create(cache_dir, recursive = TRUE)
 
   files <- list(
     "chr4_11-100kb.cool" = "cooler/chr4_11-100kb.cool",
@@ -83,94 +110,328 @@ download_example_files <- function(cache_dir, check_exists = TRUE) {
     "concatemers.rds" = "multiway/concatemers.rds"
   )
 
-  url_base <- paste0(
-    "https://raw.githubusercontent.com/",
-    "mhjiang97/gghic-data/refs/heads/master/"
-  )
+  url_base <- "https://raw.githubusercontent.com/mhjiang97/gghic-data/master/"
 
   for (file_name in names(files)) {
     file_path <- file.path(cache_dir, file_name)
     if (check_exists && file.exists(file_path)) next
+    message("Downloading ", file_name, "...")
     download.file(
-      paste0(url_base, files[[file_name]]), file_path, method = "curl"
+      paste0(url_base, files[[file_name]]), file_path,
+      method = "curl", quiet = TRUE
     )
   }
 }
 ```
 
 ```{r message=FALSE, warning=FALSE}
-dir_cache <- "../data"
-
+# Define a cache directory and download the files
+dir_cache <- file.path("..", "data")
 download_example_files(dir_cache)
 
+# Set up paths to the downloaded files
 path_cf_100 <- file.path(dir_cache, "chr4_11-100kb.cool")
 path_cf_5 <- file.path(dir_cache, "chr4_11-5kb.cool")
 path_gtf <- file.path(dir_cache, "gencode-chr4_11.gtf.gz")
-paths_track <- file.path(dir_cache, glue::glue("track{1:2}.bigWig"))
+paths_track <- file.path(dir_cache, paste0("track", 1:2, ".bigWig"))
 path_tad <- file.path(dir_cache, "TADs_500kb-chr4_11.tsv")
 path_loop <- file.path(dir_cache, "loops-chr4_11.txt")
 path_gis_hic <- file.path(dir_cache, "gis_hic.rds")
 path_concatemers <- file.path(dir_cache, "concatemers.rds")
 ```
 
-## Data Preparation
+## Working with ChromatinContacts Objects
 
-### Import Hi-C Data
+### Understanding ChromatinContacts
+
+The `ChromatinContacts` object is the central data structure in `gghic`. It acts as a lightweight pointer to your Hi-C data (Cooler files), storing resolution and sequence information without loading the massive interaction matrix into memory immediately.
+
+A key feature is the `focus` argument. This allows you to specify chromosomes or regions of interest *before* importing the data.
+
+**Why use focus?**
+
+1. **Speed**: Only reads relevant parts of the Hi-C matrix.
+2. **Memory Efficiency**: Prevents loading genome-wide matrices when you only need a specific locus.
+
+### Creating ChromatinContacts Objects
+
+#### No Focus (Genome-Wide)
+
+Without a `focus`, the object references the entire genome:
 
 ```{r}
-hic_100 <- path_cf_100 |>
-  HiCExperiment::CoolFile() |>
-  HiCExperiment::import()
-
-hic_5 <- path_cf_5 |>
-  HiCExperiment::CoolFile() |>
-  HiCExperiment::import()
+cc_100_all <- ChromatinContacts(cooler_path = path_cf_100)
+cc_100_all
 ```
 
-### Prepare Data for Visualisation
+#### Focusing on Specific Regions
+
+The `focus` argument accepts flexible region specifications. This is the **recommended approach** for working with large Hi-C datasets.
+
+##### Single Region or Chromosome
 
 ```{r}
-scale_data <- function(data, score_column = "balanced", scale_method = log10) {
-  if (inherits(data, "HiCExperiment")) {
-    gis <- InteractionSet::interactions(data)
-  } else if (inherits(data, "GInteractions")) {
-    gis <- data
-  } else {
-    stop("Input data must be a HiCExperiment or GInteractions object.")
-  }
-
-  x <- gis |>
-    tibble::as_tibble() |>
-    dplyr::mutate(score = scale_method(.data[[score_column]])) |>
-    dplyr::filter(!is.na(score), !is.infinite(score)) |>
-    dplyr::mutate(score = scales::oob_squish(score, c(min(score), max(score))))
-
-  x
-}
+# Focus on entire chromosome (includes all intra-chromosomal interactions)
+cc_chr11 <- ChromatinContacts(cooler_path = path_cf_100, focus = "chr11")
+cc_chr11
 ```
 
 ```{r}
-x_100 <- scale_data(hic_100)
-x_5 <- scale_data(hic_5)
+# Focus on specific 10 Mb region
+cc_chr11_region <- ChromatinContacts(
+  cooler_path = path_cf_100, focus = "chr11:60000000-70000000"
+)
+cc_chr11_region
 ```
 
-## Visualisations
+##### Multiple Regions with Operators
 
-### Hi-C Heatmap
-
-`geom_hic()` is the main function to visualise Hi-C/-like data. It requires the
-following aesthetics: `seqnames1`, `start1`, `end1`, `seqnames2`, `start2`,
-`end2`, and `fill`.
+Use `|` (OR) for multiple regions and `&` (AND) for inter-regional interactions:
 
 ```{r}
-p <- x_100 |>
+# Multiple chromosomes
+# Returns: chr4-chr4, chr11-chr11, AND chr4-chr11 interactions
+cc_multi <- ChromatinContacts(
+  cooler_path = path_cf_100, focus = "chr4 | chr11"
+)
+cc_multi
+```
+
+```{r}
+# Inter-chromosomal interactions ONLY (no intra-chromosomal)
+cc_inter <- ChromatinContacts(
+  cooler_path = path_cf_100,
+  focus = "chr4:10000000-15000000 & chr11:60000000-65000000"
+)
+cc_inter
+```
+
+##### Complex Focus Patterns
+
+Combine operators for sophisticated queries:
+
+```{r}
+# Example 1: Multiple intra-chromosomal + one trans-chromosomal
+# Returns: chr1-chr1, chr2-chr2, chr3-chr3, chr1-chr2, chr1-chr3, chr2-chr3, AND chr4-chr5
+focus_complex <- c("chr1 | chr2 | chr3", "chr4 & chr5")
+```
+
+```{r eval=FALSE}
+# Example 2: Specific regions with trans interactions
+focus <- c(
+  "chr1:1000000-5000000 | chr2:3000000-8000000",
+  "chr3:10000000-15000000 & chr4:20000000-25000000"
+)
+
+# Example 3: Multiple trans-chromosomal pairs
+focus <- c("chr1 & chr2", "chr3 & chr4", "chr5 & chr6")
+```
+
+**💡 Practical Tips:**
+
+- Use `focus` when working with genome-wide data files (saves time and memory)
+- For exploratory analysis, start with whole chromosome, then zoom to regions
+- Use `&` operator when specifically studying trans-chromosomal interactions
+- Combine focusing with subsetting (next section) for iterative analysis
+
+##### Using GInteractions Objects
+
+For programmatic region definition (useful in pipelines):
+
+```{r}
+# Create a GInteractions object to specify the focus
+focus_gi <- suppressWarnings(InteractionSet::GInteractions(
+  GenomicRanges::GRanges("chr4:10000000-12000000"),
+  GenomicRanges::GRanges("chr11:61000000-63000000")
+))
+
+cc_gis_focus <- ChromatinContacts(
+  cooler_path = path_cf_100,
+  focus = focus_gi
+)
+cc_gis_focus
+```
+
+### Import Interaction Data
+
+After creating the object, use `import()` to load the actual data:
+
+```{r}
+cc_100 <- import(cc_100_all)
+cc_100
+```
+
+```{r}
+# Chain operations with pipe operator
+cc_5 <- ChromatinContacts(cooler_path = path_cf_5) |>
+  import()
+cc_5
+```
+
+### Adding Genomic Features
+
+Attach genomic features (TADs, loops, tracks) to your `ChromatinContacts` object for integrated visualization.
+
+**Key Benefits:**
+
+- **Automatic synchronization**: Features are automatically subsetted when you zoom or change regions
+- **Consistent context**: All features stay aligned with the contact map
+- **Simplified plotting**: Pass a single object to `gghic()` instead of managing multiple data sources
+
+```{r}
+# Load TADs, loops, and tracks from files
+tads <- rtracklayer::import(path_tad, format = "bed")
+loops <- path_loop |>
+  rtracklayer::import(format = "bedpe") |>
+  makeGInteractionsFromGRangesPairs()
+tracks <- paths_track |>
+  purrr::map(rtracklayer::import) |>
+  setNames(paste0("track", seq_along(paths_track))) |>
+  GenomicRanges::GRangesList()
+
+# Add features to the ChromatinContacts object
+features(cc_100, "TADs") <- tads
+features(cc_100, "loops") <- loops
+features(cc_100, "tracks") <- tracks
+
+cc_100
+```
+
+```{r}
+features(cc_5, "TADs") <- tads
+features(cc_5, "loops") <- loops
+features(cc_5, "tracks") <- tracks
+```
+
+### Manipulating ChromatinContacts Objects
+
+`ChromatinContacts` objects support flexible subsetting after data import. This is useful for:
+
+- **Iterative exploration**: Start broad, then zoom to interesting regions
+- **Comparative analysis**: Extract same region from multiple samples
+- **Quality filtering**: Remove low-quality or extreme-valued interactions
+
+**Automatic updates:** Subsetting filters interactions AND updates:
+
+- Associated features (TADs, loops, tracks)
+- The `focus` slot (tracks current genomic context)
+- Sequence information (`seqinfo`)
+
+#### Subsetting by Genomic Regions (character)
+
+The most intuitive way to subset is by providing a character string representing a genomic region:
+
+```{r}
+# Subset to keep only interactions on chromosome 11
+cc_chr11 <- cc_100["chr11"]
+cc_chr11
+```
+
+```{r}
+# Subset to a specific 20 Mb region on chromosome 4
+cc_chr4_sub <- cc_100["chr4:20000000-40000000"]
+cc_chr4_sub
+```
+
+#### Subsetting with GRanges
+
+You can use a `GRanges` object to subset interactions where at least one anchor overlaps the given ranges:
+
+```{r}
+# Define a region of interest
+roi <- GenomicRanges::GRanges("chr11:60000000-70000000")
+
+# Subset the ChromatinContacts object
+cc_gr_sub <- cc_100[roi]
+cc_gr_sub
+```
+
+#### Subsetting with GInteractions
+
+To select a specific set of interactions, you can subset using a `GInteractions` object. This will keep only the interactions from the `ChromatinContacts` object that overlap with the query `GInteractions`:
+
+```{r}
+# Define a specific inter-chromosomal interaction to query
+query_gi <- InteractionSet::GInteractions(
+  GenomicRanges::GRanges("chr11:60000000-65000000"),
+  GenomicRanges::GRanges("chr4:10000000-15000000")
+)
+
+# Subset the object
+cc_gi_sub <- cc_100[query_gi]
+
+cc_gi_sub
+```
+
+#### Subsetting by Index or Logical Vector
+
+You can also use numeric indices or logical vectors for subsetting, similar to how you would subset a `data.frame` or a vector:
+
+```{r}
+# Subset by numeric index (e.g., first 1000 interactions)
+cc_numeric_sub <- cc_100[1:100]
+
+cc_numeric_sub
+```
+
+```{r}
+# Subset using a logical vector (e.g., interactions with a score > -0.1)
+df <- scaleData(cc_100, "balanced", log10)
+
+# Then subset based on the score
+logical_vec <- (df$score > -0.1) & !is.na(df$score)
+cc_logical_sub <- cc_100[logical_vec]
+
+cc_logical_sub
+```
+
+## Creating Visualizations
+
+`gghic` provides two complementary approaches for plotting:
+
+### Visualization Approaches
+
+#### 1. High-Level Wrapper: `gghic()`
+
+**Best for:** Quick plots, standard layouts, exploratory analysis
+
+- Single function call with sensible defaults
+- Automatically handles data scaling and transformation
+- Optional arguments for ideograms, genes, TADs, loops, and tracks
+- Returns a `ggplot2` object for further customization
+
+#### 2. Low-Level Layers: `geom_*()`
+
+**Best for:** Custom layouts, complex multi-panel figures, precise control
+
+- Build plots layer-by-layer like standard `ggplot2`
+- Full control over aesthetics, scales, and themes
+- Mix with other `ggplot2` geoms and extensions
+- Ideal for publication figures with specific requirements
+
+---
+
+### Basic Hi-C Heatmap
+
+#### Using `geom_hic()` Layer
+
+`geom_hic()` creates the triangle heatmap visualization. It works with standard data frames/tibbles:
+
+**Required aesthetics:**
+- `seqnames1`, `start1`, `end1`: First genomic anchor
+- `seqnames2`, `start2`, `end2`: Second genomic anchor
+- `fill`: Interaction strength (typically log-transformed)
+
+```{r}
+df_100 <- cc_100 |>
+  scaleData("balanced", log10)
+
+p <- df_100 |>
   dplyr::filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
-  tidyr::drop_na(score) |>
   ggplot2::ggplot(
     ggplot2::aes(
       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
     )
   ) +
   geom_hic()
@@ -178,93 +439,106 @@ p <- x_100 |>
 p
 ```
 
-`theme_hic()` is a theme function for `geom_hic()` that enhances the appearance
-of the plot.
+`theme_hic()` provides a clean, publication-ready appearance:
+
+- Removes axis labels and tick marks
+- Eliminates grid lines
+- Focuses attention on the contact map
+- Suitable for most Hi-C visualizations
 
 ```{r}
 p + theme_hic()
 ```
 
-`gghic()` is a wrapper function that can take either a `HiCExperiment` object, a `GenomicInteractions` object, or a `tibble`/`data.frame` as input. (exactly the same as above).
+#### Using `gghic()` Wrapper
+
+The wrapper handles scaling and plotting automatically:
 
 ```{r eval=FALSE, echo=TRUE}
-hic_100["chr11"] |>
+cc_100["chr11"] |>
   gghic()
 ```
 
-### Ideogram
+### Adding Chromosome Ideograms
 
-`geom_ideogram()` can be used to add chromosome ideograms to the plot.
+Chromosome ideograms provide genomic context by showing:
+- The entire chromosome with cytogenetic bands
+- Current viewing region highlighted
+- Chromosome name and position
+
+#### Using `geom_ideogram()` Layer
+
+**Key parameters:**
+- `genome`: Reference genome ("hg19", "hg38", "mm10", "mm39")
+- `highlight`: Whether to show the current region as a colored bar
+- `length_ratio`: Ideogram height relative to plot (0-1)
+- `fontsize`: Text size for chromosome labels
 
 ```{r}
-x_100 |>
-  dplyr::filter(seqnames1 == "chr11", seqnames2 == "chr11") |>
-  ggplot2::ggplot(
-    ggplot2::aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
-    )
-  ) +
-  geom_hic() +
-  theme_hic() +
+cc_100["chr4:10000000-15000000"] |>
+  gghic() +
   geom_ideogram(
-    genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
+    genome = "hg19", highlight = TRUE, length_ratio = 0.7, fontsize = 8
   )
 ```
 
-The wrapper function `gghic()` can also add ideograms to the plot. (exactly the same as above).
+#### Using the `ideogram` Argument in `gghic()`
 
 ```{r eval=FALSE, echo=TRUE}
-hic_100["chr11"] |>
+cc_100["chr4:10000000-15000000"] |>
   gghic(
-    ideogram = TRUE, genome = "hg19", highlight = FALSE, length_ratio = 0.7,
-    ideogram_fontsize = 8
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, length_ratio = 0.7, ideogram_fontsize = 8
   )
 ```
 
-The plotted region can be highlighted on the ideogram by setting `highlight = TRUE`.
+### Adding Gene Annotations
+
+Visualize gene structures to correlate chromatin interactions with genomic features.
+
+**Annotation features:**
+- Exon blocks (thick rectangles)
+- Introns (connecting lines)
+- Gene directionality (arrows for `style = "arrow"`)
+- Multiple gene tracks for overlapping genes
+- Automatic collision detection and layout
+
+#### Using `geom_annotation()` Layer
 
 ```{r}
-hic_100["chr4:10000000-15000000"] |>
-  gghic(
-    ideogram = TRUE, genome = "hg19", highlight = TRUE, length_ratio = 0.7,
-    ideogram_fontsize = 8
-  )
-```
+# Prepare data at 5kb resolution
+df_5 <- cc_5 |>
+  scaleData("balanced", log10)
 
-### Gene Annotation
-
-Track-based gene annotation can be added to the plot by using `geom_annotation()`.
-
-```{r}
-p <- x_5 |>
+# Create a base plot for a small region
+p <- df_5 |>
   dplyr::filter(
     seqnames1 == "chr11", seqnames2 == "chr11",
-    center1 > 67000000, center1 < 67100000,
-    center2 > 67000000, center2 < 67100000
+    start1 > 67000000, start1 < 67100000,
+    start2 > 67000000, start2 < 67100000
   ) |>
-  ggplot2::ggplot(
-    ggplot2::aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      fill = score
-    )
-  ) +
+  ggplot(aes(
+    seqnames1 = seqnames1, start1 = start1, end1 = end1,
+    seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
+  )) +
   geom_hic() +
-  theme_hic() +
-  geom_ideogram(
-    genome = "hg19", highlight = FALSE, length_ratio = 0.7, fontsize = 8
-  )
+  theme_hic()
 
+# Add the annotation layer
 p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
 ```
 
-Some parameters can be set for `geom_annotation()`:
+**Key parameters:**
 
-- `style` can be set to `"arrow"` to change the annotation style.
-- `maxgap` is used to calculate how many non-overlapping tracks are needed for the annotation.
-- `gene_symbols` can be used to specify genes to plot.
+- `gtf_path`: Path to GTF/GFF annotation file
+- `style`:
+  - `"basic"`: Simple exon-intron structure
+  - `"arrow"`: Adds directional arrows showing transcription direction
+- `maxgap`:
+  - Positive integer: Maximum gap between gene tracks (in bp)
+  - `-1`: Force all genes on single track (may overlap)
+  - `100000`: Good default for most regions
+- `gene_symbols`: Character vector of specific genes to display (others hidden)
+- `include_ncrna`: Include non-coding RNAs (lncRNA, miRNA, etc.)
 
 ```{r}
 p + geom_annotation(
@@ -273,33 +547,100 @@ p + geom_annotation(
 )
 ```
 
-`gghic()` can also add gene annotation to the plot (exactly the same as above).
+#### Using the `annotation` Argument in `gghic()`
+
+Again, you can also use the `annotation` argument in `gghic()` to add gene annotations directly.
 
 ```{r eval=FALSE, echo=TRUE}
-hic_5["chr11:67000000-67100000"] |>
+cc_5["chr11:67000000-67100000"] |>
   gghic(
-    ideogram = TRUE, genome = "hg19", highlight = FALSE, length_ratio = 0.7,
-    ideogram_fontsize = 8,
-
-    annotation = TRUE, gtf_path = path_gtf, style = "arrow", maxgap = -1,
-    gene_symbols = c("GRK2", "SSH3", "KDM2A")
+    ideogram = TRUE, genome = "hg19", highlight = FALSE, length_ratio = 0.7, ideogram_fontsize = 8,
+    annotation = TRUE, gtf_path = path_gtf, style = "arrow", maxgap = -1, gene_symbols = c("GRK2", "SSH3", "KDM2A")
   )
 ```
 
-### Chromatin Loops
+### Adding TADs (Topologically Associating Domains)
 
-Chromatin loops can be visualised using `geom_loop()` or `geom_loop2()`. The former requires a path to a loop file, while the latter requires a `tibble`/`data.frame` containing the loop data which enables easy customization by adding additional aesthetics.
+TADs are visualized as triangles overlaid on the contact map, representing self-interacting genomic regions.
+
+**Visualization features:**
+- Triangle apex points to TAD boundary
+- Triangle sides span the TAD region
+- Color and line style customizable
+- Automatically scaled to match heatmap coordinates
+
+**Two geoms available:**
+- `geom_tad()`: Reads TAD file directly (convenient)
+- `geom_tad2()`: Uses data frame (more flexible for customization)
+
+#### Using `tad` Argument in `gghic()`
 
 ```{r}
-hic_5["chr11:61915000-65000000"] |>
-  gghic(loop = TRUE, loop_path = path_loop, loop_is_0based = TRUE)
+cc_100["chr4:50000000-80000000"] |>
+  gghic(
+    tad = TRUE, tad_is_0based = TRUE, tad_path = path_tad,
+    tad_colour = "#00ff83"
+  )
 ```
+
+#### Using `geom_tad()` and `geom_tad2()`
+
+Using `geom_tad2()` makes it easy to customize TAD aesthetics since you can provide a `data.frame` with additional columns.
+
+```{r}
+df_tad <- path_tad |>
+  read.table(
+    sep = "\t", header = FALSE, col.names = c("seqnames", "start", "end")
+  ) |>
+  dplyr::mutate(start = start + 1) |>
+  dplyr::filter(seqnames == "chr4", start > 60000000, end < 70000000) |>
+  dplyr::mutate(sample = c("A", "B"))
+
+df_100 |>
+  dplyr::filter(
+    seqnames1 == "chr4", seqnames2 == "chr4",
+    start1 > 60000000, end1 < 70000000,
+    start2 > 60000000, end2 < 70000000
+  ) |>
+  gghic(scale_column = "score", scale_method = function(x) x) +
+  geom_tad2(
+    data = df_tad, ggplot2::aes(
+      seqnames = seqnames, start = start, end = end, colour = sample
+    ), stroke = 2
+  ) +
+  ggplot2::scale_color_grey()
+```
+
+### Adding Chromatin Loops
+
+Chromatin loops represent long-range interactions between specific genomic loci (e.g., enhancer-promoter contacts).
+
+**Visualization:**
+- Drawn as arcs/semicircles connecting loop anchors
+- Arc height proportional to genomic distance
+- Customizable colors, line widths, and styles
+
+**Two geoms available:**
+- `geom_loop()`: Reads BEDPE file directly
+- `geom_loop2()`: Uses data frame with custom aesthetics (color, size by significance)
+
+#### Using `loop` Argument in `gghic()`
+
+```{r}
+cc_5["chr11:61915000-65000000"] |>
+  gghic(loop = TRUE)
+```
+
+#### Using `geom_loop()` and `geom_loop2()`
+
+Using `geom_loop2()` makes it easy to customize loop aesthetics since you can provide a `data.frame` with additional columns.
 
 ```{r}
 df_loop <- path_loop |>
   read.table(
-    sep = "\t",
-    col.names = c("seqnames1", "start1", "end1", "seqnames2", "start2", "end2")
+    sep = "\t", col.names = c(
+      "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
+    )
   ) |>
   dplyr::filter(
     seqnames1 == "chr11", seqnames2 == "chr11",
@@ -314,71 +655,41 @@ df_loop <- df_loop |>
     sample = c(rep("A", 3), rep("B", 3))
   )
 
-hic_5["chr11:61915000-65000000"] |>
+cc_5["chr11:61915000-65000000"] |>
   gghic() +
   geom_loop2(
-    data = df_loop,
-    ggplot2::aes(
+    data = df_loop, ggplot2::aes(
       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2,
-      colour = sample
-    ),
-    stroke = 1
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, colour = sample
+    ), stroke = 1, style = "arc"
   )
 ```
 
-### TADs
+### Multi-Way Contact Visualization
 
-Triangulers indicating TADs can be added using `geom_tad()` or `geom_tad2()`. The former requires a path to a TAD file, while the latter requires a `tibble`/`data.frame` containing the TAD data.
+Pore-C and similar technologies capture multi-way contacts where a single DNA molecule contacts 3+ genomic loci simultaneously.
 
-```{r}
-x_100 |>
-  dplyr::filter(
-    seqnames1 == "chr4", seqnames2 == "chr4",
-    start1 > 50000000, end1 < 80000000,
-    start2 > 50000000, end2 < 80000000
-  ) |>
-  gghic(
-    tad = TRUE, tad_is_0based = TRUE, tad_path = path_tad, tad_colour = "#00ff83"
-  )
-```
+**What are concatemers?**
+- Long DNA molecules captured by nanopore sequencing
+- Each molecule contains multiple chromatin contact points
+- Represented as sets of genomic intervals with a shared read ID
 
-```{r}
-df_tad <- path_tad |>
-  read.table(
-    sep = "\t", header = FALSE, col.names = c("seqnames", "start", "end")
-  ) |>
-  dplyr::mutate(start = start + 1) |>
-  dplyr::filter(seqnames == "chr4", start > 60000000, end < 70000000) |>
-  dplyr::mutate(sample = c("A", "B"))
+**Visualization approach:**
+- Each read shown as a colored horizontal bar
+- Bar width indicates genomic span of contacts
+- Overlaid on Hi-C heatmap for context
 
-x_100 |>
-  dplyr::filter(
-    seqnames1 == "chr4", seqnames2 == "chr4",
-    start1 > 60000000, end1 < 70000000,
-    start2 > 60000000, end2 < 70000000
-  ) |>
-  gghic() +
-  geom_tad2(
-    data = df_tad,
-    ggplot2::aes(
-      seqnames = seqnames, start = start, end = end,
-      colour = sample
-    ),
-    stroke = 2
-  ) +
-  ggplot2::scale_color_grey()
-```
+> 💡 **See also:** [Hypergraph vignette](hypergraph.html) for network-based analysis of multi-way contacts
 
-### Multi-way contacts
-
-Multi-way contacts from concatemers obtained from Pore-C data can be visualised using `geom_concatemer()` or `geom_concatemer2()`. The former requires a path to a concatemer file, while the latter requires a `tibble`/`data.frame` containing the concatemer data.
+#### Using `geom_concatemer()` and `geom_concatemer2()`
 
 ```{r}
+# Load the GInteractions object representing multi-way contacts
 gis <- path_gis_hic |>
-  readRDS() |>
-  scale_data("balanced", log10)
+  readRDS()
+df <- scaleData(gis, "balanced", log10)
 
+# Select a few reads to visualize
 names_read <- c(
   "0c32bbce-24f8-4006-a75c-0e3504648971",
   "10ae8263-cebc-4cbc-94c1-2c1dc5f22101",
@@ -386,20 +697,22 @@ names_read <- c(
   "06063b40-0271-4f4e-993d-2f202028b697",
   "08bb8fe4-c54b-4a11-b9a0-c9eed2d18933"
 )
-df_concatemers <- path_concatemers |>
+grs_concatemer <- path_concatemers |>
   readRDS() |>
-  GenomicRanges::sort() |>
+  GenomicRanges::sort()
+grs_concatemer <- grs_concatemer[
+  GenomicRanges::seqnames(grs_concatemer) %in% c("chr22")
+]
+df_concatemers <- grs_concatemer |>
   tibble::as_tibble() |>
   dplyr::filter(read_name %in% names_read)
 
 gghic(gis) +
   geom_concatemer2(
-    data = df_concatemers,
-    ggplot2::aes(
+    data = df_concatemers, ggplot2::aes(
       seqnames = seqnames, start = start, end = end, read_group = read_name,
       colour = read_name
-    ),
-    check_concatemers = TRUE
+    ), check_concatemers = TRUE, width_ratio = 0.03
   ) +
   ggplot2::theme(
     legend.key.size = ggplot2::unit(2, "mm"),
@@ -407,74 +720,145 @@ gghic(gis) +
   )
 ```
 
-### Visualisation of Interaction Data of Multiple Chromosomes
+#### Converting Concatemers to GInteractions
 
-Set `draw_boundary` to `TRUE` to draw the boundary of the chromosomes. Set `expand_xaxis` to `TRUE` to expand the x-axis if the plot is crowded.
+You can also generate a `GInteractions` object from a set of concatemers using `concatemers2Gis()` to visualize the contact frequency of the concatemers.
 
 ```{r}
-x_100 |>
-  gghic(
-    draw_boundary = TRUE,
-    expand_xaxis = TRUE, expand_left = 2000000, expand_right = 2000000
+grs_concatemer_sub <- grs_concatemer[
+  grs_concatemer$read_name %in% names_read
+]
+
+gis_concatemer <- concatemers2Gis(grs_concatemer_sub, bin_size = 100000)
+
+gis_concatemer |>
+  sort() |>
+  tibble::as_tibble() |>
+  dplyr::mutate(balanced = count) |>
+  gghic(scale_method = function(x) x, ideogram = TRUE) +
+  geom_concatemer2(
+    data = df_concatemers,
+    ggplot2::aes(
+      seqnames = seqnames, start = start, end = end, read_group = read_name
+    )
+  ) +
+  ggplot2::theme(
+    legend.key.size = ggplot2::unit(2, "mm"),
+    legend.text = ggplot2::element_text(size = 4)
   )
 ```
 
-Chromosome ideograms and gene tracks can also be added to the plot when visualising multiple chromosomes.
+#### Combining Heatmaps
+
+You can combine two heatmaps using `geom_hic_under()` to visualize both pairwise interactions and multi-way contacts.
 
 ```{r}
-p <- x_5 |>
+gghic(gis) +
+  geom_concatemer2(
+    data = df_concatemers,
+    ggplot2::aes(
+      seqnames = seqnames, start = start, end = end, read_group = read_name
+    )
+  ) +
+  geom_hic_under(
+    data = tibble::as_tibble(gis_concatemer) |> dplyr::mutate(score = count),
+    ggplot2::aes(
+      seqnames1 = seqnames1, start1 = start1, end1 = end1,
+      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill2 = score
+    ), draw_boundary = FALSE
+  ) |>
+  renameGeomAes(new_aes = c("fill" = "fill2")) +
+  scale_fill_viridis_c(
+    aesthetics = "fill2", option = "A", guide = "legend", name = "count"
+  )
+```
+
+### Multi-Chromosome Visualization
+
+Visualize interactions across multiple chromosomes in a single unified plot.
+
+**Use cases:**
+- Genome-wide interaction patterns
+- Trans-chromosomal contacts
+- Comparative Hi-C across chromosomes
+- Chromosome territory analysis
+
+**Layout features:**
+- Each chromosome occupies a diagonal block
+- Inter-chromosomal interactions shown in off-diagonal blocks
+- Chromosome boundaries clearly demarcated
+
+**Key parameters:**
+- `draw_boundary = TRUE`: Draws lines separating chromosomes
+- `expand_xaxis = TRUE`: Adds spacing between chromosomes for readability
+- `expand_left`: Additional left margin (in bp) when using ideograms/annotations
+
+```{r}
+cc_100 |>
+  gghic(draw_boundary = TRUE, expand_xaxis = TRUE)
+```
+
+Chromosome ideograms and gene tracks can also be added to the plot when visualizing multiple chromosomes.
+
+```{r}
+p <- df_5 |>
   dplyr::filter(
-    center1 > 10000000 & center1 < 11000000 &
-      center2 > 10000000 & center2 < 11000000
+    start1 > 10000000 & start1 < 11000000 &
+      start2 > 10000000 & start2 < 11000000
   ) |>
   gghic(
-    draw_boundary = TRUE,
-
-    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7,
-    ideogram_width_ratio = 0.08,
-
-    annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
-    style = "basic", maxgap = 100000, annotation_fontsize = 5,
-    annotation_width_ratio = 0.05,
-
-    expand_xaxis = TRUE
+    scale_column = "score", scale_method = function(x) x,
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7, ideogram_width_ratio = 0.08,
+    annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf, maxgap = 100000, annotation_fontsize = 5, annotation_width_ratio = 0.05,
+    draw_boundary = TRUE, expand_xaxis = TRUE, expand_left = 300000
   )
 
 p
 ```
 
-### Other Data Tracks - `geom_track`
+### Adding Signal Tracks
 
-`geom_track()` can be used to add other data tracks to the plot.
+Integrate 1D genomic signals (ChIP-seq, ATAC-seq, RNA-seq, etc.) alongside Hi-C data.
+
+**Supported formats:**
+- BigWig files (`.bw`, `.bigWig`)
+- Automatic data range detection or manual specification
+- Multiple tracks with independent colors and scales
+
+**Visualization:**
+- Tracks displayed as area/mountain plots
+- Positioned on left side of heatmap
+- Aligned with genomic coordinates
+- Rasterization option for large datasets
+
+#### Using `geom_track()` Layer
 
 ```{r}
 p + geom_track(
   data_paths = paths_track, width_ratio = 0.3, data_range = "auto",
-  fill = c("#DC0000B2", "#00A087B2")
+  fill = c("#DC0000B2", "#00A087B2"), rasterize = TRUE
 )
 ```
+
+#### Using `track` Argument in `gghic()`
 
 `gghic()` is handy for adding all these features to the plot.
 
 ```{r}
-x_5 |>
-  dplyr::filter(
-    center1 > 10000000 & center1 < 11000000 &
-      center2 > 10000000 & center2 < 11000000
-  ) |>
+keep <- which(
+  df_5$start1 > 10000000 & df_5$start1 < 11000000 &
+    df_5$start2 > 10000000 & df_5$start2 < 11000000
+)
+
+cc_5[keep] |>
   gghic(
-    draw_boundary = TRUE,
-
-    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7,
-    ideogram_width_ratio = 0.08,
+    draw_boundary = TRUE, rasterize = TRUE,
+    ideogram = TRUE, genome = "hg19", highlight = TRUE, ideogram_fontsize = 7, ideogram_width_ratio = 0.08,
     annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
-    style = "arrow", maxgap = 100000, annotation_fontsize = 5,
-    annotation_width_ratio = 0.05,
-
-    track = TRUE, data_paths = paths_track, track_width_ratio = 0.5,
-    track_fill = c("#DC0000B2", "#00A087B2"), data_range = "maximum",
-
-    expand_xaxis = TRUE
+    annotation_style = "arrow", maxgap = 100000, annotation_fontsize = 5, annotation_width_ratio = 0.05,
+    track = TRUE, track_width_ratio = 0.5, track_fill = c("#DC0000B2", "#00A087B2"), data_range = "maximum",
+    loop = TRUE, loop_style = "arc", stroke = 0.5,
+    expand_xaxis = TRUE, expand_left = 300000
   )
 ```
 
