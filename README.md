@@ -29,29 +29,23 @@ Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromo
 7. [x] Plot concatemers indicating multi-way contacts.
 8. [x] Use concatemers only to plot pairwise interactions.
 9. [x] Plot a second heatmap below the main heatmap (lower triangle).
-10. [x] Build hypergraph representations from multi-way contact data.
-11. [ ] Support duckplyr for faster data manipulation.
-12. [ ] ...
+10. [x] Check and suggest optimal resolutions based on sequencing depth.
+11. [x] Build hypergraph representations from multi-way contact data.
+12. [ ] Support duckplyr for faster data manipulation.
+13. [ ] ...
 
 ## Installation
 
 To install the `gghic` package from GitHub, use the following command:
 
 ```r
-devtools::install_github("jasonwong-lab/gghic", build_vignettes = TRUE)
+devtools::install_github("jasonwong-lab/gghic")
 ```
 
 ## Usage
 
 - 📖 **Documentation:**
   Visit the <a href="https://jasonwong-lab.github.io/gghic/" target="_blank">gghic website</a> for comprehensive documentation, tutorials, and examples.
-
-- 📚 **Vignettes:**
-  After installation, you can explore the package vignettes directly in R:
-
-  ```r
-  browseVignettes("gghic")
-  ```
 
 ## Citation
 
