@@ -25,8 +25,17 @@ if (!require("devtools", quietly = TRUE)) install.packages("devtools")
 devtools::install_github("jasonwong-lab/gghic")
 ```
 
+## Documentation
+
+- [Get started with gghic for Hi-C/-like data visualization](gghic.html)
+- Articles
+  1. [Hi-C/-like data quality assessment](depth.html)
+  2. [Pore-C/-like multi-way contact analysis](hypergraph.html)
+
 ## Getting Help
 
 - 🐛 **Bug Reports:** [GitHub Issues](https://github.com/jasonwong-lab/gghic/issues)
 - 💡 **Feature Requests:** [GitHub Discussions](https://github.com/jasonwong-lab/gghic/discussions)
-- 📧 **Contact:** Open an issue for questions and support
+- 📧 **Contact:**
+  - Open an issue for questions and support
+  - Email <mjhk@connect.hku.hk> for direct inquiries

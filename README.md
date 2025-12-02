@@ -29,10 +29,11 @@ Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromo
 7. [x] Plot concatemers indicating multi-way contacts.
 8. [x] Use concatemers only to plot pairwise interactions.
 9. [x] Plot a second heatmap below the main heatmap (lower triangle).
-10. [x] Check and suggest optimal resolutions based on sequencing depth.
-11. [x] Build hypergraph representations from multi-way contact data.
-12. [ ] Support duckplyr for faster data manipulation.
-13. [ ] ...
+10. [x] Introduce a new S4 class `ChromatinContacts` for managing Hi-C/-like data.
+11. [x] Check and suggest optimal resolutions based on sequencing depth.
+12. [x] Build hypergraph representations from multi-way contact data.
+13. [ ] Support duckplyr for faster data manipulation.
+14. [ ] ...
 
 ## Installation
 
