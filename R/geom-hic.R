@@ -1,49 +1,10 @@
-calculate_hic_coordinates <- function(data, lower = FALSE) {
-  n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
-
-  if (n_sn == 1 || (n_sn == 2 && all(data$seqnames1 != data$seqnames2))) {
-    dat <- data
-  } else {
-    dat <- data |>
-      adjust_coordinates(
-        list(
-          c(start1 = "start1", end1 = "end1"),
-          c(start2 = "start2", end2 = "end2")
-        )
-      )
-  }
-
-  dat <- dat |>
-    dplyr::mutate(
-      x = (end1 + start2) / 2,
-      xmin = (start1 + start2) / 2,
-      xmax = (start1 + end2) / 2,
-      xend = (end1 + end2) / 2,
-      y = (x - end1),
-      ymin = (xmin - start1),
-      ymax = (xmax - start1),
-      yend = (xend - end1)
-    )
-
-  if (lower) {
-    dat <- dat |>
-      dplyr::mutate(
-        y = -1 * y,
-        ymin = -1 * ymin,
-        ymax = -1 * ymax,
-        yend = -1 * yend
-      )
-  }
-
-  dat
-}
-
 StatHic <- ggplot2::ggproto(
   "StatHic",
   ggplot2::Stat,
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
   ),
+  setup_params = function(data, params) params,
   compute_panel = function(data, scales) {
     # ======================================================================== #
     #   ^          /\ (xmax, ymax)                                             #
@@ -66,10 +27,10 @@ StatHic <- ggplot2::ggproto(
     #   |                                                                      #
     # ======================================================================== #
     dat <- data |>
-      calculate_hic_coordinates()
+      .calculateHicCoordinates()
 
     n_sn <- length(unique(c(data$seqnames1, data$seqnames2)))
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     env$n_annotation <- 0
     env$n_track <- 0
@@ -94,7 +55,7 @@ StatHic <- ggplot2::ggproto(
         start = min(start1),
         end = max(end1)
       ) |>
-      dplyr::reframe(range = glue::glue("{seqnames1}:{start}-{end}")) |>
+      dplyr::reframe(range = paste0(seqnames1, ":", start, "-", end)) |>
       dplyr::pull(range) |>
       GenomicRanges::GRanges()
     env$has_chr <- any(stringr::str_detect(data$seqnames1, "^chr")) ||
@@ -102,9 +63,9 @@ StatHic <- ggplot2::ggproto(
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
-        calculate_add_lengths()
+        .calculateAddLengths()
       chroms_sub <- data |>
-        calculate_subtract_lengths()
+        .calculateSubtractLengths()
       env$chroms_add <- chroms_add
       env$chroms_sub <- chroms_sub
     } else {
@@ -122,19 +83,15 @@ GeomHic <- ggplot2::ggproto(
   required_aes = c(
     "x", "xmin", "xmax", "xend", "y", "ymin", "ymax", "yend", "fill"
   ),
-  extra_params = c(
-    ggplot2::Geom$extra_params,
-    "draw_boundary", "boundary_colour", "linetype",
-    "rasterize", "dpi", "dev", "scale"
-  ),
+  default_aes = ggplot2::aes(fill = NA, colour = NA, linetype = "dashed"),
   draw_key = ggplot2::draw_key_polygon,
   draw_panel = function(
-    data, panel_params, coord,
-    rasterize, dpi, dev, scale,
-    draw_boundary, boundary_colour, linetype
+    data, panel_params, coord, rasterize = TRUE, dpi = 300, dev = "cairo",
+    scale = 1, draw_boundary = TRUE, boundary_colour = "black",
+    linetype = "dashed"
   ) {
     coords <- coord$transform(data, panel_params)
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_sn <- env$n_sn
     grob_boundary_left <- grob_boundary_right <- grid::nullGrob()
@@ -144,7 +101,8 @@ GeomHic <- ggplot2::ggproto(
     ) {
       coords_line_top <- coords |>
         dplyr::group_by(seqnames1, seqnames2) |>
-        dplyr::slice_max(order_by = ymax, n = 1) |>
+        dplyr::slice_max(order_by = ymax, n = 1, with_ties = TRUE) |>
+        dplyr::slice_max(order_by = xmax, n = 1, with_ties = FALSE) |>
         dplyr::ungroup() |>
         dplyr::filter(seqnames1 == seqnames2) |>
         dplyr::select(xmax, ymax)
@@ -160,6 +118,7 @@ GeomHic <- ggplot2::ggproto(
         dplyr::ungroup() |>
         dplyr::filter(seqnames1 == seqnames2) |>
         dplyr::select(xmin, ymin)
+
       coords_line_left <- dplyr::bind_cols(coords_line_top, coords_line_br) |>
         dplyr::filter(xend < max(xmax))
       grob_boundary_left <- grid::polylineGrob(
@@ -169,6 +128,7 @@ GeomHic <- ggplot2::ggproto(
         gp = grid::gpar(col = boundary_colour, lty = linetype),
         default.units = "native"
       )
+
       coords_line_right <- dplyr::bind_cols(coords_line_top, coords_line_bl) |>
         dplyr::filter(xmin > min(xmin))
       grob_boundary_right <- grid::polylineGrob(
@@ -200,91 +160,89 @@ GeomHic <- ggplot2::ggproto(
 
 #' geom_hic
 #'
-#' @description A ggplot2 geom for Hi-C data.
+#' @description
+#' Creates a Hi-C contact heatmap layer using diamond/rotated square geometry.
+#' This is the core visualization layer for displaying chromatin interaction
+#' frequencies.
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
-#' @param rasterize Whether to rasterize the plot or not. Default is `FALSE`.
-#' @param dpi The resolution of the rasterised plot. Default is `300`.
-#' @param dev The device to rasterise the plot. Default is `"cairo"`.
-#' @param scale The scale of the rasterised plot. Default is `1`.
-#' @param draw_boundary Whether to draw the boundary line or not when plotting
-#'   multiple chromosomes. Default is `TRUE`.
-#' @param boundary_colour The color of the boundary line. Default is `"black"`.
-#' @param linetype  The line type of the boundary line. Default is `"dashed"`.
-#' @param ... Parameters to be ignored.
+#' @param rasterize Logical. Rasterize the heatmap for better performance with
+#'   large datasets. Default is `TRUE`.
+#' @param dpi Numeric. Resolution for rasterization. Default is `300`.
+#' @param dev Character. Graphics device for rasterization. Default is
+#'   `"cairo"`.
+#' @param scale Numeric. Scaling factor for rasterization. Default is `1`.
+#' @param draw_boundary Logical. Draw boundary lines between chromosomes in
+#'   multi-chromosome plots. Default is `TRUE`.
+#' @param boundary_colour Character. Color for boundary lines. Default is
+#'   `"black"`.
+#' @param linetype Line type for boundaries. Default is `"dashed"`.
+#' @param ... Additional parameters (currently unused).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames1
-#' * start1
-#' * end1
-#' * seqnames2
-#' * start2
-#' * end2
-#' * fill
-#' @return A ggplot object.
+#' `geom_hic()` transforms rectangular interaction data into diamond-shaped
+#' heatmap tiles. Each interaction is plotted as a rotated square at 45 degrees,
+#' creating the characteristic triangular Hi-C heatmap visualization.
+#'
+#' **Required aesthetics:**
+#' * `seqnames1` - Chromosome name for first anchor
+#' * `start1` - Start position for first anchor
+#' * `end1` - End position for first anchor
+#' * `seqnames2` - Chromosome name for second anchor
+#' * `start2` - Start position for second anchor
+#' * `end2` - End position for second anchor
+#' * `fill` - Value to map to color (typically scaled contact frequency)
+#'
+#' @return A ggplot2 layer.
+#'
 #' @examples
 #' \dontrun{
-#' library(gghic)
-#' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
-#'
-#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/cooler/chr4_11-5kb.cool"
-#' )
-#' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-#' download.file(url_file, path_file)
-#'
-#' hic <- path_file |>
-#'   CoolFile() |>
+#' # Load and import Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool") |>
 #'   import()
 #'
-#' gis <- interactions(hic)
-#' gis$score <- log10(gis$balanced)
-#' x <- as_tibble(gis)
-#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
-#'
-#' x |>
-#'   filter(
-#'     seqnames1 == "chr11", seqnames2 == "chr11",
-#'     center1 > 67000000, center1 < 67100000,
-#'     center2 > 67000000, center2 < 67100000
-#'   ) |>
-#'   ggplot(
-#'     aes(
+#' # Basic Hi-C heatmap using geom_hic
+#' library(ggplot2)
+#' ggplot() +
+#'   geom_hic(
+#'     data = scaleData(cc["chr4"], "balanced", log10), aes(
 #'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-#'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
-#'       fill = score
+#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
 #'     )
 #'   ) +
-#'   geom_hic() +
+#'   scale_fill_gradientn(colors = c("white", "red")) +
+#'   theme_hic()
+#'
+#' # Multi-chromosome plot
+#' cc_multi <- cc[c("chr4", "chr11")]
+#' ggplot() +
+#'   geom_hic(
+#'     data = scaleData(cc_multi, "balanced", log10), aes(
+#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
+#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
+#'     ), draw_boundary = TRUE, boundary_colour = "blue"
+#'   ) +
 #'   theme_hic()
 #' }
-#' @export geom_hic
+#'
+#' @seealso [gghic::gghic()], [gghic::theme_hic()], [gghic::scaleData()]
+#' @export
 #' @aliases geom_hic
 geom_hic <- function(
   mapping = NULL, data = NULL, stat = StatHic, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
-  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, rasterize = TRUE,
+  dpi = 300, dev = "cairo", scale = 1, draw_boundary = TRUE,
+  boundary_colour = "black", linetype = "dashed", ...
 ) {
   ggplot2::layer(
     geom = GeomHic, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE,
     params = list(
-      na.rm = na.rm, ...,
-      rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
+      na.rm = na.rm, rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      linetype = linetype, ...
     )
   )
 }

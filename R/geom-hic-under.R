@@ -4,6 +4,7 @@ StatHicUnder <- ggplot2::ggproto(
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
   ),
+  setup_params = function(data, params) params,
   compute_panel = function(data, scales) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -26,7 +27,7 @@ StatHicUnder <- ggplot2::ggproto(
     #   |         \  /                                                         #
     #   |          \/ (xmax, ymax)                                             #
     # ======================================================================== #
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
@@ -36,7 +37,7 @@ StatHicUnder <- ggplot2::ggproto(
     }
     grs_range <- env$grs_range
 
-    gis_data <- tbl2gis(data)
+    gis_data <- .tbl2Gis(data)
     to_keep1 <- IRanges::overlapsAny(
       InteractionSet::anchors(gis_data)$first, grs_range
     )
@@ -45,7 +46,7 @@ StatHicUnder <- ggplot2::ggproto(
     )
     data <- data[to_keep1 & to_keep2, ]
     dat <- data |>
-      calculate_hic_coordinates(lower = TRUE)
+      .calculateHicCoordinates(lower = TRUE)
 
     min_y <- ifelse(
       n_annotation > 0 || n_track > 0 || n_concatemer > 0, env$min_y, 0
@@ -73,7 +74,7 @@ StatHicUnder <- ggplot2::ggproto(
 #' @description A ggplot2 layer to plot flipped Hi-C interaction data.
 #' @inheritParams ggplot2::geom_polygon
 #' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
-#' @param rasterize Whether to rasterize the plot or not. Default is `FALSE`.
+#' @param rasterize Whether to rasterize the plot or not. Default is `TRUE`.
 #' @param dpi The resolution of the rasterised plot. Default is `300`.
 #' @param dev The device to rasterise the plot. Default is `"cairo"`.
 #' @param scale The scale of the rasterised plot. Default is `1`.
@@ -94,32 +95,52 @@ StatHicUnder <- ggplot2::ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' library(gghic)
+#' # Load two Hi-C datasets for comparison
+#' cc1 <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+#'   import()
+#'
+#' # Simulate a second dataset (in practice, load a different sample)
+#' cc2 <- cc1
+#'
+#' # Compare two Hi-C maps with different color scales
 #' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
+#' ggplot() +
+#'   geom_hic(
+#'     data = scaleData(cc1, "balanced", log10),
+#'     aes(
+#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
+#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
+#'     )
+#'   ) +
+#'   geom_hic_under(
+#'     data = scaleData(cc2, "balanced", log10),
+#'     aes(
+#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
+#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill2 = score
+#'     )
+#'   ) |>
+#'   renameGeomAes(new_aes = c("fiil" = "fill2")) +
+#'   scale_fill_gradientn(
+#'     aesthetics = "fill2", colors = c("white", "blue"), name = "Sample 2"
+#'   ) +
+#'   theme_hic()
 #' }
-#' @export geom_hic_under
+#' @export
 #' @aliases geom_hic_under
 geom_hic_under <- function(
-    mapping = NULL, data = NULL, stat = StatHicUnder, position = "identity",
-    na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-    rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
-    draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  mapping = NULL, data = NULL, stat = StatHicUnder, position = "identity",
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, rasterize = TRUE,
+  dpi = 300, dev = "cairo", scale = 1, draw_boundary = TRUE,
+  boundary_colour = "black", linetype = "dashed", ...
 ) {
   ggplot2::layer(
     geom = GeomHic, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE,
     params = list(
-      na.rm = na.rm, ...,
-      rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
+      na.rm = na.rm, rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      linetype = linetype, ...
     )
   )
 }
