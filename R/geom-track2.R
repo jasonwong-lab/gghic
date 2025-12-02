@@ -1,17 +1,12 @@
 StatTrack2 <- ggplot2::ggproto(
   "StatTrack2",
   ggplot2::Stat,
-  required_aes = c(
-    "seqnames", "start", "end", "score", "name"
-  ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "width_ratio", "spacing_ratio", "data_range"
-  ),
+  required_aes = c("seqnames", "start", "end", "score", "name"),
   dropped_aes = c("seqnames"),
+  setup_params = function(data, params) params,
   compute_panel = function(
-    data, scales,
-    width_ratio = 1 / 20, spacing_ratio = 0.5, data_range = c("auto", "maximum")
+    data, scales, width_ratio = 1 / 20, spacing_ratio = 0.5,
+    data_range = c("auto", "maximum")
   ) {
     n_data <- length(unique(data$name))
     if (
@@ -28,7 +23,7 @@ StatTrack2 <- ggplot2::ggproto(
         }
       )
 
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
@@ -48,9 +43,9 @@ StatTrack2 <- ggplot2::ggproto(
 
       if (n_sn > 1) {
         chroms_add <- data |>
-          calculate_add_lengths_1d()
+          .calculateAddLengths1d()
         chroms_sub <- data |>
-          calculate_subtract_lengths_1d()
+          .calculateSubtractLengths1d()
       }
 
       seqname_1st <- tracks[[1]]$seqnames[1]
@@ -71,7 +66,7 @@ StatTrack2 <- ggplot2::ggproto(
         as.data.frame() |>
         setNames("x_max") |>
         tibble::rownames_to_column("seqname") |>
-        adjust_coordinates2(chroms_add, chroms_sub, c(x_max = "x_max"))
+        .adjustCoordinates2(chroms_add, chroms_sub, c(x_max = "x_max"))
       maxs_x <- maxs_x$x_max |>
         setNames(maxs_x$seqname)
     }
@@ -124,7 +119,7 @@ StatTrack2 <- ggplot2::ggproto(
 
     if (!is.null(chroms_add) && !is.null(chroms_sub)) {
       dat_track <- dat_track |>
-        adjust_coordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
+        .adjustCoordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
     }
 
     dat_axis <- dat_track |>
@@ -149,7 +144,7 @@ StatTrack2 <- ggplot2::ggproto(
 
     if (n_sn > 1) {
       dat_vline <- dat |>
-        dplyr::slice(seq_len(length(maxs_x))) |>
+        dplyr::slice(seq_along(maxs_x)) |>
         dplyr::mutate(
           xmax = maxs_x,
           y = env$min_y,
@@ -165,25 +160,20 @@ StatTrack2 <- ggplot2::ggproto(
   }
 )
 
-GeomTrack2 <- ggproto(
+GeomTrack2 <- ggplot2::ggproto(
   "GeomTrack2",
   ggplot2::Geom,
   required_aes = c(
     "x", "y", "xmax", "ymin", "type", "name", "seqname"
-  ),
-  extra_params = c(
-    ggplot2::Geom$extra_params,
-    "draw_boundary", "boundary_colour", "linetype",
-    "rasterize", "dpi", "dev", "scale"
   ),
   draw_key = ggplot2::draw_key_polygon,
   default_aes = ggplot2::aes(
     fill = "black", colour = NA, alpha = 1, fontsize = 5
   ),
   draw_panel = function(
-    data, panel_params, coord,
-    rasterize = TRUE, dpi = 300, dev = "cairo", scale = 1,
-    draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+    data, panel_params, coord, rasterize = TRUE, dpi = 300, dev = "cairo",
+    scale = 1, draw_boundary = TRUE, boundary_colour = "black",
+    linetype = "dashed"
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -235,7 +225,10 @@ GeomTrack2 <- ggproto(
       default.units = "native"
     )
     grob_tick_text <- grid::textGrob(
-      x = rep(coords_axis$x - (1 / 90) - (1 / 200) - (1 / 900), nrow(coords_axis) * 2),
+      x = rep(
+        coords_axis$x - (1 / 90) - (1 / 200) - (1 / 900),
+        nrow(coords_axis) * 2
+      ),
       y = c(coords_axis$ymin, coords_axis$y),
       label = c(coords_axis$text_ymin, rep("0", nrow(coords_axis))),
       just = c("right", "centre"),
@@ -298,28 +291,63 @@ GeomTrack2 <- ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+#'   import()
+#'
+#' # Load track data from BigWig
+#' track1 <- rtracklayer::import("path/to/track1.bw")
+#' track1$name <- "ChIP-seq"
+#'
+#' # Add track using data frame with aesthetics
+#' library(ggplot2)
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = as.data.frame(track1),
+#'     aes(
+#'       seqnames = seqnames,
+#'       start = start,
+#'       end = end,
+#'       score = score,
+#'       name = name
+#'     )
+#'   )
+#'
+#' # Multiple tracks with different colors
+#' track2 <- track1
+#' track2$name <- "ATAC-seq"
+#' tracks_df <- rbind(
+#'   as.data.frame(track1),
+#'   as.data.frame(track2)
+#' )
+#'
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = tracks_df, aes(
+#'       seqnames = seqnames, start = start, end = end, score = score,
+#'       name = name, fill = name
+#'     ), width_ratio = 1 / 25
+#'   ) +
+#'   scale_fill_manual(values = c("ChIP-seq" = "blue", "ATAC-seq" = "red"))
 #' }
-#' @export geom_track2
+#' @export
 #' @aliases geom_track2
 geom_track2 <- function(
   mapping = NULL, data = NULL, stat = StatTrack2, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  width_ratio = 1 / 20, spacing_ratio = 0.5,
-  data_range = c("auto", "maximum"),
-  rasterize = TRUE, dpi = 300, dev = "cairo", scale = 1,
-  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, width_ratio = 1 / 20,
+  spacing_ratio = 0.5, data_range = c("auto", "maximum"), rasterize = TRUE,
+  dpi = 300, dev = "cairo", scale = 1, draw_boundary = TRUE,
+  boundary_colour = "black", linetype = "dashed", ...
 ) {
   ggplot2::layer(
     geom = GeomTrack2, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE,
     params = list(
-      na.rm = na.rm, ...,
-      width_ratio = width_ratio, spacing_ratio = spacing_ratio,
-      data_range = data_range,
-      rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
-      draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      na.rm = na.rm, width_ratio = width_ratio, spacing_ratio = spacing_ratio,
+      data_range = data_range, rasterize = rasterize, dpi = dpi, dev = dev,
+      scale = scale, draw_boundary = draw_boundary,
+      boundary_colour = boundary_colour, linetype = linetype, ...
     )
   )
 }

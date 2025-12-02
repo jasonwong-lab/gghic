@@ -4,16 +4,10 @@ StatTrack <- ggplot2::ggproto(
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "data_paths", "data_granges", "width_ratio", "spacing_ratio"
-  ),
-  dropped_aes = c(
-    "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
-  ),
+  setup_params = function(data, params) params,
   compute_panel = function(
-    data, scales,
-    data_paths, data_granges, width_ratio, spacing_ratio, data_range
+    data, scales, data_paths = NULL, track_grs = NULL, width_ratio = 1 / 20,
+    spacing_ratio = 0.5, data_range = c("auto", "maximum")
   ) {
     # ======================================================================== #
     #       ^                                                                  #
@@ -29,23 +23,23 @@ StatTrack <- ggplot2::ggproto(
     # 0 --+ | --       ---       --           (x, y) +----+ (xmax, y)          #
     # ======================================================================== #
     # data_range <- data_range[1]
-    if (is.null(data_paths) && is.null(data_granges)) {
-      stop("Either data_paths or data_granges must be provided.")
+    if (is.null(data_paths) && is.null(track_grs)) {
+      stop("Either data_paths or track_grs must be provided.")
     }
-    if (!is.null(data_paths) && !is.null(data_granges)) {
-      stop("Only one of data_paths or data_granges can be provided.")
+    if (!is.null(data_paths) && !is.null(track_grs)) {
+      stop("Only one of data_paths or track_grs can be provided.")
     }
     if (!is.null(data_paths)) {
       n_data <- length(data_paths)
     }
-    if (!is.null(data_granges)) {
-      n_data <- length(data_granges)
+    if (!is.null(track_grs)) {
+      n_data <- length(track_grs)
     }
     if (!is.null(data_paths) && is.null(names(data_paths))) {
-      names(data_paths) <- glue::glue("track_{seq_along(data_paths)}")
+      names(data_paths) <- paste0("track_", seq_along(data_paths))
     }
-    if (!is.null(data_granges) && is.null(names(data_granges))) {
-      names(data_granges) <- glue::glue("track_{seq_along(data_granges)}")
+    if (!is.null(track_grs) && is.null(names(track_grs))) {
+      names(track_grs) <- paste0("track_", seq_along(track_grs))
     }
     if (
       is.numeric(data_range) &&
@@ -54,7 +48,7 @@ StatTrack <- ggplot2::ggproto(
       stop("data_range must be of length 1 or equal to the number of data.")
     }
 
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
@@ -67,7 +61,7 @@ StatTrack <- ggplot2::ggproto(
       n_sn <- env$n_sn
     } else {
       dat_hic <- data |>
-        calculate_hic_coordinates()
+        .calculateHicCoordinates()
       max_y <- max(dat_hic$ymax, na.rm = TRUE)
       max_x <- max(dat_hic$xend, na.rm = TRUE)
       min_x <- min(dat_hic$xmin, na.rm = TRUE)
@@ -94,8 +88,8 @@ StatTrack <- ggplot2::ggproto(
     if (!is.null(data_paths)) {
       names_track <- names(data_paths)
     }
-    if (!is.null(data_granges)) {
-      names_track <- names(data_granges)
+    if (!is.null(track_grs)) {
+      names_track <- names(track_grs)
     }
 
     ys <- names_track |>
@@ -114,7 +108,7 @@ StatTrack <- ggplot2::ggproto(
         start = min(start1),
         end = max(end1)
       ) |>
-      dplyr::reframe(range = glue::glue("{seqnames1}:{start}-{end}")) |>
+      dplyr::reframe(range = paste0(seqnames1, ":", start, "-", end)) |>
       dplyr::pull(range) |>
       GenomicRanges::GRanges()
 
@@ -128,9 +122,9 @@ StatTrack <- ggplot2::ggproto(
         dplyr::bind_rows(.id = "name") |>
         dplyr::rename(seqname = seqnames)
     }
-    if (!is.null(data_granges)) {
+    if (!is.null(track_grs)) {
       tracks <- purrr::map(
-        data_granges, function(.x) {
+        track_grs, function(.x) {
           tmp <- .x[
             IRanges::overlapsAny(.x, grs_range, ignore.strand = TRUE)
           ]
@@ -172,12 +166,12 @@ StatTrack <- ggplot2::ggproto(
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
-        calculate_add_lengths()
+        .calculateAddLengths()
       chroms_sub <- data |>
-        calculate_subtract_lengths()
+        .calculateSubtractLengths()
 
       dat_track <- dat_track |>
-        adjust_coordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
+        .adjustCoordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
     }
 
     dat_axis <- dat_track |>
@@ -197,12 +191,12 @@ StatTrack <- ggplot2::ggproto(
 
     dat <- dplyr::bind_rows(dat_track, dat_axis, dat_text)
 
-    env$min_y <- min(dat$y)
+    env$min_y <- min(dat$y) - .height * spacing_ratio * 0.5
     env$n_track <- env$n_track + 1
 
     if (n_sn > 1) {
       dat_vline <- dat |>
-        dplyr::slice(seq_len(length(maxs_x))) |>
+        dplyr::slice(seq_along(maxs_x)) |>
         dplyr::mutate(
           xmax = maxs_x,
           y = env$min_y,
@@ -218,22 +212,16 @@ StatTrack <- ggplot2::ggproto(
   }
 )
 
-GeomTrack <- ggproto(
+GeomTrack <- ggplot2::ggproto(
   "GeomTrack",
   ggplot2::Geom,
-  required_aes = c(
-    "x", "y", "xmax", "ymin", "type", "name", "seqname"
-  ),
-  extra_params = c(
-    ggplot2::Geom$extra_params,
-    "fill", "fontsize", "draw_boundary", "boundary_colour", "linetype",
-    "rasterize", "dpi", "dev", "scale"
-  ),
+  required_aes = c("x", "y", "xmax", "ymin", "type", "name", "seqname"),
+  default_aes = ggplot2::aes(fontsize = 5, linetype = "dashed"),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
-    data, panel_params, coord,
-    rasterize, dpi, dev, scale,
-    fill, fontsize, draw_boundary, boundary_colour, linetype
+    data, panel_params, coord, rasterize = TRUE, dpi = 300, dev = "cairo",
+    scale = 1, fill = "black", fontsize = 5, draw_boundary = TRUE,
+    boundary_colour = "black", linetype = "dashed"
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -250,7 +238,7 @@ GeomTrack <- ggproto(
     if (is.null(names(fill))) {
       col_track <- tibble::tibble(
         name = names_track,
-        col_track = fill[seq_len(length(names_track))]
+        col_track = fill[seq_along(names_track)]
       )
     }
 
@@ -305,7 +293,10 @@ GeomTrack <- ggproto(
       default.units = "native"
     )
     grob_tick_text <- grid::textGrob(
-      x = rep(coords_axis$x - (1 / 90) - (1 / 200) - (1 / 900), nrow(coords_axis) * 2),
+      x = rep(
+        coords_axis$x - (1 / 90) - (1 / 200) - (1 / 900),
+        nrow(coords_axis) * 2
+      ),
       y = c(coords_axis$ymin, coords_axis$y),
       label = c(coords_axis$text_ymin, rep("0", nrow(coords_axis))),
       just = c("right", "centre"),
@@ -343,7 +334,7 @@ GeomTrack <- ggproto(
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param data_paths The paths to the sequencing data files. Default is `NULL`.
-#' @param data_granges The GRanges object of the sequencing data.
+#' @param track_grs The GRanges object of the sequencing data.
 #'   Default is `NULL`.
 #' @param width_ratio The ratio of the width of each track relative to the
 #'   height of the Hi-C plot. Default is `1/20`.
@@ -351,7 +342,7 @@ GeomTrack <- ggproto(
 #'   Default is `0.5`.
 #' @param data_range The range of the x axis. It can be `"auto"`, `"maximum"`,
 #'   or a number (vector). Default is `"auto"`.
-#' @param rasterize Whether to rasterize the plot or not. Default is `FALSE`.
+#' @param rasterize Whether to rasterize the plot or not. Default is `TRUE`.
 #' @param dpi The resolution of the rasterised plot. Default is `300`.
 #' @param dev The device to rasterise the plot. Default is `"cairo"`.
 #' @param scale The scale of the rasterised plot. Default is `1`.
@@ -369,89 +360,39 @@ GeomTrack <- ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' library(gghic)
-#' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
-#'
-#' dir_cache_gghic <- user_cache_dir(appname = "gghic")
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/cooler/chr4_11-5kb.cool"
-#' )
-#' path_file <- file.path(dir_cache_gghic, "chr4_11-5kb.cool")
-#' download.file(url_file, path_file)
-#'
-#' hic <- path_file |>
-#'   CoolFile() |>
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
-#' gis <- interactions(hic)
-#' gis$score <- log10(gis$balanced)
-#' x <- as_tibble(gis)
-#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+#' # Load track data from BigWig files
+#' track1 <- "path/to/track1.bw"
+#' track2 <- "path/to/track2.bw"
 #'
-#' p <- x |>
-#'   filter(
-#'     center1 > 10000000 & center1 < 11000000 &
-#'       center2 > 10000000 & center2 < 11000000
-#'   ) |>
-#'   gghic(
-#'     draw_boundary = TRUE,
-#'
-#'     ideogram = TRUE, genome = "hg19", highlight = TRUE,
-#'     ideogram_fontsize = 7, ideogram_width_ratio = 0.08,
-#'
-#'     annotation = TRUE, include_ncrna = FALSE, gtf_path = path_gtf,
-#'     style = "arrow", maxgap = 100000, annotation_fontsize = 5,
-#'     annotation_width_ratio = 0.05,
-#'
-#'     expand_xaxis = TRUE
-#'   )
-#'
-#' urls_file <- glue(
-#'   "https://raw.githubusercontent.com/",
-#'   "mhjiang97/gghic-data/refs/heads/master/bigwig/track{1:2}.bigWig"
-#' )
-#' paths_track <- glue("{dir_cache_gghic}/track{1:2}.bigWig")
-#' for (i in seq_along(urls_file)) {
-#'   download.file(urls_file[i], paths_track[i])
+#' # Add tracks using file paths
+#' gghic(cc) +
+#'   geom_track(data_paths = c(track1, track2))
 #' }
-#'
-#' p + geom_track(
-#'   data_paths = paths_track, width_ratio = 0.5,
-#'   fill = c("#DC0000B2", "#00A087B2"), data_range = "auto"
-#' )
-#' }
-#' @export geom_track
+#' @export
 #' @aliases geom_track
 geom_track <- function(
   mapping = NULL, data = NULL, stat = StatTrack, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  data_paths = NULL, data_granges = NULL, width_ratio = 1 / 20,
-  spacing_ratio = 0.5, data_range = c("auto", "maximum"),
-  fill = "black", fontsize = 5,
-  rasterize = FALSE, dpi = 300, dev = "cairo", scale = 1,
-  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, data_paths = NULL,
+  track_grs = NULL, width_ratio = 1 / 20, spacing_ratio = 0.5,
+  data_range = c("auto", "maximum"), fill = "black", fontsize = 5,
+  rasterize = TRUE, dpi = 300, dev = "cairo", scale = 1, draw_boundary = TRUE,
+  boundary_colour = "black", linetype = "dashed", ...
 ) {
   ggplot2::layer(
     geom = GeomTrack, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE,
     params = list(
-      na.rm = na.rm, ...,
-      data_paths = data_paths, data_granges = data_granges,
+      na.rm = na.rm, data_paths = data_paths, track_grs = track_grs,
       width_ratio = width_ratio, spacing_ratio = spacing_ratio,
       data_range = data_range, fill = fill, fontsize = fontsize,
       rasterize = rasterize, dpi = dpi, dev = dev, scale = scale,
       draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      linetype = linetype, ...
     )
   )
 }
