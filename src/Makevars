@@ -1,0 +1,2 @@
+PKG_CFLAGS = -I/usr/include
+PKG_LIBS = -lz
