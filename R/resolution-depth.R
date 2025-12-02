@@ -8,6 +8,12 @@
 #'   For large files, use `pairs_file` parameter instead to read in chunks.
 #' @param pairs_file Character path to pairs file for chunked reading.
 #'   File can be gzip compressed (.gz).
+#' @param cache External pointer to cached pairs data (from `readPairsCache()`).
+#'   If provided, data is read from cache instead of file for much faster
+#'   repeated operations.
+#' @param return_cache Logical, if TRUE, `findOptimalResolutionChunked()`
+#'   returns a list with both the optimal bin size and the cache pointer.
+#'   Default: FALSE.
 #' @param bin_size Integer bin size in base pairs.
 #' @param min_contacts Integer minimum number of contacts required for a bin.
 #'   Default: 1000.
@@ -63,11 +69,34 @@
 #' # Find optimal resolution
 #' opt_bin <- findOptimalResolution(pairs, target_coverage = 0.8)
 #'
-#' # For large file
+#' # For large file - method 1: let function read file each time
 #' opt_bin <- findOptimalResolutionChunked(
 #'   pairs_file = "contact_matrix.txt",
 #'   target_coverage = 0.8
 #' )
+#'
+#' # For large file - method 2: cache once, reuse many times (FASTER!)
+#' cache <- readPairsCache("contact_matrix.txt")
+#'
+#' # Find optimal resolution using cache
+#' opt_bin <- findOptimalResolutionChunked(cache = cache, target_coverage = 0.8)
+#'
+#' # Reuse cache for multiple analyses (no file I/O!)
+#' depth_10kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 10000)
+#' depth_50kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 50000)
+#' coverage <- calculateGenomeCoverageChunked(cache = cache, bin_size = 10000)
+#'
+#' # Method 3: Get cache back from findOptimalResolutionChunked
+#' result <- findOptimalResolutionChunked(
+#'   pairs_file = "contact_matrix.txt",
+#'   target_coverage = 0.8,
+#'   return_cache = TRUE
+#' )
+#' opt_bin <- result$bin_size
+#' cache <- result$cache
+#'
+#' # Now reuse the cache
+#' depth <- calculateResolutionDepthChunked(cache = cache, bin_size = opt_bin)
 #' }
 #'
 #' @name resolution-depth
@@ -288,7 +317,9 @@ plotCoverageCurve <- function(
       )
     )
 
-  p <- ggplot2::ggplot(coverage_data, ggplot2::aes(x = bin_size_kb, y = coverage)) +
+  p <- ggplot2::ggplot(
+    coverage_data, ggplot2::aes(x = bin_size_kb, y = coverage)
+  ) +
     ggplot2::geom_line(color = "steelblue", linewidth = 1) +
     ggplot2::geom_point(color = "steelblue", size = 3) +
     ggplot2::labs(
@@ -307,9 +338,92 @@ plotCoverageCurve <- function(
   p
 }
 
+#' Read Pairs File into Cache
+#'
+#' Load a pairs file into C memory for fast repeated analysis.
+#' The cache persists until garbage collected or explicitly cleared.
+#'
+#' @param pairs_file Character path to pairs file.
+#'
+#' @return An external pointer to the cached data.
+#'
+#' @examples
+#' \dontrun{
+#' # Create cache once
+#' cache <- readPairsCache("data.pairs.gz")
+#'
+#' # Reuse cache for multiple operations
+#' depth1 <- calculateResolutionDepthChunked(cache = cache, bin_size = 10000)
+#' depth2 <- calculateResolutionDepthChunked(cache = cache, bin_size = 50000)
+#' coverage <- calculateGenomeCoverageChunked(cache = cache, bin_size = 10000)
+#'
+#' # Cache is automatically freed when R session ends
+#' # Or explicitly remove it:
+#' rm(cache)
+#' gc()
+#' }
+#'
 #' @export
 #' @rdname resolution-depth
-calculateResolutionDepthChunked <- function(pairs_file, bin_size) {
+readPairsCache <- function(pairs_file) {
+  pairs_file <- normalizePath(pairs_file, mustWork = TRUE)
+  message("Reading positions from file into C memory...")
+
+  cache_ptr <- tryCatch(
+    {
+      .Call("read_pairs_cache_c", pairs_file, PACKAGE = "gghic")
+    },
+    error = function(e) {
+      stop("Failed to read positions from file: ", e$message)
+    }
+  )
+
+  message("Cache created successfully")
+  cache_ptr
+}
+
+#' @export
+#' @rdname resolution-depth
+calculateResolutionDepthChunked <- function(
+  pairs_file = NULL, bin_size, cache = NULL
+) {
+  # Use cache if provided, otherwise read file
+  if (!is.null(cache)) {
+    if (!inherits(cache, "externalptr")) {
+      stop("cache must be an external pointer created by readPairsCache()")
+    }
+
+    result <- .Call(
+      "calculate_coverage_from_positions_c",
+      cache,
+      as.integer(bin_size),
+      as.integer(1),  # min_contacts = 1 to get all bins
+      PACKAGE = "gghic"
+    )
+
+    # This returns coverage, but we need depth counts
+    # Call a different C function that returns full depth table
+    tryCatch(
+      {
+        result <- .Call(
+          "process_pairs_from_cache_c",
+          cache,
+          as.integer(bin_size),
+          PACKAGE = "gghic"
+        )
+        return(tibble::as_tibble(result))
+      },
+      error = function(e) {
+        stop("Failed to calculate depth from cache: ", e$message)
+      }
+    )
+  }
+
+  # Original file-based implementation
+  if (is.null(pairs_file)) {
+    stop("Either pairs_file or cache must be provided")
+  }
+
   pairs_file <- normalizePath(pairs_file, mustWork = TRUE)
 
   tryCatch(
@@ -339,9 +453,32 @@ calculateResolutionDepthChunked <- function(pairs_file, bin_size) {
 #' @export
 #' @rdname resolution-depth
 calculateGenomeCoverageChunked <- function(
-  pairs_file, bin_size, min_contacts = 1000
+  pairs_file = NULL, bin_size, min_contacts = 1000, cache = NULL
 ) {
-  depth <- calculateResolutionDepthChunked(pairs_file, bin_size)
+  # Use cache if provided for fast calculation
+  if (!is.null(cache)) {
+    if (!inherits(cache, "externalptr")) {
+      stop("cache must be an external pointer created by readPairsCache()")
+    }
+
+    coverage <- .Call(
+      "calculate_coverage_from_cache_c",
+      cache,
+      as.integer(bin_size),
+      as.integer(min_contacts),
+      PACKAGE = "gghic"
+    )
+    return(coverage)
+  }
+
+  # Original file-based implementation
+  if (is.null(pairs_file)) {
+    stop("Either pairs_file or cache must be provided")
+  }
+
+  depth <- calculateResolutionDepthChunked(
+    pairs_file = pairs_file, bin_size = bin_size
+  )
 
   if (is.null(depth) || nrow(depth) == 0) {
     return(0.0)
@@ -356,20 +493,31 @@ calculateGenomeCoverageChunked <- function(
 #' @export
 #' @rdname resolution-depth
 findOptimalResolutionChunked <- function(
-  pairs_file, min_bin = 1000, max_bin = 5000000, target_coverage = 0.8,
-  min_contacts = 1000
+  pairs_file = NULL, min_bin = 1000, max_bin = 5000000, target_coverage = 0.8,
+  min_contacts = 1000, cache = NULL, return_cache = FALSE
 ) {
-  pairs_file <- normalizePath(pairs_file, mustWork = TRUE)
-
-  message("Reading positions from file into C memory (one time only)...")
-  cache_ptr <- tryCatch(
-    {
-      .Call("read_pairs_cache_c", pairs_file, PACKAGE = "gghic")
-    },
-    error = function(e) {
-      stop("Failed to read positions from file: ", e$message)
+  # Use provided cache or create new one
+  if (is.null(cache)) {
+    if (is.null(pairs_file)) {
+      stop("Either pairs_file or cache must be provided")
     }
-  )
+    pairs_file <- normalizePath(pairs_file, mustWork = TRUE)
+    message("Reading positions from file into C memory (one time only)...")
+    cache_ptr <- tryCatch(
+      {
+        .Call("read_pairs_cache_c", pairs_file, PACKAGE = "gghic")
+      },
+      error = function(e) {
+        stop("Failed to read positions from file: ", e$message)
+      }
+    )
+  } else {
+    if (!inherits(cache, "externalptr")) {
+      stop("cache must be an external pointer created by readPairsCache()")
+    }
+    cache_ptr <- cache
+    message("Using provided cache")
+  }
 
   left <- min_bin
   right <- max_bin
@@ -401,5 +549,9 @@ findOptimalResolutionChunked <- function(
     }
   }
 
+  if (return_cache) {
+    return(list(bin_size = best_bin, cache = cache_ptr))
+  }
+  
   best_bin
 }
