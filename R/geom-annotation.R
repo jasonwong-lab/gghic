@@ -1,243 +1,15 @@
-extract_trs <- function(
-  grs, genes, txdump, include_ncrna, gene_info
-) {
-  `!!` <- rlang::`!!`
-
-  chrom <- as.character(grs@seqnames)
-  start <- grs@ranges@start
-  end <- start + grs@ranges@width - 1
-
-  r <- range(
-    genes[
-      S4Vectors::subjectHits(
-        GenomicRanges::findOverlaps(grs, genes, ignore.strand = TRUE)
-      )
-    ],
-    ignore.strand = TRUE
-  )
-
-  .txdump <- txdump
-  .txdump$chrominfo <- .txdump$chrominfo[
-    .txdump$chrominfo$chrom == chrom, ,
-    drop = FALSE
-  ]
-
-  if (is.null(gene_info)) {
-    .txdump$transcripts <- .txdump$transcripts[
-      .txdump$transcripts$tx_chrom == chrom &
-        .txdump$transcripts$tx_start < GenomicRanges::end(r) &
-        .txdump$transcripts$tx_end > GenomicRanges::start(r), ,
-      drop = FALSE
-    ]
-  }
-  if (!is.null(gene_info)) {
-    gene_info <- gene_info |>
-      dplyr::filter(
-        chrom == !!chrom,
-        start < GenomicRanges::end(r),
-        end > GenomicRanges::start(r)
-      )
-    if (nrow(gene_info) == 0) {
-      return(GenomicRanges::GRangesList())
-    }
-
-    .txdump$transcripts <- .txdump$transcripts[
-      .txdump$transcripts$tx_name %in% gene_info$tx_id, ,
-      drop = FALSE
-    ]
-  }
-
-  .txdump$genes <- .txdump$genes[
-    .txdump$genes$tx_id %in% .txdump$transcripts$tx_id, ,
-    drop = FALSE
-  ]
-  .txdump$splicings <- .txdump$splicings[
-    .txdump$splicings$tx_id %in% .txdump$transcripts$tx_id, ,
-    drop = FALSE
-  ]
-
-  txdb_subset <- do.call(txdbmaker::makeTxDb, .txdump)
-
-  exons_gviz <- Gviz::GeneRegionTrack(
-    txdb_subset,
-    chromosome = chrom, start = GenomicRanges::start(r), end = GenomicRanges::end(r),
-    strand = "*"
-  )
-  exons <- exons_gviz@range
-
-  if (!include_ncrna) {
-    ncrnas <- unique(exons$transcript[exons$feature == "ncRNA"])
-    exons <- exons[!exons$transcript %in% ncrnas]
-  }
-
-  trs <- GenomicRanges::split(exons, as.character(exons$transcript))
-
-  trs_exon_intron <- purrr::map(trs, function(tr) {
-    introns <- GenomicRanges::gaps(tr)[-1]
-    if (length(introns) > 0) {
-      introns$gene <- unique(tr$gene)
-      introns$feature <- "intron"
-    }
-    tmp <- GenomicRanges::pintersect(c(tr, introns), grs, ignore.strand = TRUE)
-    tmp[width(tmp) > 0]
-  })
-
-  GenomicRanges::GRangesList(trs_exon_intron)
-}
-
-decide_track_lines <- function(genes_span, maxgap) {
-  names_gene <- names_gene_copy <- names(genes_span)
-  dat_line <- tibble::tibble(gene_id = names_gene, line = 0)
-
-  while (length(names_gene_copy) > 1) {
-    n1 <- names_gene_copy[1]
-    n1o <- setdiff(names_gene_copy, n1)
-    genes_n1 <- genes_span[[n1]]
-    genes_n1o <- GenomicRanges::GRangesList(genes_span[n1o]) |>
-      unlist()
-    genes_n1o_nonol <- genes_n1o[
-      !IRanges::overlapsAny(
-        genes_n1o, genes_n1, maxgap = maxgap, ignore.strand = TRUE
-      )
-    ]
-    n1o_nonol <- names(genes_n1o_nonol)
-    if (length(n1o_nonol) == 0) {
-      dat_line$line[dat_line$gene_id == n1] <- max(dat_line$line) + 1
-      names_gene_copy <- setdiff(names_gene_copy, n1)
-      next
-    }
-    dat_line$line[dat_line$gene_id %in% c(n1, n1o_nonol)] <- max(dat_line$line) + 1
-    names_gene_copy <- setdiff(names_gene_copy, n1o_nonol)
-  }
-  if (sum(dat_line$line == 0)) {
-    dat_line$line[dat_line$line == 0] <- max(dat_line$line) + 1
-  }
-
-  dat_line
-}
-
-retrive_genes <- function(
-  data, txdb, tx2gene, gtf_path, maxgap, include_ncrna,
-  gene_symbols, chrom_prefix
-) {
-  txdb <- ensure_txdb(txdb, gtf_path)
-  tx2gene <- ensure_tx2gene(tx2gene, gtf_path)
-  txdump <- ensure_txdump(txdb, gtf_path)
-
-  info_genes <- NULL
-  if (!is.null(gene_symbols)) {
-    info_genes <- tx2gene |>
-      dplyr::filter(gene_symbol %in% gene_symbols)
-  }
-
-  grs <- purrr::map(
-    unique(data$seqnames1), function(.x) {
-      tmp <- .x
-      if (!chrom_prefix) tmp <- paste0("chr", tmp)
-      GenomicRanges::GRanges(
-        seqnames = tmp,
-        ranges = IRanges::IRanges(
-          start = min(data$start1[data$seqnames1 == .x]),
-          end = max(data$end1[data$seqnames1 == .x])
-        )
-      )
-    }
-  )
-
-  genes <- purrr::map(
-    grs, function(.x) {
-      GenomicFeatures::genes(
-        txdb, columns = c("exon_id"), filter = list(tx_chrom = .x@seqnames)
-      )
-    }
-  )
-
-  trs <- purrr::map2(
-    grs, genes,
-    extract_trs,
-    txdump = txdump, include_ncrna = include_ncrna, gene_info = info_genes
-  )
-
-  dat <- purrr::pmap(
-    list(trs), function(.x) {
-      genes <- GenomicRanges::split(unlist(.x), unlist(.x)$gene)
-
-      genes_reduced <- purrr::map(
-        genes, function(g) {
-          features <- GenomicRanges::split(g, g$feature)
-          features_reduced <- purrr::map(
-            features, function(f) {
-              if (f$feature[1] == "intron") {
-                tmp <- f
-                S4Vectors::mcols(tmp) <- NULL
-                names(tmp) <- NULL
-              } else {
-                tmp <- GenomicRanges::reduce(f)
-              }
-              tmp$feature <- unique(f$feature)
-              tmp$gene_id <- unique(g$gene)
-              tmp
-            }
-          )
-        }
-      )
-
-      genes_span <- purrr::map(
-        genes_reduced, function(.x) {
-          tmp <- unlist(GenomicRanges::GRangesList(.x))
-          GenomicRanges::GRanges(
-            seqnames = tmp@seqnames[1],
-            ranges = IRanges::IRanges(
-              start = min(GenomicRanges::start(tmp)),
-              end = max(GenomicRanges::end(tmp))
-            ),
-            strand = tmp@strand[1]
-          )
-        }
-      )
-
-      dat_line <- decide_track_lines(genes_span, maxgap)
-
-      dat_gene <- purrr::map_df(
-        genes_reduced, function(.x) {
-          tmp <- GenomicRanges::GRangesList(.x) |>
-            unlist()
-          tibble::as_tibble(stats::setNames(tmp, NULL))
-        }
-      ) |>
-        dplyr::left_join(dat_line, by = "gene_id") |>
-        dplyr::left_join(
-          dplyr::select(
-            dplyr::distinct(tx2gene, gene_id, .keep_all = TRUE),
-            gene_id, gene_symbol
-          ), by = "gene_id"
-        )
-
-      dat_gene
-    }
-  )
-
-  dplyr::bind_rows(dat)
-}
-
 StatAnnotation <- ggplot2::ggproto(
   "StatAnnotation",
   ggplot2::Stat,
   required_aes = c(
     "seqnames1", "start1", "end1", "seqnames2", "start2", "end2"
   ),
-  extra_params = c(
-    ggplot2::Stat$extra_params,
-    "txdb", "tx2gene", "gtf_path", "width_ratio", "spacing_ratio", "maxgap",
-    "include_ncrna", "style", "gene_symbols", "chrom_prefix"
-  ),
-  dropped_aes = c(
-    "seqnames1", "start1", "end1", "seqnames2", "start2", "end2", "fill"
-  ),
+  setup_params = function(data, params) params,
   compute_panel = function(
     data, scales,
-    txdb, tx2gene, gtf_path, width_ratio, spacing_ratio, maxgap, include_ncrna,
-    style, gene_symbols, chrom_prefix
+    txdb = NULL, tx2gene = NULL, gtf_path = NULL, width_ratio = 1 / 50,
+    spacing_ratio = 1 / 3, maxgap = -1, include_ncrna = TRUE,
+    style = c("basic", "arrow"), gene_symbols = NULL, chrom_prefix = TRUE
   ) {
     # ======================================================================== #
     #   ^                                                                      #
@@ -268,7 +40,7 @@ StatAnnotation <- ggplot2::ggproto(
       stop("Either gtf_path or txdb and tx2gene must be provided.")
     }
 
-    name_pkg <- get_pkg_name()
+    name_pkg <- .getPkgName()
     env <- get(".env", envir = asNamespace(name_pkg))
     n_annotation <- env$n_annotation
     n_track <- env$n_track
@@ -281,7 +53,7 @@ StatAnnotation <- ggplot2::ggproto(
       n_sn <- env$n_sn
     } else {
       dat_hic <- data |>
-        calculate_hic_coordinates()
+        .calculateHicCoordinates()
       max_y <- max(dat_hic$ymax, na.rm = TRUE)
       max_x <- max(dat_hic$xend, na.rm = TRUE)
       min_x <- min(dat_hic$xmin, na.rm = TRUE)
@@ -306,9 +78,9 @@ StatAnnotation <- ggplot2::ggproto(
     .height <- max_y * width_ratio
     .height_cds <- .height * 0.8
 
-    genes <- retrive_genes(
-      data, txdb, tx2gene, gtf_path, maxgap, include_ncrna,
-      gene_symbols, chrom_prefix
+    genes <- .retriveGenes(
+      data, txdb, tx2gene, gtf_path, maxgap, include_ncrna, gene_symbols,
+      chrom_prefix
     ) |>
       dplyr::rename(seqname = seqnames)
 
@@ -413,32 +185,34 @@ StatAnnotation <- ggplot2::ggproto(
 
     if ((n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))) {
       chroms_add <- data |>
-        calculate_add_lengths()
+        .calculateAddLengths()
       chroms_sub <- data |>
-        calculate_subtract_lengths()
+        .calculateSubtractLengths()
 
       dat <- dat |>
-        adjust_coordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
+        .adjustCoordinates2(chroms_add, chroms_sub, c(x = "x", xmax = "xmax"))
 
       if (style[1] == "arrow") {
         dat <- dat |>
-          adjust_coordinates2(chroms_add, chroms_sub, c(xend = "xend"))
+          .adjustCoordinates2(chroms_add, chroms_sub, c(xend = "xend"))
       }
     }
 
-    env$min_y <- min(dat$ymin)
+    env$min_y <- min(dat$ymin) - .height_cds * 2
     env$n_annotation <- env$n_annotation + 1
 
     if (n_sn > 1) {
-      dat_vline <- dat |>
-        dplyr::slice(seq_len(length(maxs_x))) |>
-        dplyr::mutate(
-          xmax = maxs_x,
-          ymin = env$min_y - (.height * spacing_ratio),
-          y = min_y - (.height * spacing_ratio),
-          feature = "vline"
-        ) |>
-        dplyr::slice(seq_len((dplyr::n() - 1)))
+      dat_vline <- tibble::tibble(
+        xmax = maxs_x[-length(maxs_x)],
+        ymin = env$min_y - (.height * spacing_ratio),
+        y = min_y - (.height * spacing_ratio),
+        feature = "vline",
+        x = xmax,
+        gene_symbol = "",
+        gene_id = "",
+        strand = "*",
+        seqname = names(maxs_x)[-length(maxs_x)]
+      )
 
       dat <- dplyr::bind_rows(dat, dat_vline)
     }
@@ -453,14 +227,14 @@ GeomAnnotation <- ggplot2::ggproto(
   required_aes = c(
     "x", "y", "xmax", "ymin", "feature", "gene_symbol", "strand", "seqname"
   ),
-  extra_params = c(
-    ggplot2::Geom$extra_params, "fontsize", "style", "colour", "fill",
-    "draw_boundary", "boundary_colour", "linetype"
+  default_aes = ggplot2::aes(
+    colour = "#48CFCB", fill = "#48CFCB", fontsize = 10, linetype = "dashed"
   ),
   draw_key = ggplot2::draw_key_blank,
   draw_panel = function(
-    data, panel_params, coord,
-    fontsize, style, colour, fill, draw_boundary, boundary_colour, linetype
+    data, panel_params, coord, fontsize = 10, style = c("basic", "arrow"),
+    colour = "#48CFCB", fill = "#48CFCB", draw_boundary = TRUE,
+    boundary_colour = "black", linetype = "dashed"
   ) {
     coords <- coord$transform(data, panel_params)
 
@@ -487,23 +261,41 @@ GeomAnnotation <- ggplot2::ggproto(
 
       coords_intron <- coords |>
         dplyr::filter(feature == "intron")
-      ends <- ifelse(coords_intron$strand == "+", "last", "first")
-      lengths_arrow <- rep(1 / 90, nrow(coords_intron))
-      lengths_intron <- coords_intron$xmax - coords_intron$x
-      lengths_arrow[lengths_arrow > lengths_intron] <- 0
-      grob_intron <- grid::segmentsGrob(
+
+      intron_mid <- (coords_intron$x + coords_intron$xmax) / 2
+      intron_length <- coords_intron$xmax - coords_intron$x
+      # 25% of intron or fixed small distance
+      arrow_offset <- pmin(intron_length * 0.25, 1 / 10)
+
+      arrow_x0 <- ifelse(
+        coords_intron$strand == "+",
+        intron_mid - arrow_offset,
+        intron_mid + arrow_offset
+      )
+      arrow_x1 <- ifelse(
+        coords_intron$strand == "+",
+        intron_mid + arrow_offset,
+        intron_mid - arrow_offset
+      )
+
+      grob_intron_line <- grid::segmentsGrob(
         x0 = coords_intron$x, x1 = coords_intron$xmax,
         y0 = coords_intron$y, y1 = coords_intron$y,
-        arrow = grid::arrow(
-          type = "open",
-          length = grid::unit(lengths_arrow, "native"),
-          ends = ends
-        ),
         gp = grid::gpar(col = colour),
         default.units = "native"
       )
 
-      grids <- grid::gList(grob_exon, grob_intron, grob_text)
+      lengths_arrow <- pmin(arrow_offset, 1 / 120)
+      grob_intron_arrow <- grid::segmentsGrob(
+        x0 = arrow_x0, x1 = arrow_x1, y0 = coords_intron$y,
+        y1 = coords_intron$y, arrow = grid::arrow(
+          type = "open", length = grid::unit(lengths_arrow, "native"),
+          ends = "last"
+        ), gp = grid::gpar(col = colour), default.units = "native"
+      )
+      grids <- grid::gList(
+        grob_exon, grob_intron_line, grob_intron_arrow, grob_text
+      )
     }
     if (style[1] == "arrow") {
       coords_arrow_p <- coords |>
@@ -612,76 +404,58 @@ GeomAnnotation <- ggplot2::ggproto(
 #' @return A ggplot object.
 #' @examples
 #' \dontrun{
-#' library(gghic)
-#' library(ggplot2)
-#' library(dplyr)
-#' library(HiCExperiment)
-#' library(InteractionSet)
-#' library(scales)
-#' library(glue)
-#' library(rappdirs)
-#'
-#' dir_cache <- user_cache_dir(appname = "gghic")
-#' url_file <- paste0(
-#'   "https://raw.githubusercontent.com/mhjiang97/gghic-data/refs/heads/",
-#'   "master/cooler/chr4_11-5kb.cool"
-#' )
-#' path_file <- glue("{dir_cache}/chr4_11-5kb.cool")
-#' download.file(url_file, path_file)
-#'
-#' hic <- path_file |>
-#'   CoolFile() |>
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
-#' gis <- interactions(hic)
-#' gis$score <- log10(gis$balanced)
-#' x <- as_tibble(gis)
-#' scores <- x$score[pairdist(gis) != 0 & !is.na(pairdist(gis) != 0)]
-#' scores <- scores[!is.na(scores) & !is.infinite(scores)]
-#' x$score <- oob_squish(x$score, c(min(scores), max(scores)))
+#' gtf_file <- "path/to/genes.gtf"
+#' gghic(cc) + geom_annotation(gtf_path = gtf_file)
 #'
-#' p <- x |>
-#'   filter(
-#'     seqnames1 == "chr11", seqnames2 == "chr11",
-#'     center1 > 67000000, center1 < 67100000,
-#'     center2 > 67000000, center2 < 67100000
-#'   ) |>
-#'   ggplot(
-#'     aes(
-#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-#'       seqnames2 = seqnames2, start2 = start2, end2 = end2,
-#'       fill = score
-#'     )
-#'   ) +
-#'   geom_hic()
+#' # Filter specific genes
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     gene_symbols = c("BRCA1", "TP53", "MYC")
+#'   )
 #'
-#' path_gtf <- glue("{dir_cache_gghic}/gencode-chr4_11.gtf.gz")
+#' # Arrow style with custom colors
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     style = "arrow",
+#'     colour = "darkblue",
+#'     fill = "lightblue",
+#'     fontsize = 8
+#'   )
 #'
-#' p + geom_annotation(gtf_path = path_gtf, style = "basic", maxgap = 100000)
+#' # Exclude non-coding RNAs
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     include_ncrna = FALSE
+#'   )
 #' }
-#' @export geom_annotation
+#' @export
 #' @aliases geom_annotation
 geom_annotation <- function(
   mapping = NULL, data = NULL, stat = StatAnnotation, position = "identity",
-  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, ...,
-  txdb = NULL, tx2gene = NULL, gtf_path = NULL, width_ratio = 1 / 50,
-  spacing_ratio = 1 / 3, maxgap = -1, include_ncrna = TRUE,
-  style = c("basic", "arrow"), gene_symbols = NULL, chrom_prefix = TRUE,
-  fontsize = 10, colour = "#48CFCB", fill = "#48CFCB",
-  draw_boundary = TRUE, boundary_colour = "black", linetype = "dashed"
+  na.rm = FALSE, show.legend = NA, inherit.aes = TRUE, txdb = NULL,
+  tx2gene = NULL, gtf_path = NULL, width_ratio = 1 / 50, spacing_ratio = 1 / 3,
+  maxgap = -1, include_ncrna = TRUE, style = c("basic", "arrow"),
+  gene_symbols = NULL, chrom_prefix = TRUE, fontsize = 10,
+  colour = "#48CFCB", fill = "#48CFCB", draw_boundary = TRUE,
+  boundary_colour = "black", linetype = "dashed", ...
 ) {
   ggplot2::layer(
     geom = GeomAnnotation, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = FALSE, params = list(
-      na.rm = na.rm, ...,
-      txdb = txdb, tx2gene = tx2gene, gtf_path = gtf_path,
+      na.rm = na.rm, txdb = txdb, tx2gene = tx2gene, gtf_path = gtf_path,
       width_ratio = width_ratio, spacing_ratio = spacing_ratio, maxgap = maxgap,
       include_ncrna = include_ncrna, style = style, gene_symbols = gene_symbols,
-      chrom_prefix = chrom_prefix,
-      fontsize = fontsize, colour = colour, fill = fill,
-      draw_boundary = draw_boundary, boundary_colour = boundary_colour,
-      linetype = linetype
+      chrom_prefix = chrom_prefix, fontsize = fontsize, colour = colour,
+      fill = fill, draw_boundary = draw_boundary,
+      boundary_colour = boundary_colour, linetype = linetype, ...
     )
   )
 }
