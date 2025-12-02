@@ -1,9 +1,9 @@
-colors_hic <- function() {
+.colorHic <- function() {
   ggplot2::scale_fill_gradientn(
     colors = c(
-      "#FFFEF9", "#FCF9CE", "#FFF2A9", "#FDE188", "#FFCA67", "#FAAA4B",
-      "#F78E40", "#F15C34", "#ED3024", "#D42027", "#B01F29", "#7A1128",
-      "#1A0A10"
+      "#FFFEF9", "#FCF9CE", "#FFF2A9", "#FDE188", "#FFCA67",
+      "#FAAA4B", "#F78E40", "#F15C34", "#ED3024", "#D42027",
+      "#B01F29", "#7A1128", "#1A0A10"
     ),
     na.value = "#FFFFFF"
   )
@@ -26,15 +26,27 @@ colors_hic <- function() {
 #' @details
 #' If either `xmin` or `xmax` is `NULL`, the x-axis will not be expanded.
 #' @return A ggplot2 theme.
-#' @inherit geom_hic examples
-#' @export theme_hic
+#' @examples
+#' \dontrun{
+#' # Load Hi-C data
+#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
+#'   import()
+#'
+#' # Apply default theme_hic
+#' gghic(cc) + theme_hic()
+#'
+#' # Disable default color scale
+#' gghic(cc) +
+#'   theme_hic(scale_fill_gradientn = FALSE) +
+#'   scale_fill_viridis_c()
+#' }
+#' @export
 #' @aliases theme_hic
 theme_hic <- function(
-  hide_y = TRUE, coord_ratio = 1,
-  scale_fill_gradientn = TRUE,
+  hide_y = TRUE, coord_ratio = 1, scale_fill_gradientn = TRUE,
   breaks = ggplot2::waiver(),
-  labels = scales::unit_format(unit = "M", scale = 1e-6),
-  xmin = NULL, xmax = NULL, expand_x = c(0, 0)
+  labels = scales::unit_format(unit = "M", scale = 1e-6), xmin = NULL,
+  xmax = NULL, expand_x = c(0, 0)
 ) {
   t <- ggplot2::theme_bw() %+replace%
     ggplot2::theme(
@@ -55,7 +67,7 @@ theme_hic <- function(
   }
 
   if (scale_fill_gradientn) {
-    tt <- list(t, colors_hic())
+    tt <- list(t, .colorHic())
   }
 
   tt <- c(
