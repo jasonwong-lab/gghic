@@ -1,11 +1,11 @@
 ---
 title: "Multi-way Contact Analysis with Hypergraphs"
-author: "gghic package"
+author: "Minghao Jiang"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 3
+    toc_depth: 4
 vignette: >
   %\VignetteIndexEntry{Multi-way Contact Analysis with Hypergraphs}
   %\VignetteEngine{knitr::rmarkdown}

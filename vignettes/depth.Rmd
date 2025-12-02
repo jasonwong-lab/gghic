@@ -1,11 +1,11 @@
 ---
 title: "Resolution Depth Analysis for Hi-C/-like Data"
-author: "gghic package"
+author: "Minghao Jiang"
 date: "`r Sys.Date()`"
 output:
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 2
+    toc_depth: 4
 vignette: >
   %\VignetteIndexEntry{Resolution Depth Analysis for Hi-C/-like Data}
   %\VignetteEngine{knitr::rmarkdown}
