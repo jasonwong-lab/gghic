@@ -264,7 +264,7 @@ scaleData <- function(data, scale_column, scale_method, remove_na = FALSE) {
 #' # Customize ideogram appearance
 #' gghic(cc,
 #'   ideogram = TRUE,
-#'   ideogram_width_ratio = 1/25,
+#'   ideogram_width_ratio = 1 / 25,
 #'   ideogram_colour = "blue",
 #'   ideogram_fill = "#ADD8E680"
 #' )
@@ -296,8 +296,8 @@ scaleData <- function(data, scale_column, scale_method, remove_na = FALSE) {
 #' gghic(
 #'   cc,
 #'   expand_xaxis = TRUE,
-#'   expand_left = 1e6,   # Extend 1 Mb to the left
-#'   expand_right = 1e6   # Extend 1 Mb to the right
+#'   expand_left = 1e6, # Extend 1 Mb to the left
+#'   expand_right = 1e6 # Extend 1 Mb to the right
 #' )
 #' }
 #' @seealso

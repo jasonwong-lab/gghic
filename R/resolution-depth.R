@@ -11,7 +11,7 @@
 #' @param cache External pointer to cached pairs data (from `readPairsCache()`).
 #'   If provided, data is read from cache instead of file for much faster
 #'   repeated operations.
-#' @param return_cache Logical, if TRUE, `findOptimalResolutionChunked()`
+#' @param return_cache Logical, if TRUE, `findOptResChunked()`
 #'   returns a list with both the optimal bin size and the cache pointer.
 #'   Default: FALSE.
 #' @param bin_size Integer bin size in base pairs.
@@ -27,9 +27,9 @@
 #' - `calculateGenomeCoverage()`: A numeric value representing the fraction
 #'   of bins with >= min_contacts.
 #' - `findOptimalResolution()`: An integer representing the optimal bin size.
-#' - `calculateResolutionDepthChunked()`: Same as above, reads file in chunks.
-#' - `calculateGenomeCoverageChunked()`: Coverage calculation from file.
-#' - `findOptimalResolutionChunked()`: Optimal resolution for large files.
+#' - `calcResDepthChunked()`: Same as above, reads file in chunks.
+#' - `calcGenomeCovChunked()`: Coverage calculation from file.
+#' - `findOptResChunked()`: Optimal resolution for large files.
 #'
 #' @details
 #' These functions analyze Hi-C pairs data to determine optimal genomic resolution.
@@ -58,7 +58,7 @@
 #' depth_10kb <- calculateResolutionDepth(pairs, bin_size = 10000)
 #'
 #' # For large file, read in chunks
-#' depth_10kb <- calculateResolutionDepthChunked(
+#' depth_10kb <- calcResDepthChunked(
 #'   pairs_file = "contact_matrix.txt",
 #'   bin_size = 10000
 #' )
@@ -70,7 +70,7 @@
 #' opt_bin <- findOptimalResolution(pairs, target_coverage = 0.8)
 #'
 #' # For large file - method 1: let function read file each time
-#' opt_bin <- findOptimalResolutionChunked(
+#' opt_bin <- findOptResChunked(
 #'   pairs_file = "contact_matrix.txt",
 #'   target_coverage = 0.8
 #' )
@@ -79,15 +79,15 @@
 #' cache <- readPairsCache("contact_matrix.txt")
 #'
 #' # Find optimal resolution using cache
-#' opt_bin <- findOptimalResolutionChunked(cache = cache, target_coverage = 0.8)
+#' opt_bin <- findOptResChunked(cache = cache, target_coverage = 0.8)
 #'
 #' # Reuse cache for multiple analyses (no file I/O!)
-#' depth_10kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 10000)
-#' depth_50kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 50000)
-#' coverage <- calculateGenomeCoverageChunked(cache = cache, bin_size = 10000)
+#' depth_10kb <- calcResDepthChunked(cache = cache, bin_size = 10000)
+#' depth_50kb <- calcResDepthChunked(cache = cache, bin_size = 50000)
+#' coverage <- calcGenomeCovChunked(cache = cache, bin_size = 10000)
 #'
-#' # Method 3: Get cache back from findOptimalResolutionChunked
-#' result <- findOptimalResolutionChunked(
+#' # Method 3: Get cache back from findOptResChunked
+#' result <- findOptResChunked(
 #'   pairs_file = "contact_matrix.txt",
 #'   target_coverage = 0.8,
 #'   return_cache = TRUE
@@ -96,7 +96,7 @@
 #' cache <- result$cache
 #'
 #' # Now reuse the cache
-#' depth <- calculateResolutionDepthChunked(cache = cache, bin_size = opt_bin)
+#' depth <- calcResDepthChunked(cache = cache, bin_size = opt_bin)
 #' }
 #'
 #' @name resolution-depth
@@ -353,9 +353,9 @@ plotCoverageCurve <- function(
 #' cache <- readPairsCache("data.pairs.gz")
 #'
 #' # Reuse cache for multiple operations
-#' depth1 <- calculateResolutionDepthChunked(cache = cache, bin_size = 10000)
-#' depth2 <- calculateResolutionDepthChunked(cache = cache, bin_size = 50000)
-#' coverage <- calculateGenomeCoverageChunked(cache = cache, bin_size = 10000)
+#' depth1 <- calcResDepthChunked(cache = cache, bin_size = 10000)
+#' depth2 <- calcResDepthChunked(cache = cache, bin_size = 50000)
+#' coverage <- calcGenomeCovChunked(cache = cache, bin_size = 10000)
 #'
 #' # Cache is automatically freed when R session ends
 #' # Or explicitly remove it:
@@ -384,7 +384,7 @@ readPairsCache <- function(pairs_file) {
 
 #' @export
 #' @rdname resolution-depth
-calculateResolutionDepthChunked <- function(
+calcResDepthChunked <- function(
   pairs_file = NULL, bin_size, cache = NULL
 ) {
   # Use cache if provided, otherwise read file
@@ -393,16 +393,7 @@ calculateResolutionDepthChunked <- function(
       stop("cache must be an external pointer created by readPairsCache()")
     }
 
-    result <- .Call(
-      "calculate_coverage_from_positions_c",
-      cache,
-      as.integer(bin_size),
-      as.integer(1),  # min_contacts = 1 to get all bins
-      PACKAGE = "gghic"
-    )
-
-    # This returns coverage, but we need depth counts
-    # Call a different C function that returns full depth table
+    # Call C function that returns full depth table from cache
     tryCatch(
       {
         result <- .Call(
@@ -452,7 +443,7 @@ calculateResolutionDepthChunked <- function(
 
 #' @export
 #' @rdname resolution-depth
-calculateGenomeCoverageChunked <- function(
+calcGenomeCovChunked <- function(
   pairs_file = NULL, bin_size, min_contacts = 1000, cache = NULL
 ) {
   # Use cache if provided for fast calculation
@@ -476,7 +467,7 @@ calculateGenomeCoverageChunked <- function(
     stop("Either pairs_file or cache must be provided")
   }
 
-  depth <- calculateResolutionDepthChunked(
+  depth <- calcResDepthChunked(
     pairs_file = pairs_file, bin_size = bin_size
   )
 
@@ -492,7 +483,7 @@ calculateGenomeCoverageChunked <- function(
 
 #' @export
 #' @rdname resolution-depth
-findOptimalResolutionChunked <- function(
+findOptResChunked <- function(
   pairs_file = NULL, min_bin = 1000, max_bin = 5000000, target_coverage = 0.8,
   min_contacts = 1000, cache = NULL, return_cache = FALSE
 ) {
@@ -552,6 +543,6 @@ findOptimalResolutionChunked <- function(
   if (return_cache) {
     return(list(bin_size = best_bin, cache = cache_ptr))
   }
-  
+
   best_bin
 }

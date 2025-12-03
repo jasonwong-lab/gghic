@@ -36,7 +36,8 @@ StatTad <- ggplot2::ggproto(
 
     if (!is.null(tad_path)) {
       tmp <- read.delim(
-        tad_path, header = FALSE, col.names = c("chrom", "start", "end")
+        tad_path,
+        header = FALSE, col.names = c("chrom", "start", "end")
       )
 
       if (is_0_based) tmp$start <- tmp$start + 1

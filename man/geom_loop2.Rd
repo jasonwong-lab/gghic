@@ -117,7 +117,8 @@ cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 # Prepare loop data frame
 loop_file <- "path/to/loops.bedpe"
 loops <- read.table(
-  loop_file, col.names = c(
+  loop_file,
+  col.names = c(
     "chr1", "start1", "end1", "chr2", "start2", "end2"
   )
 )

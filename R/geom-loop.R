@@ -39,7 +39,8 @@ StatLoop <- ggplot2::ggproto(
 
     if (!is.null(loop_path)) {
       tmp <- read.delim(
-        loop_path, header = FALSE, col.names = c(
+        loop_path,
+        header = FALSE, col.names = c(
           "chrom1", "start1", "end1", "chrom2", "start2", "end2"
         )
       )
