@@ -78,10 +78,10 @@ glimpse(pairs)
 The gghic package provides two complementary approaches for analyzing
 pairs data:
 
-| Approach                                                                                                               | Memory          | Speed   | When to Use                            |
-|------------------------------------------------------------------------------------------------------------------------|-----------------|---------|----------------------------------------|
-| **In-memory** [`calculateResolutionDepth()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)      | O(interactions) | Fastest | Files \< 50% RAM, interactive analysis |
-| **Chunked** [`calculateResolutionDepthChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md) | O(unique bins)  | Fast    | Files \> 50% RAM, automated pipelines  |
+| Approach                                                                                                          | Memory          | Speed   | When to Use                            |
+|-------------------------------------------------------------------------------------------------------------------|-----------------|---------|----------------------------------------|
+| **In-memory** [`calculateResolutionDepth()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md) | O(interactions) | Fastest | Files \< 50% RAM, interactive analysis |
+| **Chunked** [`calcResDepthChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)        | O(unique bins)  | Fast    | Files \> 50% RAM, automated pipelines  |
 
 **In-Memory Processing (Smaller Files)** - Load entire dataset into
 memory - Single file read (fastest) - Typical memory: ~4 bytes per
@@ -229,7 +229,8 @@ cat(sprintf(
 
 # Verify the result
 actual_coverage <- calculateGenomeCoverage(
-  pairs, optimal_bin, min_contacts = 50
+  pairs, optimal_bin,
+  min_contacts = 50
 )
 cat(sprintf("Actual coverage: %.2f%%\n", actual_coverage * 100))
 #> Actual coverage: 80.11%
@@ -331,7 +332,7 @@ Read the file each time a function is called:
 
 ``` r
 # Each function reads the file independently
-opt_bin <- findOptimalResolutionChunked(
+opt_bin <- findOptResChunked(
   pairs_file = pairs_file,
   min_bin = 1e3,
   max_bin = 5e4,
@@ -340,14 +341,14 @@ opt_bin <- findOptimalResolutionChunked(
 )
 
 # Reads file again
-coverage <- calculateGenomeCoverageChunked(
+coverage <- calcGenomeCovChunked(
   pairs_file = pairs_file,
   bin_size = opt_bin,
   min_contacts = 1000
 )
 
 # Reads file again
-depth <- calculateResolutionDepthChunked(
+depth <- calcResDepthChunked(
   pairs_file = pairs_file,
   bin_size = opt_bin
 )
@@ -368,7 +369,7 @@ cat("File loaded into C memory cache\n")
 
 # 2. FIND OPTIMAL RESOLUTION (using cache) ----
 # This is now instant - no file I/O!
-opt_bin <- findOptimalResolutionChunked(
+opt_bin <- findOptResChunked(
   cache = cache,
   min_bin = 1e3,
   max_bin = 5e4,
@@ -379,7 +380,7 @@ cat("Optimal resolution:", opt_bin / 1e3, "Kb\n")
 
 # 3. CHECK COVERAGE (using cache) ----
 # Also instant!
-coverage <- calculateGenomeCoverageChunked(
+coverage <- calcGenomeCovChunked(
   cache = cache,
   bin_size = opt_bin,
   min_contacts = 1000
@@ -388,15 +389,15 @@ cat("Coverage:", sprintf("%.1f%%\n", coverage * 100))
 
 # 4. EXTRACT BINNED DEPTHS (using cache) ----
 # Still instant!
-depth <- calculateResolutionDepthChunked(
+depth <- calcResDepthChunked(
   cache = cache,
   bin_size = opt_bin
 )
 
 # 5. TRY DIFFERENT BIN SIZES (no additional I/O!) ----
-depth_5kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 5000)
-depth_10kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 10000)
-depth_50kb <- calculateResolutionDepthChunked(cache = cache, bin_size = 50000)
+depth_5kb <- calcResDepthChunked(cache = cache, bin_size = 5000)
+depth_10kb <- calcResDepthChunked(cache = cache, bin_size = 10000)
+depth_50kb <- calcResDepthChunked(cache = cache, bin_size = 50000)
 
 # Cache is automatically freed when removed or R session ends
 rm(cache)
@@ -409,21 +410,21 @@ seconds × operations = **30 seconds**
 
 **3x faster!** And the speedup increases with more operations.
 
-### Approach 3: Get Cache from findOptimalResolutionChunked
+### Approach 3: Get Cache from findOptResChunked
 
 Let
-[`findOptimalResolutionChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
+[`findOptResChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
 return the cache for subsequent use:
 
 ``` r
 # Find optimal resolution and get cache back
-result <- findOptimalResolutionChunked(
+result <- findOptResChunked(
   pairs_file = pairs_file,
   min_bin = 1e3,
   max_bin = 5e4,
   target_coverage = 0.8,
   min_contacts = 1000,
-  return_cache = TRUE  # Get the cache back!
+  return_cache = TRUE # Get the cache back!
 )
 
 # Extract results
@@ -433,13 +434,13 @@ cache <- result$cache
 cat("Optimal resolution:", opt_bin / 1e3, "Kb\n")
 
 # Now reuse the cache for other operations
-coverage <- calculateGenomeCoverageChunked(
+coverage <- calcGenomeCovChunked(
   cache = cache,
   bin_size = opt_bin,
   min_contacts = 1000
 )
 
-depth <- calculateResolutionDepthChunked(
+depth <- calcResDepthChunked(
   cache = cache,
   bin_size = opt_bin
 )
@@ -447,11 +448,11 @@ depth <- calculateResolutionDepthChunked(
 
 ### When to Use Each Approach
 
-| Approach           | Best For                                                                                                                   | I/O Operations |
-|--------------------|----------------------------------------------------------------------------------------------------------------------------|----------------|
-| **Direct File**    | Single analysis, simple scripts                                                                                            | N operations   |
-| **Explicit Cache** | Interactive exploration, multiple analyses                                                                                 | 1 operation    |
-| **Return Cache**   | When starting with [`findOptimalResolutionChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md) | 1 operation    |
+| Approach           | Best For                                                                                                        | I/O Operations |
+|--------------------|-----------------------------------------------------------------------------------------------------------------|----------------|
+| **Direct File**    | Single analysis, simple scripts                                                                                 | N operations   |
+| **Explicit Cache** | Interactive exploration, multiple analyses                                                                      | 1 operation    |
+| **Return Cache**   | When starting with [`findOptResChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md) | 1 operation    |
 
 **Rule of thumb**: If you’ll call more than one chunked function, use
 the cache!

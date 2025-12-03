@@ -393,7 +393,7 @@ gghic(cc, ideogram = TRUE, genome = "hg19")
 # Customize ideogram appearance
 gghic(cc,
   ideogram = TRUE,
-  ideogram_width_ratio = 1/25,
+  ideogram_width_ratio = 1 / 25,
   ideogram_colour = "blue",
   ideogram_fill = "#ADD8E680"
 )
@@ -425,8 +425,8 @@ gghic(cc, track = TRUE, track_fill = c("blue", "red"))
 gghic(
   cc,
   expand_xaxis = TRUE,
-  expand_left = 1e6,   # Extend 1 Mb to the left
-  expand_right = 1e6   # Extend 1 Mb to the right
+  expand_left = 1e6, # Extend 1 Mb to the left
+  expand_right = 1e6 # Extend 1 Mb to the right
 )
 } # }
 ```

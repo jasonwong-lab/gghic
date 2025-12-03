@@ -73,9 +73,9 @@
   [`calculateGenomeCoverage()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   [`findOptimalResolution()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   [`readPairsCache()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
-  [`calculateResolutionDepthChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
-  [`calculateGenomeCoverageChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
-  [`findOptimalResolutionChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
+  [`calcResDepthChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
+  [`calcGenomeCovChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
+  [`findOptResChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   : Calculate Resolution and Depth for Pairs Data
 - [`scaleData()`](https://jasonwong-lab.github.io/gghic/reference/scaleData.md)
   : Scale Hi-C interaction data

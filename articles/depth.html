@@ -66,7 +66,7 @@
                         <h4 data-toc-skip class="author">Minghao
 Jiang</h4>
             
-            <h4 data-toc-skip class="date">2025-12-02</h4>
+            <h4 data-toc-skip class="date">2025-12-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/depth.Rmd" class="external-link"><code>vignettes/depth.Rmd</code></a></small>
       <div class="d-none name"><code>depth.Rmd</code></div>
@@ -195,8 +195,7 @@ pairs data:</p>
 </tr>
 <tr class="even">
 <td>
-<strong>Chunked</strong>
-<code><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked()</a></code>
+<strong>Chunked</strong> <code><a href="../reference/resolution-depth.html">calcResDepthChunked()</a></code>
 </td>
 <td>O(unique bins)</td>
 <td>Fast</td>
@@ -349,7 +348,8 @@ achieving your target coverage:</p>
 <span></span>
 <span><span class="co"># Verify the result</span></span>
 <span><span class="va">actual_coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateGenomeCoverage</a></span><span class="op">(</span></span>
-<span>  <span class="va">pairs</span>, <span class="va">optimal_bin</span>, min_contacts <span class="op">=</span> <span class="fl">50</span></span>
+<span>  <span class="va">pairs</span>, <span class="va">optimal_bin</span>,</span>
+<span>  min_contacts <span class="op">=</span> <span class="fl">50</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Actual coverage: %.2f%%\n"</span>, <span class="va">actual_coverage</span> <span class="op">*</span> <span class="fl">100</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Actual coverage: 80.11%</span></span></code></pre></div>
@@ -462,7 +462,7 @@ variants which stream the file with C-level I/O:</p>
 <p>Read the file each time a function is called:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Each function reads the file independently</span></span>
-<span><span class="va">opt_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptimalResolutionChunked</a></span><span class="op">(</span></span>
+<span><span class="va">opt_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptResChunked</a></span><span class="op">(</span></span>
 <span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
 <span>  min_bin <span class="op">=</span> <span class="fl">1e3</span>,</span>
 <span>  max_bin <span class="op">=</span> <span class="fl">5e4</span>,</span>
@@ -471,14 +471,14 @@ variants which stream the file with C-level I/O:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reads file again</span></span>
-<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateGenomeCoverageChunked</a></span><span class="op">(</span></span>
+<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcGenomeCovChunked</a></span><span class="op">(</span></span>
 <span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span>,</span>
 <span>  min_contacts <span class="op">=</span> <span class="fl">1000</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Reads file again</span></span>
-<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span></span>
+<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span></span>
 <span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -497,7 +497,7 @@ three times (30 GB total I/O)!</p>
 <span></span>
 <span><span class="co"># 2. FIND OPTIMAL RESOLUTION (using cache) ----</span></span>
 <span><span class="co"># This is now instant - no file I/O!</span></span>
-<span><span class="va">opt_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptimalResolutionChunked</a></span><span class="op">(</span></span>
+<span><span class="va">opt_bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptResChunked</a></span><span class="op">(</span></span>
 <span>  cache <span class="op">=</span> <span class="va">cache</span>,</span>
 <span>  min_bin <span class="op">=</span> <span class="fl">1e3</span>,</span>
 <span>  max_bin <span class="op">=</span> <span class="fl">5e4</span>,</span>
@@ -508,7 +508,7 @@ three times (30 GB total I/O)!</p>
 <span></span>
 <span><span class="co"># 3. CHECK COVERAGE (using cache) ----</span></span>
 <span><span class="co"># Also instant!</span></span>
-<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateGenomeCoverageChunked</a></span><span class="op">(</span></span>
+<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcGenomeCovChunked</a></span><span class="op">(</span></span>
 <span>  cache <span class="op">=</span> <span class="va">cache</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span>,</span>
 <span>  min_contacts <span class="op">=</span> <span class="fl">1000</span></span>
@@ -517,15 +517,15 @@ three times (30 GB total I/O)!</p>
 <span></span>
 <span><span class="co"># 4. EXTRACT BINNED DEPTHS (using cache) ----</span></span>
 <span><span class="co"># Still instant!</span></span>
-<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span></span>
+<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span></span>
 <span>  cache <span class="op">=</span> <span class="va">cache</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># 5. TRY DIFFERENT BIN SIZES (no additional I/O!) ----</span></span>
-<span><span class="va">depth_5kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
-<span><span class="va">depth_10kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
-<span><span class="va">depth_50kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">50000</span><span class="op">)</span></span>
+<span><span class="va">depth_5kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">5000</span><span class="op">)</span></span>
+<span><span class="va">depth_10kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span>
+<span><span class="va">depth_50kb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span>cache <span class="op">=</span> <span class="va">cache</span>, bin_size <span class="op">=</span> <span class="fl">50000</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Cache is automatically freed when removed or R session ends</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/rm.html" class="external-link">rm</a></span><span class="op">(</span><span class="va">cache</span><span class="op">)</span></span>
@@ -538,19 +538,19 @@ seconds</strong></p>
 operations.</p>
 </div>
 <div class="section level3">
-<h3 id="approach-3-get-cache-from-findoptimalresolutionchunked">Approach 3: Get Cache from findOptimalResolutionChunked<a class="anchor" aria-label="anchor" href="#approach-3-get-cache-from-findoptimalresolutionchunked"></a>
+<h3 id="approach-3-get-cache-from-findoptreschunked">Approach 3: Get Cache from findOptResChunked<a class="anchor" aria-label="anchor" href="#approach-3-get-cache-from-findoptreschunked"></a>
 </h3>
-<p>Let <code><a href="../reference/resolution-depth.html">findOptimalResolutionChunked()</a></code> return the cache for
-subsequent use:</p>
+<p>Let <code><a href="../reference/resolution-depth.html">findOptResChunked()</a></code> return the cache for subsequent
+use:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Find optimal resolution and get cache back</span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptimalResolutionChunked</a></span><span class="op">(</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">findOptResChunked</a></span><span class="op">(</span></span>
 <span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
 <span>  min_bin <span class="op">=</span> <span class="fl">1e3</span>,</span>
 <span>  max_bin <span class="op">=</span> <span class="fl">5e4</span>,</span>
 <span>  target_coverage <span class="op">=</span> <span class="fl">0.8</span>,</span>
 <span>  min_contacts <span class="op">=</span> <span class="fl">1000</span>,</span>
-<span>  return_cache <span class="op">=</span> <span class="cn">TRUE</span>  <span class="co"># Get the cache back!</span></span>
+<span>  return_cache <span class="op">=</span> <span class="cn">TRUE</span> <span class="co"># Get the cache back!</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Extract results</span></span>
@@ -560,13 +560,13 @@ subsequent use:</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"Optimal resolution:"</span>, <span class="va">opt_bin</span> <span class="op">/</span> <span class="fl">1e3</span>, <span class="st">"Kb\n"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Now reuse the cache for other operations</span></span>
-<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateGenomeCoverageChunked</a></span><span class="op">(</span></span>
+<span><span class="va">coverage</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcGenomeCovChunked</a></span><span class="op">(</span></span>
 <span>  cache <span class="op">=</span> <span class="va">cache</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span>,</span>
 <span>  min_contacts <span class="op">=</span> <span class="fl">1000</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calculateResolutionDepthChunked</a></span><span class="op">(</span></span>
+<span><span class="va">depth</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/resolution-depth.html">calcResDepthChunked</a></span><span class="op">(</span></span>
 <span>  cache <span class="op">=</span> <span class="va">cache</span>,</span>
 <span>  bin_size <span class="op">=</span> <span class="va">opt_bin</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -598,7 +598,7 @@ subsequent use:</p>
 </tr>
 <tr class="odd">
 <td><strong>Return Cache</strong></td>
-<td>When starting with <code><a href="../reference/resolution-depth.html">findOptimalResolutionChunked()</a></code>
+<td>When starting with <code><a href="../reference/resolution-depth.html">findOptResChunked()</a></code>
 </td>
 <td>1 operation</td>
 </tr>
