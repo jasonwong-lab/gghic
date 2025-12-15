@@ -20,16 +20,16 @@ Whether you are analyzing large-scale Hi-C experiments, visualizing multi-chromo
 
 ## Features
 
-1. [x] Plot triangular heatmaps for genomic interaction data containing multiple chromosomes.
-2. [x] Plot chromosome ideograms with highlighted regions above the heatmap.
-3. [x] Plot gene/transcript model tracks under the heatmap.
-4. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, concatemers, *etc.*, under the heatmap.
-5. [x] Plot compartments, TADs, and loops on the heatmap.
-6. [x] Allow for generating rasterized heatmaps and tracks to handle large datasets.
-7. [x] Plot concatemers indicating multi-way contacts.
-8. [x] Use concatemers only to plot pairwise interactions.
-9. [x] Plot a second heatmap below the main heatmap (lower triangle).
-10. [x] Introduce a new S4 class `ChromatinContacts` for managing Hi-C/-like data.
+1. [x] Introduce new S4 classes `ChromatinContacts` and `MultiWayContacts` for managing pair-wise and multi-way contact data.
+2. [x] Plot triangular heatmaps for genomic interaction data containing multiple chromosomes.
+3. [x] Plot chromosome ideograms with highlighted regions above the heatmap.
+4. [x] Plot gene/transcript model tracks under the heatmap.
+5. [x] Plot tracks of other genomic data, *e.g.*, ChIP-seq peaks, BigWig files, concatemers, *etc.*, under the heatmap.
+6. [x] Plot compartments, TADs, and loops on the heatmap.
+7. [x] Allow for generating rasterized heatmaps and tracks to handle large datasets.
+8. [x] Plot concatemers indicating multi-way contacts.
+9. [x] Use concatemers only to plot pairwise interactions.
+10. [x] Plot a second heatmap below the main heatmap (lower triangle).
 11. [x] Check and suggest optimal resolutions based on sequencing depth.
 12. [x] Build hypergraph representations from multi-way contact data.
 13. [ ] Support duckplyr for faster data manipulation.
