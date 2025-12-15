@@ -258,7 +258,8 @@ download_url <- "https://www.dropbox.com/scl/fi/yc4axg1mf2i9zylg3d0oe/test.txt.g
 if (!file.exists(pairs_file)) {
   message("Downloading test data to cache directory...")
   download.file(
-    download_url, pairs_file, method = "auto", quiet = TRUE
+    download_url, pairs_file,
+    method = "auto", quiet = TRUE
   )
   message("Downloaded to: ", pairs_file)
 } else {

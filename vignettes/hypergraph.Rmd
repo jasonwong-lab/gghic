@@ -25,15 +25,15 @@ knitr::opts_chunk$set(
 
 ## Overview
 
-Pore-C and HiPore-C technologies capture **multi-way chromatin contacts** where a single long DNA molecule can contact 3, 4, 5, or more genomic loci simultaneously. Traditional Hi-C analysis focuses on pairwise interactions, but multi-way contacts provide richer information about:
+Pore-C and similar long-read technologies capture **multi-way chromatin contacts** where a single DNA molecule can contact 3, 4, 5, or more genomic loci simultaneously. Traditional Hi-C analysis focuses on pairwise interactions, but multi-way contacts provide richer information about:
 
 - **Higher-order chromatin structure**: TAD hubs, chromatin loops involving multiple enhancers
 - **Regulatory complexity**: Multi-enhancer clusters coordinating gene expression
 - **Phase separation**: Condensate formation with many participants
 
-This vignette shows how to analyze and visualize multi-way contacts using **hypergraph representations**, where:
+This vignette shows how to analyze and visualize multi-way contacts using **hypergraph representations** with the `MultiWayContacts` S4 class, where:
 
-- **Nodes** = Genomic bins
+- **Nodes (vertices)** = Genomic bins
 - **Hyperedges** = Reads connecting multiple bins
 
 ## Key Concepts
@@ -62,7 +62,7 @@ Multi-way contact analysis requires careful filtering:
 
 1. **Bin contacts**: Remove low-quality pairwise interactions (quantile filtering)
 2. **Multi-way degree**: Keep only reads with ≥N contacts (e.g., ≥3)
-3. **Chromosome focus**: Analyze one chromosome at a time for clarity
+3. **Chromosome focus**: Analyze specific chromosomes for clarity
 
 ## Getting Started
 
@@ -90,19 +90,17 @@ read_002     chr2    2000  chr2    8000
 
 Each row is a **pairwise contact** from a read. A read with 4 contacts generates 6 rows (all pairs).
 
-### Generate Example Data
+### Prepare Example Data
 
-For this vignette, we'll create synthetic Pore-C data:
+For this vignette, we'll create synthetic Pore-C data and save it to a temporary file:
 
-```{r}
+```{r generate-data}
 set.seed(42)
 
 # Simulate multi-way contacts on multiple chromosomes
-# Real Pore-C typically has 3-10 contacts per read
-# Include both intra-chromosomal and trans-chromosomal contacts
 n_reads <- 500
 
-# Multiple chromosomes with different lengths
+# Chromosome information
 chroms <- data.frame(
   chrom = c("chr21", "chr22"),
   length = c(46e6, 50e6), # 46 Mb and 50 Mb
@@ -137,13 +135,12 @@ read_data <- lapply(seq_len(n_reads), function(i) {
       rnorm(n_contacts_chr2, center2, spread2)
     )))
 
-    # Create all pairwise combinations (intra and inter)
+    # Create all pairwise combinations
     all_positions <- list(
       chr1 = data.frame(chrom = chroms$chrom[1], pos = as.integer(pos_chr1)),
       chr2 = data.frame(chrom = chroms$chrom[2], pos = as.integer(pos_chr2))
     )
 
-    # Combine all positions
     all_contacts <- rbind(all_positions$chr1, all_positions$chr2)
     n_total <- nrow(all_contacts)
 
@@ -199,7 +196,7 @@ read_data <- lapply(seq_len(n_reads), function(i) {
 
 pairs_df <- do.call(rbind, read_data)
 
-# Add some noise with random contacts
+# Add some noise
 noise_pairs <- do.call(rbind, lapply(1:100, function(i) {
   chr <- sample(chroms$chrom, 1)
   chr_length <- chroms$length[chroms$chrom == chr]
@@ -215,13 +212,18 @@ noise_pairs <- do.call(rbind, lapply(1:100, function(i) {
 
 pairs_df <- rbind(pairs_df, noise_pairs)
 
+# Save to temporary file
+pairs_file <- tempfile(fileext = ".pairs.gz")
+gz <- gzfile(pairs_file, "w")
+write.table(pairs_df, gz, sep = "\t", quote = FALSE, row.names = FALSE)
+close(gz)
+
 # Summary
 cat(sprintf(
   "Generated %d pairwise contacts from %d reads\n",
   nrow(pairs_df), length(unique(pairs_df$read_name))
 ))
 
-# Count intra vs trans contacts
 trans_contacts <- sum(pairs_df$chrom1 != pairs_df$chrom2)
 cat(sprintf(
   "  Intra-chromosomal: %d (%.1f%%)\n",
@@ -230,635 +232,504 @@ cat(sprintf(
 ))
 cat(sprintf(
   "  Trans-chromosomal: %d (%.1f%%)\n",
-  trans_contacts,
-  100 * trans_contacts / nrow(pairs_df)
+  trans_contacts, 100 * trans_contacts / nrow(pairs_df)
 ))
-
-chr_counts <- table(pairs_df$chrom1)
-for (i in seq_len(nrow(chroms))) {
-  cat(sprintf(
-    "  %s: %d contacts (%.1f Mb)\n",
-    chroms$chrom[i], chr_counts[chroms$chrom[i]], chroms$length[i] / 1e6
-  ))
-}
 
 head(pairs_df, 10)
 ```
 
-## Step 1: Build Hypergraph
+## Workflow with MultiWayContacts
 
-The `buildHypergraph()` function processes pairs data into a hypergraph structure:
+The `MultiWayContacts` S4 class provides a streamlined, object-oriented workflow for analyzing multi-way contacts. The typical analysis follows these steps:
 
-```{r build}
-# Single chromosome example
-hg <- buildHypergraph(
-  pairs = pairs_df,
-  bin_size = 500000, # 500 Kb bins
-  chrom = "chr22", # Focus on chr22
-  quantile = 0.80, # Keep top 20% of pairwise contacts
-  min_multiway = 3 # Reads must contact ≥3 bins
+1. **Create** `MultiWayContacts` object
+2. **Import** pairs data
+3. **Build** hypergraph
+4. **Tidy** to long format
+5. **Select** top hyperedges
+6. **Visualize** with `gghypergraph()`
+
+### Single Chromosome Analysis
+
+```{r single-chrom}
+# Create MultiWayContacts object for chr22
+mc_chr22 <- MultiWayContacts(pairs_path = pairs_file, focus = "chr22")
+
+# Complete workflow using pipes
+mc_chr22 <- mc_chr22 |>
+  import() |> # Load pairs data
+  build(
+    bin_size = 500000L, # 500 Kb bins
+    quantile = 0.80, # Top 20% contacts
+    min_multiway = 3
+  ) |> # ≥3-way contacts
+  gghic::tidy() |> # Convert to long format
+  gghic::select(n_intra = 10) # Select top hyperedges
+
+# Visualize
+gghypergraph(mc_chr22, color_by = "n_multiways", palette = "viridis")
+```
+
+### Multiple Chromosomes
+
+```{r multi-chrom}
+# Analyze both chr21 and chr22
+mc_multi <- MultiWayContacts(
+  pairs_path = pairs_file, focus = c("chr21", "chr22")
+)
+
+mc_multi <- mc_multi |>
+  import(inter_chrom = TRUE) |>
+  build(bin_size = 500000L, quantile = 0.80, min_multiway = 3) |>
+  gghic::tidy() |>
+  gghic::select(n_intra = 10, n_inter = 10)
+
+# Faceted view (separate panels per chromosome)
+gghypergraph(mc_multi, facet_chrom = FALSE)
+```
+
+## Method Details
+
+### import()
+
+Loads pairs data from file. The data can be filtered to:
+
+- Specific chromosome(s) (via `focus` parameter in constructor)
+- Intra-chromosomal only (default) or include inter-chromosomal (`inter_chrom = TRUE`)
+
+```{r import-example, eval=FALSE}
+# Intra-chromosomal only (default)
+mc <- MultiWayContacts(pairs_path) |>
+  import()
+
+# Include inter-chromosomal
+mc <- MultiWayContacts(pairs_path) |>
+  import(inter_chrom = TRUE)
+```
+
+### build()
+
+Constructs the hypergraph through several steps:
+
+1. **Binning**: Aggregate contacts into genomic bins
+2. **Filtering**: Remove low-frequency bin pairs (by `quantile` threshold)
+3. **Incidence matrix**: Build sparse matrix (bins × reads)
+4. **Deduplication**: Merge identical hyperedge patterns
+5. **Multiway filtering**: Keep only hyperedges with ≥ `min_multiway` contacts
+
+**Parameters:**
+
+- `bin_size`: Genomic bin size (default 1 Mb). Smaller = higher resolution but sparser
+- `quantile`: Threshold for bin pair filtering (default 0.85). Higher = more stringent
+- `min_multiway`: Minimum contacts per hyperedge (default 2)
+
+```{r build-params, eval=FALSE}
+# High resolution, strict filtering
+mc |>
+  build(bin_size = 100000L, quantile = 0.90, min_multiway = 4)
+
+# Lower resolution, permissive filtering
+mc |>
+  build(bin_size = 1000000L, quantile = 0.75, min_multiway = 2)
+```
+
+### tidy()
+
+Converts the sparse incidence matrix to a tidy long-format data frame.
+
+**Parameters:**
+
+- `max_hyperedges`: Subset to top N hyperedges by contact order (default: all)
+- `weight_normalization`: Weight transformation:
+  - `"none"`: Raw frequency counts (default)
+  - `"log"`: Log-transformed
+  - `"by_order"`: Normalized within each contact order
+  - `"minmax"`: Scaled to [0, 1]
+
+```{r tidy-example, eval=FALSE}
+# Top 50 hyperedges with log weights
+mc |>
+  tidy(max_hyperedges = 50, weight_normalization = "log")
+
+# All hyperedges with normalized weights
+mc |>
+  tidy(weight_normalization = "by_order")
+```
+
+### select()
+
+Selects top-weighted hyperedges for visualization. For each chromosome, selects:
+
+- Top `n_intra` intra-chromosomal hyperedges
+- Top `n_inter` inter-chromosomal hyperedges
+
+If fewer intra-chromosomal hyperedges exist, the remaining quota is added to inter-chromosomal selection.
+
+**Parameters:**
+
+- `n_intra`: Number of intra-chromosomal hyperedges per chromosome (default 5)
+- `n_inter`: Number of inter-chromosomal hyperedges per chromosome (default 5)
+- `n_multiways_filter`: Keep only specific contact orders (e.g., `c(3, 4)`)
+- `chroms`: Focus on specific chromosome(s)
+- `append`: Add to existing selection (`TRUE`) or replace (`FALSE`)
+
+```{r select-examples, eval=FALSE}
+# Select more hyperedges
+mc |>
+  gghic::select(n_intra = 15, n_inter = 10)
+
+# Only 3-way and 4-way contacts
+mc |>
+  gghic::select(n_multiways_filter = c(3, 4))
+
+# Focus on chr1
+mc |>
+  gghic::select(chroms = "chr1", append = FALSE)
+
+# Accumulate selections
+mc |>
+  gghic::select(chroms = "chr1", append = FALSE) |>
+  gghic::select(chroms = "chr2", append = TRUE)
+```
+
+### gghypergraph()
+
+Creates a ggplot2 visualization of selected hyperedges.
+
+**Parameters:**
+
+- `point_size`: Size of bin points (default 2)
+- `line_width`: Base width of hyperedge lines (default 0.3)
+- `line_alpha`: Transparency of lines (default 0.6)
+- `color_by`: Variable for coloring (`"n_multiways"` or other)
+- `palette`: Color palette (`"viridis"`, `"magma"`, `"plasma"`, etc.)
+- `facet_chrom`: Separate panels per chromosome (`TRUE`) or composite y-axis (`FALSE`)
+
+```{r viz-custom}
+gghypergraph(
+  mc_chr22,
+  point_size = 3,
+  line_width = 0.5,
+  line_alpha = 0.8,
+  palette = "plasma",
+  facet_chrom = TRUE
 )
 ```
 
-```{r}
-# Multiple chromosomes example (using both chr21 and chr22)
-hg_multi <- buildHypergraph(
-  pairs = pairs_df,
-  bin_size = 500000, # 500 Kb bins
-  chrom = c("chr21", "chr22"), # Both chromosomes
-  quantile = 0.80,
-  min_multiway = 3,
-  inter_chrom = FALSE # Only intra-chromosomal contacts (default)
-)
+The plot shows:
+
+- **X-axis**: Hyperedges (sorted by genomic position)
+- **Y-axis**: Genomic bins (position within chromosome)
+- **Line width**: Scales with hyperedge weight
+- **Line color**: By contact order (number of bins)
+
+## Other Examples
+
+### Filtering by Contact Order
+
+```{r filter-order}
+# Focus on high-order contacts only (≥5-way)
+mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
+  import() |>
+  build(bin_size = 500000L, quantile = 0.85, min_multiway = 5) |>
+  gghic::tidy() |>
+  gghic::select(n_intra = 10, n_inter = 0)
+
+gghypergraph(mc_high_order, palette = "inferno")
 ```
 
-```{r}
-# To include inter-chromosomal contacts between chr21 and chr22:
-hg_multi_inter <- buildHypergraph(
-  pairs = pairs_df,
-  bin_size = 500000,
-  chrom = c("chr21", "chr22"),
-  quantile = 0.80,
-  min_multiway = 3,
-  inter_chrom = TRUE # Include inter-chromosomal contacts
-)
+### Comparing Chromosomes
+
+```{r compare-chroms}
+# Select from both chromosomes independently
+mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
+  import() |>
+  build(bin_size = 500000L) |>
+  gghic::tidy() |>
+  gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
+
+# Faceted comparison
+gghypergraph(mc_compare, facet_chrom = TRUE)
 ```
 
-**Additional examples** (not run with synthetic data):
+### Customizing Plots
 
-> **⚠️ Note**: The code examples in this section are provided for reference but are **not executed** in this vignette.
+```{r custom-plot}
+# Get base plot and customize
+p <- gghypergraph(mc_chr22, facet_chrom = FALSE)
 
-```{r eval=FALSE}
-# Download example file with caching
-cache_dir <- rappdirs::user_cache_dir("gghic")
-dir.create(cache_dir, recursive = TRUE, showWarnings = FALSE)
-
-pairs_file <- file.path(cache_dir, "test.txt.gz")
-download_url <- "https://www.dropbox.com/scl/fi/yc4axg1mf2i9zylg3d0oe/test.txt.gz?rlkey=sdsdhsnixo01koo38d242y4c8&st=t4rn0js0&dl=1"
-
-if (!file.exists(pairs_file)) {
-  message("Downloading test data to cache directory...")
-  download.file(
-    download_url, pairs_file,
-    method = "wget", extra = "-c", quiet = TRUE
+# Add custom styling
+p +
+  ggplot2::theme_bw() +
+  ggplot2::labs(
+    title = "Multi-way Chromatin Contacts on chr22",
+    subtitle = "Colored by contact order, line width = frequency"
+  ) +
+  ggplot2::theme(
+    plot.title = element_text(size = 16, face = "bold"),
+    plot.subtitle = element_text(size = 12)
   )
-  message("Downloaded to: ", pairs_file)
-} else {
-  message("Using cached file: ", pairs_file)
+```
+
+## Interpreting Results
+
+### Contact Order Distribution
+
+```{r contact-dist}
+# Examine distribution of contact orders
+if (!is.null(hypergraphData(mc_multi, "selected"))) {
+  contact_summary <- hypergraphData(mc_multi, "selected") |>
+    dplyr::distinct(hyperedge_idx, n_multiways) |>
+    dplyr::count(n_multiways, name = "n_hyperedges")
+
+  print(contact_summary)
+
+  ggplot2::ggplot(
+    contact_summary,
+    ggplot2::aes(x = n_multiways, y = n_hyperedges)
+  ) +
+    ggplot2::geom_col(fill = "steelblue") +
+    ggplot2::labs(
+      x = "Number of contacts (multiway order)",
+      y = "Number of hyperedges",
+      title = "Distribution of Contact Orders"
+    ) +
+    ggplot2::theme_minimal()
 }
 ```
 
-```{r eval=FALSE}
-# From large file (uses C for speed)
-# Genome-wide, intra-chromosomal only (default)
-hg <- buildHypergraph(
-  pairs_file = pairs_file, # Supports .gz
-  bin_size = 100000,
-  chrom = NULL,
-  quantile = 0.85,
-  min_multiway = 3,
-  inter_chrom = FALSE # Only intra-chromosomal (default)
-)
+### Intra vs Inter-chromosomal
 
-# Genome-wide with inter-chromosomal contacts
-hg_all <- buildHypergraph(
-  pairs_file = pairs_file,
-  bin_size = 100000,
-  chrom = NULL,
-  quantile = 0.85,
-  min_multiway = 3,
-  inter_chrom = TRUE # Include inter-chromosomal contacts
-)
+```{r intra-inter}
+# Check balance of intra vs inter contacts
+if (!is.null(hypergraphData(mc_multi, "selected"))) {
+  type_summary <- hypergraphData(mc_multi, "selected") |>
+    dplyr::distinct(hyperedge_idx, type) |>
+    dplyr::count(type)
+
+  print(type_summary)
+}
 ```
 
-### Parameters Explained
+## Best Practices
 
-**`bin_size`**: Size of genomic bins
-- Smaller bins = higher resolution but sparser data
-- Typical: 50-500 Kb for Pore-C
-- Use `find_optimal_resolution()` from resolution-depth vignette
+1. **Start with single chromosome**: Easier to interpret and faster to compute
 
-**`quantile`**: Threshold for filtering pairwise contacts
-- `0.85` = keep top 15% most frequent bin pairs
-- Higher = more stringent, fewer contacts
-- Alternative: use `min_contacts` for absolute threshold
+2. **Tune bin size**: Use `resolution_depth` vignette to find optimal resolution
 
-**`min_multiway`**: Minimum contacts per read
-- `3` = keep 3-way, 4-way, 5-way, ... contacts
-- Higher = focus on highly multi-way reads
-- Lower = include more reads but less structure
+3. **Adjust quantile**:
 
-### Hypergraph Object
+  - Higher (0.9-0.95): Very strict, fewer but high-confidence contacts
+  - Lower (0.75-0.85): More permissive, capture weaker signals
 
-```{r}
-hg
-```
+5. **Filter by multiway order**: Focus on specific contact orders for targeted analysis
 
-The object contains:
-- **`incidence`**: Sparse matrix (bins × reads)
-- **`bins`**: Integer vector of bin IDs
-- **`reads`**: Character vector of read names
-- **`contacts_per_read`**: Integer vector
+6. **Use composite view** (`facet_chrom = FALSE`) for multi-chromosome to see relationships
 
-## Step 2: Convert to Tidy Format
+7. **Weight normalization**: Use `"by_order"` to compare across different contact orders fairly
 
-For visualization and analysis, convert to long format:
+## Using geom_hypergraph for Custom Plots
 
-```{r}
-# All reads
-df <- tidyHypergraph(hg)
+While `gghypergraph()` provides a convenient high-level interface, you can also use `geom_hypergraph()` directly for more customization. This is useful when you want to:
 
-# Subset to top 100 reads by contact count
-df_top <- tidyHypergraph(hg, max_reads = 100)
+- Combine hypergraph with other ggplot2 layers
+- Create custom faceting or layouts
+- Apply custom themes and styling
+- Build complex multi-panel figures
 
-df
-```
+### Basic Usage
 
-## Step 3: Visualize Hypergraph
+```{r geom-basic}
+# Extract the selected hypergraph data
+df <- hypergraphData(mc_chr22, "selected")
 
-### Basic Visualization
-
-```{r}
-# Single chromosome
-plotHypergraph(hg, max_reads = 50)
-```
-
-```{r}
-plotHypergraph(hg_multi, max_reads = 50, facet_chrom = TRUE)
-```
-
-```{r}
-plotHypergraph(hg_multi_inter, max_reads = 50, facet_chrom = FALSE)
-```
-
-This creates a plot where:
-- **Y-axis**: Genomic bins (sorted by position)
-  - For multi-chromosome plots with `facet_chrom = FALSE`: Y-axis shows chromosome names in **bold** with alternating gray/white background shading
-  - Chromosomes are separated by horizontal gray lines
-- **X-axis**: Individual reads
-- **Vertical lines**: Connect bins contacted by each read
-- **Points**: Individual bin positions
-- **Color**: Number of contacts per read
-- **Trans-chromosomal contacts**: Lines spanning across the horizontal separators show reads connecting multiple chromosomes
-- **Facets** (when `facet_chrom = TRUE`): Separate panel per chromosome
-
-### Custom Visualization
-
-For more control, use `geom_hypergraph()`:
-
-```{r}
-ggplot(df_top, aes(x = read_idx, y = bin_idx, group = read_idx)) +
-  geom_hypergraph(
-    aes(color = n_contacts),
-    line_width = 0.4,
-    line_alpha = 0.7,
-    point_size = 1
-  ) +
-  scale_color_viridis_c(option = "plasma", name = "Contacts\nper read") +
-  labs(
-    title = "Multi-way Contacts on chr22",
-    subtitle = sprintf(
-      "%d bins, %d reads (≥3-way)",
-      nrow(hg$incidence), ncol(hg$incidence)
-    ),
-    x = "Read (ordered by appearance)",
-    y = "Genomic position"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank()
-  )
-```
-
-```{r}
-# Multi-chromosome showing trans-chromosomal connections
-df_multi <- tidyHypergraph(hg_multi_inter, max_reads = 50)
-
-# Create composite y-axis for multi-chrom visualization
-chrom_info <- df_multi |>
-  group_by(chrom) |>
-  summarise(
-    max_bin = max(bin_idx),
-    min_bin = min(bin_idx),
+# Create custom x-axis ordering (by genomic position)
+hyperedge_order <- df |>
+  dplyr::mutate(chrom_num = as.numeric(gsub("\\D", "", chrom))) |>
+  dplyr::group_by(hyperedge_idx) |>
+  dplyr::summarise(
+    min_chrom_num = min(chrom_num, na.rm = TRUE),
+    min_bin = min(bin),
     .groups = "drop"
   ) |>
-  arrange(chrom)
+  dplyr::arrange(min_chrom_num, min_bin) |>
+  dplyr::pull(hyperedge_idx)
 
-chrom_info$offset <- 0
-chrom_info$y_start <- 0
-chrom_info$y_end <- chrom_info$max_bin - chrom_info$min_bin + 1
+df <- df |>
+  dplyr::mutate(
+    x = as.numeric(factor(hyperedge_idx, levels = hyperedge_order)),
+    y = bin
+  )
 
-if (nrow(chrom_info) > 1) {
-  for (i in 2:nrow(chrom_info)) {
-    chrom_info$offset[i] <- chrom_info$y_end[i - 1] +
-      max(1, 0.05 * chrom_info$y_end[i - 1])
-    chrom_info$y_start[i] <- chrom_info$offset[i]
-    chrom_info$y_end[i] <- chrom_info$y_start[i] +
-      (chrom_info$max_bin[i] - chrom_info$min_bin[i] + 1)
-  }
-}
+# Create plot with geom_hypergraph
+ggplot2::ggplot(df, ggplot2::aes(x = x, y = y, group = hyperedge_idx)) +
+  geom_hypergraph(
+    ggplot2::aes(colour = n_multiways),
+    line_width = 0.4,
+    line_alpha = 0.7,
+    point_size = 2.5
+  ) +
+  ggplot2::scale_color_viridis_c(name = "Contact Order") +
+  ggplot2::labs(
+    title = "Multi-way Contacts on chr22",
+    x = "Hyperedge",
+    y = "Genomic Position (bin)"
+  ) +
+  ggplot2::theme_minimal() +
+  ggplot2::theme(
+    panel.grid.minor = ggplot2::element_blank(),
+    axis.text.x = ggplot2::element_blank(),
+    axis.ticks.x = ggplot2::element_blank()
+  )
+```
 
-df_multi_composite <- df_multi |>
-  dplyr::left_join(
-    chrom_info |> dplyr::select(chrom, offset, min_bin),
-    by = "chrom"
+### Multi-Chromosome with Custom Layout
+
+```{r geom-multi-chrom}
+# Get multi-chromosome data
+df_multi <- hypergraphData(mc_multi, "selected")
+
+# Order hyperedges
+hyperedge_order_multi <- df_multi |>
+  dplyr::mutate(chrom_num = as.numeric(gsub("\\D", "", chrom))) |>
+  dplyr::group_by(hyperedge_idx) |>
+  dplyr::summarise(
+    min_chrom_num = min(chrom_num, na.rm = TRUE),
+    min_chrom = dplyr::first(chrom[chrom_num == min_chrom_num]),
+    min_bin = min(bin[chrom == min_chrom]),
+    .groups = "drop"
   ) |>
+  dplyr::arrange(min_chrom_num, min_bin) |>
+  dplyr::pull(hyperedge_idx)
+
+df_multi <- df_multi |>
   dplyr::mutate(
-    y_composite = bin_idx - min_bin + offset
+    x = as.numeric(factor(hyperedge_idx, levels = hyperedge_order_multi))
   )
 
-chrom_breaks <- chrom_info |>
-  dplyr::mutate(
-    mid_point = (y_start + y_end) / 2,
-    fill_color = if_else(dplyr::row_number() %% 2 == 0, "gray95", "white")
-  )
-
-ggplot(df_multi_composite, aes(x = read_idx, y = y_composite, group = read_idx)) +
-  # Add alternating background shading for chromosomes
-  geom_rect(
-    data = chrom_breaks,
-    aes(
-      xmin = -Inf, xmax = Inf,
-      ymin = y_start, ymax = y_end,
-      fill = fill_color
-    ),
-    alpha = 0.3,
-    inherit.aes = FALSE
-  ) +
-  scale_fill_identity() +
-  geom_hypergraph(
-    aes(color = n_contacts),
-    line_width = 0.4,
-    line_alpha = 0.7,
-    point_size = 1
-  ) +
-  geom_hline(
-    data = if (nrow(chrom_breaks) > 1) chrom_breaks[2:nrow(chrom_breaks), ] else NULL,
-    aes(yintercept = y_start),
-    linetype = "solid",
-    color = "gray40",
-    linewidth = 0.8,
-    alpha = 0.7
-  ) +
-  scale_color_viridis_c(option = "plasma", name = "Contacts\nper read") +
-  scale_y_continuous(
-    breaks = chrom_breaks$mid_point,
-    labels = chrom_breaks$chrom,
-    expand = expansion(mult = c(0.02, 0.02))
-  ) +
-  labs(
-    title = "Trans-chromosomal Multi-way Contacts",
-    subtitle = sprintf(
-      "%d bins, %d reads (≥3-way) - Lines crossing gray bars show trans contacts",
-      nrow(hg_multi$incidence), ncol(hg_multi$incidence)
-    ),
-    x = "Read (ordered by appearance)",
-    y = "Chromosome | Genomic position"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    axis.text.y = element_text(face = "bold", size = 10)
-  )
-```
-
-```{r}
-# Multi-chromosome with faceting (separate panels)
-ggplot(df_multi, aes(x = read_idx, y = bin_idx, group = read_idx)) +
-  geom_hypergraph(
-    aes(color = n_contacts),
-    line_width = 0.4,
-    line_alpha = 0.7,
-    point_size = 1
-  ) +
-  scale_color_viridis_c(option = "plasma", name = "Contacts\nper read") +
-  facet_grid(chrom ~ ., scales = "free_y", space = "free_y") +
-  labs(
-    title = "Multi-way Contacts on chr21 and chr22 (Faceted)",
-    subtitle = sprintf(
-      "%d bins, %d reads (≥3-way)",
-      nrow(hg_multi$incidence), ncol(hg_multi$incidence)
-    ),
-    x = "Read (ordered by appearance)",
-    y = "Genomic position"
-  ) +
-  theme_minimal() +
-  theme(
-    panel.grid.minor = element_blank(),
-    panel.grid.major.x = element_blank(),
-    axis.text.x = element_blank(),
-    axis.ticks.x = element_blank(),
-    strip.text.y = element_text(angle = 0)
-  )
-```
-
-### Interpretation
-
-**Vertical patterns**: Reads spanning similar regions (local contacts)
-
-**Diagonal patterns**: Sequential bins contacted together (chromatin fiber)
-
-**Dense clusters**: Bins with many shared reads (potential hubs/compartments)
-
-**Long lines**: Reads with many contacts (high-order structure)
-
-**Lines crossing chromosome boundaries**: Trans-chromosomal contacts showing inter-chromosomal interactions
-  - Look for lines that cross the horizontal gray separator bars
-  - These represent reads that physically link multiple chromosomes
-
-**Background shading**: Alternating gray/white bands distinguish different chromosomes
-  - Y-axis labels show chromosome names in bold
-  - Makes it easy to identify which genomic region belongs to which chromosome
-
-**Color intensity**: Reads with more contacts (highly connected molecules)
-
-## Step 4: Analyze Hypergraph Properties
-
-### Contact Degree Distribution
-
-```{r degree}
-# Distribution of contacts per read
-ggplot(
-  data.frame(n_contacts = hg$contacts_per_read),
-  aes(x = n_contacts)
+# Create faceted plot
+ggplot2::ggplot(
+  df_multi,
+  ggplot2::aes(x = x, y = bin, group = hyperedge_idx)
 ) +
-  geom_histogram(binwidth = 1, fill = "steelblue", alpha = 0.7) +
-  labs(
-    title = "Multi-way Contact Distribution",
-    x = "Number of bins per read",
-    y = "Count"
+  geom_hypergraph(
+    ggplot2::aes(colour = weight),
+    line_width = 0.4,
+    point_size = 2
   ) +
-  theme_minimal()
-```
-
-### Bin Popularity
-
-```{r}
-# How many reads contact each bin?
-bin_degrees <- Matrix::rowSums(hg$incidence)
-
-df_bins <- data.frame(
-  bin_id = hg$bin_ids,
-  bin_num = hg$bin_info$bin_num,
-  degree = bin_degrees
-)
-
-ggplot(df_bins, aes(x = bin_num, y = degree)) +
-  geom_line(color = "steelblue") +
-  geom_point(color = "steelblue", alpha = 0.6) +
-  labs(
-    title = "Bin Connectivity Profile",
-    x = sprintf("Genomic bin (%s bp)", format(hg$bin_size, big.mark = ",")),
-    y = "Number of reads contacting bin"
+  ggplot2::scale_color_gradient(
+    low = "lightblue",
+    high = "darkred",
+    name = "Weight"
   ) +
-  theme_minimal()
-```
-
-High-degree bins may represent:
-- **Chromatin hubs**: Architectural features (TAD boundaries, loop anchors)
-- **Active compartments**: Gene-dense regions
-- **Technical artifacts**: High mappability, repetitive elements
-
-### Pairwise Co-occurrence Matrix
-
-Which bins are frequently contacted together?
-
-```{r eval=FALSE}
-# Compute bin-bin co-occurrence
-cooccur <- Matrix::tcrossprod(hg$incidence)
-
-# Convert to dense for visualization (if small enough)
-if (nrow(cooccur) < 500) {
-  library(pheatmap)
-
-  pheatmap::pheatmap(
-    as.matrix(cooccur),
-    cluster_rows = TRUE,
-    cluster_cols = TRUE,
-    color = colorRampPalette(c("white", "steelblue", "darkblue"))(100),
-    main = "Bin Co-occurrence Matrix"
+  ggplot2::facet_grid(chrom ~ ., scales = "free_y", space = "free_y") +
+  ggplot2::labs(
+    title = "Multi-way Contacts Across Chromosomes",
+    x = "Hyperedge",
+    y = "Genomic Position"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(
+    strip.text = ggplot2::element_text(face = "bold"),
+    axis.text.x = ggplot2::element_blank(),
+    axis.ticks.x = ggplot2::element_blank()
   )
-}
 ```
 
-## Advanced Usage
+### Adding Annotations
 
-### Multi-Chromosome Analysis
-
-Analyze contacts across multiple chromosomes to study:
-
-- **Inter-TAD interactions** across chromosomes
-- **Chromosome territories** and compartmentalization
-- **Trans-chromosomal hubs** (e.g., nucleolar organizing regions)
-
-```{r eval=FALSE}
-# Analyze chromosome 21 and 22 together
-hg_multi <- buildHypergraph(
-  pairs_file = pairs_file,
-  bin_size = 500000, # Larger bins for multi-chrom
-  chrom = c("chr21", "chr22"),
-  quantile = 0.90, # More stringent
-  min_multiway = 4,
-  inter_chrom = TRUE
+```{r geom-annotate}
+# Add regions of interest
+regions_of_interest <- data.frame(
+  ymin = c(20, 60),
+  ymax = c(30, 70),
+  label = c("Region A", "Region B")
 )
 
-# Visualize with chromosome facets
-plotHypergraph(
-  hg_multi,
-  max_reads = 100, facet_chrom = FALSE, chrom = c("chr12", "chr22")
-)
-
-# Identify inter-chromosomal reads
-df_multi <- tidyHypergraph(hg_multi)
-
-trans_reads <- df_multi |>
-  group_by(read_name) |>
-  summarise(
-    n_chroms = length(unique(chrom)),
-    chroms = paste(unique(chrom), collapse = ",")
-  ) |>
-  filter(n_chroms > 1)
-
-cat(sprintf(
-  "Found %d reads with trans-chromosomal contacts (%.1f%%)\n",
-  nrow(trans_reads),
-  100 * nrow(trans_reads) / length(unique(df_multi$read_name))
-))
-```
-
-### Genome-wide Hypergraph
-
-For a complete picture, analyze all chromosomes:
-
-```{r eval=FALSE}
-# Build genome-wide hypergraph (intra-chromosomal only)
-hg_genome <- buildHypergraph(
-  pairs_file = pairs_file,
-  bin_size = 1000000, # 1 Mb bins
-  chrom = NULL, # All chromosomes
-  quantile = 0.95, # Very stringent
-  min_multiway = 5
-)
-
-# Summary by chromosome
-df_genome <- tidyHypergraph(hg_genome, max_reads = 500)
-
-chr_summary <- df_genome |>
-  group_by(chrom) |>
-  summarise(
-    n_bins = length(unique(bin_idx)),
-    n_reads = length(unique(read_name)),
-    mean_contacts = mean(n_contacts)
-  ) |>
-  arrange(desc(n_reads))
-
-print(chr_summary)
-
-# Visualize top chromosomes
-plotHypergraph(hg_genome, max_reads = 200, facet_chrom = TRUE)
-```
-
-### TAD Identification from Multi-way Contacts
-
-Multi-way contacts can reveal TAD boundaries:
-
-```{r eval=FALSE}
-bin_degrees <- Matrix::rowSums(hg_genome$incidence)
-
-df_bins <- data.frame(
-  bin_id = hg_genome$bin_ids,
-  bin_num = hg_genome$bin_info$bin_num,
-  degree = bin_degrees
-)
-
-# Bins with high connectivity may mark TAD boundaries
-boundary_candidates <- df_bins |>
-  filter(degree > quantile(degree, 0.9)) |>
-  pull(bin_num)
-
-# Visualize on hypergraph
-df_viz <- tidyHypergraph(hg, max_reads = 100) |>
-  mutate(is_boundary = bin %in% boundary_candidates)
-
-ggplot(df_viz, aes(x = read_idx, y = bin_idx, group = read_idx)) +
-  geom_hypergraph(aes(color = n_contacts)) +
-  geom_hline(
-    data = data.frame(bin = boundary_candidates), aes(yintercept = bin),
-    color = "red", linetype = "dashed", alpha = 0.5, inherit.aes = FALSE
+ggplot2::ggplot(df, ggplot2::aes(x = x, y = y, group = hyperedge_idx)) +
+  # Add shaded regions
+  ggplot2::geom_rect(
+    data = regions_of_interest,
+    ggplot2::aes(xmin = -Inf, xmax = Inf, ymin = ymin, ymax = ymax),
+    fill = "yellow", alpha = 0.2, inherit.aes = FALSE
   ) +
-  labs(title = "Potential TAD Boundaries (red)") +
-  theme_minimal()
+  # Add hypergraph
+  geom_hypergraph(
+    ggplot2::aes(colour = n_multiways),
+    line_width = 0.4,
+    line_alpha = 0.7
+  ) +
+  # Add region labels
+  ggplot2::geom_text(
+    data = regions_of_interest,
+    ggplot2::aes(x = max(df$x) * 0.95, y = (ymin + ymax) / 2, label = label),
+    hjust = 1, fontface = "bold", inherit.aes = FALSE
+  ) +
+  ggplot2::scale_color_viridis_c(name = "Contacts") +
+  ggplot2::labs(
+    title = "Hypergraph with Annotated Regions",
+    x = "Hyperedge",
+    y = "Genomic Bin"
+  ) +
+  ggplot2::theme_minimal()
 ```
 
-### Comparing Samples
+### Highlighting Specific Hyperedges
 
-```{r eval=FALSE}
-# Build hypergraphs for multiple samples
-samples <- c("control", "treatment")
-
-hgs <- lapply(samples, function(sample) {
-  build_hypergraph(
-    pairs_file = paste0(sample, "_pairs.txt"),
-    bin_size = 100000,
-    chrom = "chr22",
-    quantile = 0.85,
-    min_multiway = 3
+```{r geom-highlight}
+# Highlight high-order contacts (≥5-way)
+df_highlight <- df |>
+  dplyr::mutate(
+    is_high_order = n_multiways >= 5,
+    alpha_value = ifelse(is_high_order, 0.9, 0.3),
+    line_color = ifelse(is_high_order, "red", "gray70")
   )
-})
 
-# Compare contact distributions
-df_compare <- data.frame(
-  sample = rep(samples, sapply(hgs, function(h) length(h$contacts_per_read))),
-  n_contacts = unlist(lapply(hgs, function(h) h$contacts_per_read))
-)
-
-ggplot(df_compare, aes(x = n_contacts, fill = sample)) +
-  geom_histogram(binwidth = 1, alpha = 0.7, position = "identity") +
-  scale_fill_manual(values = c("steelblue", "coral")) +
-  labs(
-    title = "Multi-way Contact Distribution by Sample",
-    x = "Contacts per read",
-    y = "Count"
+ggplot2::ggplot(
+  df_highlight,
+  ggplot2::aes(x = x, y = y, group = hyperedge_idx)
+) +
+  geom_hypergraph(
+    ggplot2::aes(colour = line_color, alpha = alpha_value),
+    line_width = 0.4,
+    point_size = 2
   ) +
-  theme_minimal()
+  ggplot2::scale_color_identity() +
+  ggplot2::scale_alpha_identity() +
+  ggplot2::labs(
+    title = "Highlighting High-Order Contacts (≥5-way)",
+    subtitle = "Red = high-order, Gray = lower-order",
+    x = "Hyperedge",
+    y = "Genomic Bin"
+  ) +
+  ggplot2::theme_minimal()
 ```
 
-### Export for Network Analysis
+### geom_hypergraph Parameters
 
-```{r eval=FALSE}
-# Export incidence matrix for external tools (Cytoscape, igraph, etc.)
-library(Matrix)
+The `geom_hypergraph()` layer accepts these key parameters:
 
-# Sparse matrix format
-writeMM(hg$incidence, "hypergraph_incidence.mtx")
+- **`line_width`**: Width of hyperedge lines (default: 0.3)
+- **`line_alpha`**: Transparency of lines (default: 0.6)
+- **`point_size`**: Size of bin points (default: 2)
+- **`point_alpha`**: Transparency of points (default: 0.8)
+- **`colour_by`**: What to color by ("n_contacts" or "none")
 
-# Metadata
-write.csv(
-  data.frame(bin_id = hg$bins, bin_pos = hg$bins * hg$bin_size),
-  "bins.csv",
-  row.names = FALSE
-)
+You can also map aesthetics directly using `aes()`:
 
-write.csv(
-  data.frame(
-    read_id = hg$reads,
-    n_contacts = hg$contacts_per_read
-  ),
-  "reads.csv",
-  row.names = FALSE
-)
+- **`colour`**: Color by any variable
+- **`group`**: Must be the hyperedge identifier
+- **`x`, `y`**: Position mappings
+
+## Cleanup
+
+```{r cleanup}
+# Remove temporary file
+unlink(pairs_file)
 ```
-
-## Biological Insights
-
-### What Multi-way Contacts Reveal
-
-**High-order contacts (≥5-way)** suggest:
-- Phase-separated condensates (e.g., Polycomb bodies)
-- Transcription factories with multiple genes
-- Regulatory hubs with many enhancers
-
-**3-4 way contacts** typically represent:
-- TAD internal structure
-- Enhancer-promoter-CTCF triplets
-- Local chromatin fiber folding
-
-**Bin hubs** (high-degree nodes) may be:
-- Architectural proteins (CTCF, cohesin)
-- Super-enhancer clusters
-- Gene-dense compartments
-
-## Troubleshooting
-
-**No contacts after filtering**
-- Lower `quantile` threshold (e.g., 0.7)
-- Lower `min_multiway` (e.g., 2)
-- Check data quality: `nrow(pairs)`
-
-**Memory issues**
-- Use `pairs_file` instead of loading to memory
-- Increase `quantile` to filter more aggressively
-- Process chromosomes separately
-- Use `max_reads` in visualization
-
-**Visualization too dense**
-- Increase `min_multiway`
-- Use `max_reads` parameter
-- Subset to genomic regions with `dplyr::filter()`
-
-**Slow performance**
-- Ensure C functions are compiled: check `R CMD INSTALL`
-- Use larger `bin_size` to reduce bins
-- Filter data before building hypergraph
 
 ## Session Info
 
-```{r session}
+```{r}
 sessionInfo()
 ```
