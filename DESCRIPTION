@@ -1,6 +1,6 @@
 Package: gghic
 Title: Visualizing Genomic Interaction Data Using ggplot2
-Version: 0.2.0
+Version: 0.2.1
 Authors@R:
     person("Minghao", "Jiang", , "mjhk@connect.hku.hk",
            role = c("aut", "cre", "ctb", "cph"),
@@ -9,19 +9,15 @@ Description: An easy way to create publication-ready figures for genomic
     interaction data using ggplot2.
 License: GPL (>= 3)
 Imports:
-    AnnotationDbi,
     dplyr,
-    GenomicFeatures,
     GenomicRanges,
     ggplot2,
     grid,
-    Gviz,
     InteractionSet,
     IRanges,
     Matrix,
     methods,
     purrr,
-    rappdirs,
     rhdf5,
     rlang,
     rtracklayer,
@@ -29,11 +25,16 @@ Imports:
     scales,
     Seqinfo,
     tibble,
-    tidyr,
-    txdbmaker
+    tidyr
 Suggests:
+    AnnotationDbi,
+    furrr,
+    GenomicFeatures,
+    Gviz,
     knitr,
-    rmarkdown
+    rappdirs,
+    rmarkdown,
+    txdbmaker
 VignetteBuilder:
     knitr
 biocViews:
