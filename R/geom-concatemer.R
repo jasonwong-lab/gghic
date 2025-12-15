@@ -1,3 +1,6 @@
+#' StatConcatemer
+#' @keywords internal
+#' @noRd
 StatConcatemer <- ggplot2::ggproto(
   "StatConcatemer",
   ggplot2::Stat,
@@ -153,6 +156,9 @@ StatConcatemer <- ggplot2::ggproto(
   }
 )
 
+#' GeomConcatemer
+#' @keywords internal
+#' @noRd
 GeomConcatemer <- ggplot2::ggproto(
   "GeomConcatemer",
   ggplot2::Geom,
@@ -196,22 +202,30 @@ GeomConcatemer <- ggplot2::ggproto(
   }
 )
 
-#' geom_concatemer
+#' Visualize multi-way contact concatemers below Hi-C map
 #'
-#' @description A ggplot2 geom for concatemers containing multi-way contacts.
+#' @description
+#' Displays multi-way chromatin contact reads (concatemers) as horizontal bars
+#' positioned below the Hi-C contact map. Each bar represents genomic fragments
+#' contacted by a single long sequencing read, with gaps shown as connecting
+#' lines. Useful for visualizing Pore-C, Tri-C, or similar multi-way contact
+#' data in genomic context.
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
-#' @param width_ratio The ratio of the width of each concatemer track
-#'   relative to the height of the Hi-C plot. Default is `1/100`.
-#' @param spacing_ratio The ratio of the spacing between two tracks.
-#'   Default is `1/5`.
-#' @param concatemer_grs The GRanges object of the concatemer tracks.
-#'   Default is `NULL`.
-#' @param concatemer_path The paths to the concatemer files. Default is `NULL`.
-#' @param group_identifier A character indicating the column name in the
-#'   concatemer GRanges object that identifies the group of
-#'   concatemers. Default is `NULL`.
-#' @param fill The fill color of the gene model track. Default is `"black"`.
+#' @param width_ratio Numeric. Height of each concatemer track relative to Hi-C
+#'   plot height (default: 1/100).
+#' @param spacing_ratio Numeric. Spacing between concatemer tracks as fraction
+#'   of track height (default: 1/5).
+#' @param concatemer_grs GRanges object containing concatemer fragment
+#'   coordinates. Must include metadata column specified by `group_identifier`.
+#'   Either `concatemer_grs` or `concatemer_path` required (default: NULL).
+#' @param concatemer_path Character. Path to file containing concatemer data.
+#'   Either `concatemer_grs` or `concatemer_path` required (default: NULL).
+#' @param group_identifier Character. Name of metadata column in `concatemer_grs`
+#'   that identifies which fragments belong to the same read (e.g.,
+#'   `"read_name"`) (required).
+#' @param fill Character. Fill color for concatemer bars (default: `"black"`).
 #' @param ... Parameters to be ignored.
 #' @details
 #' Requires the following aesthetics:

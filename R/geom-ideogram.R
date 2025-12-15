@@ -1,7 +1,6 @@
-#' @rdname geom_ideogram
-#' @format NULL
-#' @usage NULL
-#' @export
+#' StatIdeogram
+#' @keywords internal
+#' @noRd
 StatIdeogram <- ggplot2::ggproto(
   "StatIdeogram",
   ggplot2::Stat,
@@ -116,10 +115,9 @@ StatIdeogram <- ggplot2::ggproto(
   }
 )
 
-#' @rdname geom_ideogram
-#' @format NULL
-#' @usage NULL
-#' @export
+#' GeomIdeogram
+#' @keywords internal
+#' @noRd
 GeomIdeogram <- ggplot2::ggproto(
   "GeomIdeogram",
   ggplot2::Geom,
@@ -171,54 +169,136 @@ GeomIdeogram <- ggplot2::ggproto(
   }
 )
 
-#' geom_ideogram
+#' Add chromosome ideogram annotation to Hi-C plot
 #'
-#' @description A ggplot2 geom for chromosome ideogram.
+#' @description
+#' Displays chromosome ideograms (cytogenetic band representations) above the
+#' Hi-C contact map, showing the genomic context with Giemsa staining patterns
+#' and highlighting the displayed region. Ideograms provide visual reference for
+#' chromosome structure, centromeres, and cytogenetic landmarks.
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
-#' @param genome The genome name. Default is `"hg19"`.
-#' @param chrom_prefix Whether the input data has chromosome names
-#'   with prefix 'chr' or not. Default is `TRUE`.
-#' @param show_coord Whether to show coordinates on the right side of the
-#'   ideogram. Default is `FALSE`.
-#' @param highlight Whether to highlight the boundary of the chromosome.
-#'   Default is `TRUE`.
-#' @param width_ratio The ratio of the width of each chromosome ideogram
-#'   relative to the height of the Hi-C plot. Default is `1/30`.
-#' @param length_ratio The ratio of the length of each chromosome ideogram
-#'   relative to the width of the Hi-C plot. Default is `0.8`.
-#' @param fontsize The font size of the chromosome name. Default is `10`.
-#' @param colour The color of the chromosome boundary. Default is `"red"`.
-#' @param fill The fill color of the highlighted region on the ideogram.
-#'   Default is `"#FFE3E680"`.
-#' @param ... Parameters to be ignored.
+#' @param genome Character. Genome assembly version for retrieving cytogenetic
+#'   band information from UCSC. Supported genomes include:
+#'   * `"hg38"`: Human (GRCh38/hg38)
+#'   * `"hg19"`: Human (GRCh37/hg19) (default)
+#'   * `"mm10"`: Mouse (GRCm38)
+#'   * `"mm39"`: Mouse (GRCm39)
+#'   * Other UCSC genome assemblies with cytoBand tables
+#' @param chrom_prefix Logical. Whether chromosome names in the data include
+#'   "chr" prefix (e.g., "chr1" vs "1"). Set FALSE for Ensembl-style naming
+#'   (default: TRUE).
+#' @param show_coord Logical. Display genomic coordinates (start-end) next to
+#'   chromosome names on the ideogram (default: FALSE). Useful for showing exact
+#'   region boundaries.
+#' @param highlight Logical. Draw a colored outline around the displayed genomic
+#'   region on the ideogram to emphasize the Hi-C map extent (default: TRUE).
+#' @param width_ratio Numeric. Height of ideogram relative to Hi-C plot height
+#'   (default: 1/30). Larger values create taller ideograms.
+#' @param length_ratio Numeric. Fraction of Hi-C plot width used for ideogram
+#'   length (default: 0.8 = 80%). Controls horizontal scaling to leave space for
+#'   labels.
+#' @param fontsize Numeric. Font size in points for chromosome labels and
+#'   coordinates (default: 10).
+#' @param colour Character. Border color for the highlighted region box
+#'   (default: `"red"`).
+#' @param fill Character. Fill color for the highlighted region box, using RGBA
+#'   hex format for transparency (default: `"#FFE3E680"` = semi-transparent
+#'   light red).
+#' @param ... Additional parameters (unused).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames1
-#' * start1
-#' * end1
-#' * seqnames2
-#' * start2
-#' * end2
-#' @return A ggplot object.
+#' ## Required aesthetics
+#' Inherits from Hi-C data: `seqnames1`, `start1`, `end1`, `seqnames2`,
+#' `start2`, `end2`
+#'
+#' ## Ideogram structure
+#' Chromosomes are displayed horizontally above the Hi-C map with:
+#' * **Cytogenetic bands**: Giemsa staining patterns (G-bands) shown with
+#'   standard colors (light/dark representing staining intensity)
+#' * **Centromeres**: Typically appear as darker bands near the middle
+#' * **Highlighted region**: Colored box showing the exact genomic region
+#'   displayed in the Hi-C map below
+#' * **Labels**: Chromosome names or coordinates on the right side
+#'
+#' ## Multi-chromosome display
+#' When visualizing multiple chromosomes, ideograms are stacked vertically in
+#' the same order as they appear in the Hi-C plot.
+#'
+#' ## Genome assembly selection
+#' Ensure the `genome` parameter matches your data's assembly. Mismatched
+#' assemblies will show incorrect cytogenetic band patterns or fail to retrieve
+#' band data.
+#'
+#' ## Performance considerations
+#' Ideogram data is fetched from UCSC Genome Browser on first use per session.
+#' Subsequent calls use cached data for improved performance.
+#'
+#' @return A ggplot2 layer that can be added to a Hi-C plot.
+#'
+#' @seealso [gghic()], [geom_annotation()], [geom_hic()]
+#'
 #' @examples
 #' \dontrun{
-#' # Load Hi-C data
-#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
-#'   import()
-#'
-#' # Add ideogram with default hg19 genome
+#' # Basic usage with human genome (hg19)
+#' cc <- ChromatinContacts("sample.cool", focus = "chr4") |> import()
 #' gghic(cc) + geom_ideogram(genome = "hg19")
 #'
-#' # Highlight region with custom colors
+#' # Use human GRCh38/hg38 assembly
+#' gghic(cc) + geom_ideogram(genome = "hg38")
+#'
+#' # Mouse genome
+#' cc_mouse <- ChromatinContacts("mouse.cool", focus = "chr1") |> import()
+#' gghic(cc_mouse) + geom_ideogram(genome = "mm10")
+#'
+#' # Show coordinates instead of just chromosome names
+#' gghic(cc) +
+#'   geom_ideogram(genome = "hg19", show_coord = TRUE)
+#'
+#' # Customize highlight colors
 #' gghic(cc) +
 #'   geom_ideogram(
-#'     genome = "hg19", highlight = TRUE, colour = "blue", fill = "#ADD8E680"
+#'     genome = "hg19",
+#'     highlight = TRUE,
+#'     colour = "blue",
+#'     fill = "#ADD8E680"  # Semi-transparent light blue
 #'   )
 #'
-#' # Show coordinates on ideogram
+#' # Adjust ideogram size
 #' gghic(cc) +
-#'   geom_ideogram(genome = "hg19", show_coord = TRUE, fontsize = 8)
+#'   geom_ideogram(
+#'     genome = "hg19",
+#'     width_ratio = 1/20,    # Taller ideogram
+#'     length_ratio = 0.9,    # Wider ideogram
+#'     fontsize = 12          # Larger labels
+#'   )
+#'
+#' # Multiple chromosomes with ideograms
+#' cc_multi <- ChromatinContacts("sample.cool", focus = "chr1|chr2") |>
+#'   import()
+#' gghic(cc_multi) +
+#'   geom_ideogram(genome = "hg19", show_coord = TRUE)
+#'
+#' # Ensembl-style chromosome names (without "chr" prefix)
+#' cc_ensembl <- ChromatinContacts("ensembl.cool", focus = "1") |> import()
+#' gghic(cc_ensembl) +
+#'   geom_ideogram(genome = "hg19", chrom_prefix = FALSE)
+#'
+#' # Disable highlighting for cleaner look
+#' gghic(cc) +
+#'   geom_ideogram(genome = "hg19", highlight = FALSE)
+#'
+#' # Complete publication-ready plot
+#' gghic(cc, ideogram = FALSE) +  # Disable auto-ideogram
+#'   geom_ideogram(
+#'     genome = "hg19",
+#'     highlight = TRUE,
+#'     colour = "darkred",
+#'     fill = "#FFE3E650",
+#'     fontsize = 11
+#'   ) +
+#'   theme_hic()
 #' }
 #' @export
 #' @aliases geom_ideogram

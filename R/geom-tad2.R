@@ -1,5 +1,8 @@
+#' StatTad2
+#' @keywords internal
+#' @noRd
 StatTad2 <- ggplot2::ggproto(
-  "StatTad",
+  "StatTad2",
   ggplot2::Stat,
   required_aes = c("seqnames", "start", "end"),
   setup_params = function(data, params) params,
@@ -62,8 +65,11 @@ StatTad2 <- ggplot2::ggproto(
   }
 )
 
+#' GeomTad2
+#' @keywords internal
+#' @noRd
 GeomTad2 <- ggplot2::ggproto(
-  "GeomTad",
+  "GeomTad2",
   ggplot2::Geom,
   required_aes = c("xmin", "xmax", "xend", "ymin", "ymax", "yend"),
   draw_key = ggplot2::draw_key_path,
@@ -88,9 +94,12 @@ GeomTad2 <- ggplot2::ggproto(
   }
 )
 
-#' geom_tad2
+#' Visualize TAD boundaries (a second version)
 #'
-#' @description A second version of [geom_tad()].
+#' @description
+#' Another version of [geom_tad()] that requires direct data frame input.
+#' Draws TAD boundaries as triangular outlines on the Hi-C heatmap.
+#'
 #' @inheritParams ggplot2::geom_line
 #' @inheritParams geom_hic
 #' @param ... Parameters to be ignored.

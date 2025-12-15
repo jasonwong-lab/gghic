@@ -1,3 +1,6 @@
+#' StatAnnotation
+#' @keywords internal
+#' @noRd
 StatAnnotation <- ggplot2::ggproto(
   "StatAnnotation",
   ggplot2::Stat,
@@ -222,6 +225,9 @@ StatAnnotation <- ggplot2::ggproto(
   }
 )
 
+#' GeomAnnotation
+#' @keywords internal
+#' @noRd
 GeomAnnotation <- ggplot2::ggproto(
   "GeomAnnotation",
   ggplot2::Geom,
@@ -360,60 +366,140 @@ GeomAnnotation <- ggplot2::ggproto(
   }
 )
 
-#' geom_annotation
+#' Add gene annotation tracks to Hi-C plots
 #'
-#' @description A ggplot2 geom for gene model tracks.
+#' @description
+#' Displays gene models as annotation tracks below Hi-C heatmaps, showing gene
+#' structure with exons, introns, UTRs, and strand orientation. Gene annotations
+#' are automatically retrieved from GTF files or TxDb objects and positioned
+#' below the Hi-C plot with gene symbols labeled underneath. The function supports
+#' two visualization styles: "basic" (detailed exon/intron structure) and "arrow"
+#' (simplified arrow representation indicating strand direction).
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
-#' @param txdb The TxDb object. Default is `NULL`.
-#' @param tx2gene An optional data frame or tibble that maps transcript
-#'   information to gene information. It should include the following columns:
-#'   * chrom: Chromosome number or name.
-#'   * gene_id: Entrez gene ID.
-#'   * gene_symbol: Common symbol or name of the gene.
-#'   * tx_id: Entrez transcript ID.
-#'   * tx_name: Name of the transcript.
-#'   * gene_type: Type or classification of the gene.
-#'   * tx_type: Type or classification of the transcript.
-#' @param gtf_path The path to the GTF file, which is used to generate `txdb`
-#'   and `tx2gene`. Generated files are saved in the cache directory.
+#' @param txdb A TxDb object from the GenomicFeatures package containing transcript
+#'   annotations. Must be provided together with `tx2gene` if `gtf_path` is not
+#'   specified. Default is `NULL`.
+#' @param tx2gene A data frame or tibble mapping transcript information to gene
+#'   information. Required if using `txdb` parameter. Should include the following
+#'   columns:
+#'   * `chrom`: Chromosome number or name
+#'   * `gene_id`: Entrez gene ID or unique gene identifier
+#'   * `gene_symbol`: Common gene symbol or name (e.g., "TP53", "BRCA1")
+#'   * `tx_id`: Entrez transcript ID or unique transcript identifier
+#'   * `tx_name`: Name of the transcript
+#'   * `gene_type`: Gene biotype (e.g., "protein_coding", "lncRNA")
+#'   * `tx_type`: Transcript biotype
 #'   Default is `NULL`.
-#' @param chrom_prefix Whether the input data has chromosome names
-#'   with prefix 'chr' or not. Default is `TRUE`.
-#' @param width_ratio The ratio of the width of each gene model track
-#'   relative to the height of the Hi-C plot. Default is `1/50`.
-#' @param spacing_ratio The ratio of the spacing between two gene model tracks.
-#'   Default is `1/3`.
-#' @param maxgap The maximum gap between genes to be drawn in the same line.
+#' @param gtf_path Character string specifying the path to a GTF/GFF file. The
+#'   function will automatically parse the GTF file to generate `txdb` and
+#'   `tx2gene` objects. Parsed data is cached to speed up subsequent calls.
+#'   Either `gtf_path` or both `txdb` and `tx2gene` must be provided.
+#'   Default is `NULL`.
+#' @param chrom_prefix Logical indicating whether chromosome names include the
+#'   "chr" prefix (e.g., "chr1" vs "1"). Should match the naming convention in
+#'   your Hi-C data. Default is `TRUE`.
+#' @param width_ratio Numeric value controlling the height of each gene track
+#'   relative to the Hi-C plot height. Smaller values create thinner tracks.
+#'   Default is `1/50` (2% of Hi-C plot height).
+#' @param spacing_ratio Numeric value controlling the vertical spacing between
+#'   gene tracks as a proportion of track height. Larger values increase spacing.
+#'   Default is `1/3` (33% of track height).
+#' @param maxgap Integer specifying the maximum genomic distance (in bp) between
+#'   genes on the same horizontal line. Genes within this distance will be placed
+#'   on separate lines to prevent overlap. Set to `-1` for automatic spacing.
 #'   Default is `-1`.
-#' @param include_ncrna Whether to include ncRNA or not. Default is `TRUE`.
-#' @param style The style of the gene model track, which can be `"basic"`
-#'   or `"arrow"`. Default is `"basic"`.
-#' @param gene_symbols A character vector of gene symbols to be included only.
-#'   Default is `NULL`.
-#' @param fontsize The font size of the gene symbols. Default is `10`.
-#' @param colour The color of the gene model track. Default is `"#48CFCB"`.
-#' @param fill The fill color of the gene model track. Default is `"#48CFCB"`.
-#' @param ... Parameters to be ignored.
+#' @param include_ncrna Logical indicating whether to include non-coding RNA genes
+#'   (lncRNA, miRNA, etc.) in the annotation track. Set to `FALSE` to show only
+#'   protein-coding genes. Default is `TRUE`.
+#' @param style Character string specifying the visualization style. Options:
+#'   * `"basic"`: Shows detailed gene structure with distinct exons (thick boxes),
+#'     introns (thin lines with directional arrows), and UTRs (thin boxes)
+#'   * `"arrow"`: Simplified representation showing each gene as a single arrow
+#'     pointing in the direction of transcription (5' to 3')
+#'   Default is `"basic"`.
+#' @param gene_symbols Character vector of specific gene symbols to display. When
+#'   provided, only these genes will be shown in the annotation track. Useful for
+#'   highlighting genes of interest. Default is `NULL` (show all genes).
+#' @param fontsize Numeric value specifying the font size for gene symbol labels.
+#'   Default is `10`.
+#' @param colour Character string specifying the outline color for gene features.
+#'   Default is `"#48CFCB"` (teal).
+#' @param fill Character string specifying the fill color for gene features
+#'   (exons, UTRs, arrows). Default is `"#48CFCB"` (teal).
+#' @param draw_boundary Logical indicating whether to draw vertical boundary lines
+#'   between chromosomes in multi-chromosome displays. Default is `TRUE`.
+#' @param boundary_colour Character string specifying the color of chromosome
+#'   boundary lines. Default is `"black"`.
+#' @param linetype Character string or integer specifying the line type for
+#'   chromosome boundaries. Default is `"dashed"`.
+#' @param ... Additional parameters (currently ignored).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames1
-#' * start1
-#' * end1
-#' * seqnames2
-#' * start2
-#' * end2
-#' @return A ggplot object.
+#' ## Required Aesthetics
+#' This geom inherits aesthetics from the Hi-C data and requires:
+#' * `seqnames1`, `seqnames2`: Chromosome names
+#' * `start1`, `start2`: Start positions
+#' * `end1`, `end2`: End positions
+#'
+#' ## Gene Annotation Sources
+#' Gene annotations can be provided in three ways:
+#' 1. **GTF file** via `gtf_path`: Most convenient, automatically parsed and cached
+#' 2. **TxDb + tx2gene**: Pre-processed annotations for custom databases
+#' 3. Downloaded from online repositories (Ensembl, UCSC, GENCODE)
+#'
+#' ## Visualization Styles
+#'
+#' ### Basic Style (`style = "basic"`)
+#' Shows detailed gene structure:
+#' * **Coding exons (CDS)**: Thick rectangles in full color
+#' * **UTRs**: Thinner rectangles showing 5' and 3' untranslated regions
+#' * **Introns**: Thin lines with small directional arrows indicating strand
+#' * **ncRNAs**: Thin rectangles for non-coding transcripts (if `include_ncrna = TRUE`)
+#'
+#' ### Arrow Style (`style = "arrow"`)
+#' Simplified representation:
+#' * Each gene shown as a single arrow shape
+#' * Arrow points from 5' to 3' direction
+#' * More compact, suitable for dense genomic regions
+#'
+#' ## Gene Placement and Layout
+#' * Genes are automatically arranged on multiple horizontal lines to prevent overlap
+#' * Genes closer than `maxgap` are placed on separate lines
+#' * Gene symbols are centered below each gene
+#' * Multiple tracks are vertically stacked with spacing controlled by `spacing_ratio`
+#'
+#' ## Multi-Chromosome Display
+#' When displaying multiple chromosomes:
+#' * Coordinates are automatically adjusted for proper alignment
+#' * Vertical boundary lines separate chromosomes (if `draw_boundary = TRUE`)
+#' * Gene labels maintain proper positioning across chromosome boundaries
+#'
+#' ## Gene Filtering
+#' Use `gene_symbols` parameter to highlight specific genes:
+#' * Provide a character vector of gene names
+#' * Only matching genes will be displayed
+#' * Useful for focusing on candidate genes or pathways
+#'
+#' ## Performance Considerations
+#' * GTF parsing is cached for faster subsequent loading
+#' * For large genomic regions, consider filtering genes with `gene_symbols`
+#' * Setting `include_ncrna = FALSE` reduces the number of features
+#' * Arrow style renders faster than basic style for dense regions
+#'
+#' @return A ggplot2 layer object that can be added to a gghic plot.
+#'
 #' @examples
 #' \dontrun{
-#' # Load Hi-C data
+#' # Basic usage with GTF file
 #' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
 #' gtf_file <- "path/to/genes.gtf"
 #' gghic(cc) + geom_annotation(gtf_path = gtf_file)
 #'
-#' # Filter specific genes
+#' # Filter specific genes of interest
 #' gghic(cc) +
 #'   geom_annotation(
 #'     gtf_path = gtf_file,
@@ -430,13 +516,75 @@ GeomAnnotation <- ggplot2::ggproto(
 #'     fontsize = 8
 #'   )
 #'
-#' # Exclude non-coding RNAs
+#' # Exclude non-coding RNAs for cleaner view
 #' gghic(cc) +
 #'   geom_annotation(
 #'     gtf_path = gtf_file,
 #'     include_ncrna = FALSE
 #'   )
+#'
+#' # Custom track dimensions
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     width_ratio = 1 / 40,    # Taller tracks
+#'     spacing_ratio = 1 / 2     # More spacing
+#'   )
+#'
+#' # Using TxDb object directly
+#' library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+#' txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+#' tx2gene <- read.csv("tx2gene_mapping.csv")
+#'
+#' gghic(cc) +
+#'   geom_annotation(txdb = txdb, tx2gene = tx2gene)
+#'
+#' # Multiple genes with custom styling
+#' candidates <- c("PDGFRA", "KIT", "KDR", "FLT1")
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     gene_symbols = candidates,
+#'     colour = "red",
+#'     fill = "pink",
+#'     fontsize = 12
+#'   )
+#'
+#' # Without chromosome prefix (e.g., "1" instead of "chr1")
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     chrom_prefix = FALSE
+#'   )
+#'
+#' # Multi-chromosome with boundaries
+#' cc_multi <- ChromatinContacts("path/to/cooler.cool",
+#'                               focus = c("chr4", "chr8")) |>
+#'   import()
+#' gghic(cc_multi) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     draw_boundary = TRUE,
+#'     boundary_colour = "gray50",
+#'     linetype = "dotted"
+#'   )
+#'
+#' # Protein-coding genes only with arrow style
+#' gghic(cc) +
+#'   geom_annotation(
+#'     gtf_path = gtf_file,
+#'     include_ncrna = FALSE,
+#'     style = "arrow",
+#'     fill = "#2E86AB"
+#'   )
 #' }
+#'
+#' @seealso
+#' * [gghic()] for creating the base Hi-C plot
+#' * [geom_hic()] for the Hi-C heatmap layer
+#' * [geom_track()] and [geom_track2()] for genomic signal tracks
+#' * [geom_ideogram()] for chromosome ideograms
+#'
 #' @export
 #' @aliases geom_annotation
 geom_annotation <- function(

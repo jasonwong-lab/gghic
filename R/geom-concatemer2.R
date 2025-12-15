@@ -1,3 +1,6 @@
+#' StatConcatemer2
+#' @keywords internal
+#' @noRd
 StatConcatemer2 <- ggplot2::ggproto(
   "StatConcatemer2",
   ggplot2::Stat,
@@ -135,6 +138,9 @@ StatConcatemer2 <- ggplot2::ggproto(
   }
 )
 
+#' GeomConcatemer2
+#' @keywords internal
+#' @noRd
 GeomConcatemer2 <- ggplot2::ggproto(
   "GeomConcatemer2",
   ggplot2::Geom,
@@ -188,9 +194,13 @@ GeomConcatemer2 <- ggplot2::ggproto(
   }
 )
 
-#' geom_concatemer2
+#' Visualize concatemers (a second version)
 #'
-#' @description A second version of [geom_concatemer()].
+#' @description
+#' Another version of [geom_concatemer()] that requires a Hi-C plot to be
+#' drawn first and takes direct data frame input.
+#' Displays multi-way contact reads as horizontal bars below the Hi-C heatmap.
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
 #' @param check_concatemers Whether to subset the concatemers according to the

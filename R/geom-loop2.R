@@ -1,7 +1,6 @@
-#' @rdname geom_loop2
-#' @format NULL
-#' @usage NULL
-#' @export
+#' StatLoop2
+#' @keywords internal
+#' @noRd
 StatLoop2 <- ggplot2::ggproto(
   "StatLoop2",
   ggplot2::Stat,
@@ -47,15 +46,14 @@ StatLoop2 <- ggplot2::ggproto(
   }
 )
 
-#' @rdname geom_loop2
-#' @format NULL
-#' @usage NULL
-#' @export
+#' GeomLoop2
+#' @keywords internal
+#' @noRd
 GeomLoop2 <- ggplot2::ggproto(
   "GeomLoop2",
   ggplot2::Geom,
   required_aes = c("x", "y"),
-  draw_key = ggplot2::draw_key_point,
+  # draw_key = ggplot2::draw_key_point,
   default_aes = ggplot2::aes(
     colour = "black", shape = 21, fill = NA, size = 1, fontsize = 3,
     alpha = 1, stroke = 0.5
@@ -106,25 +104,36 @@ GeomLoop2 <- ggplot2::ggproto(
   }
 )
 
-#' geom_loop2
+#' Visualize chromatin loops (a second version)
 #'
-#' @description A second version of [geom_loop()].
+#' @description
+#' Another version of [geom_loop()] that requires direct data frame input
+#' with loop coordinates instead of file paths. Supports both circle and arc
+#' visualization styles.
+#'
 #' @inheritParams ggplot2::geom_point
 #' @inheritParams geom_hic
-#' @param style The style for drawing loops: `"circle"` for points/circles
-#'   or `"arc"` for arcs under the Hi-C heatmap. Default is `"circle"`.
-#' @param n_arc_points Number of points used to draw each arc (only used when
-#'   `style = "arc"`). Default is `50`.
-#' @param ... Parameters to be ignored.
+#' @param style Character. Visualization style:
+#'   * `"circle"`: Display loops as circular points (default)
+#'   * `"arc"`: Display loops as curved arcs connecting anchors
+#' @param n_arc_points Integer. Number of points for drawing smooth arcs when
+#'   `style = "arc"`. Higher values = smoother curves (default: 50).
+#' @param ... Additional parameters (unused).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames1
-#' * start1
-#' * end1
-#' * seqnames2
-#' * start2
-#' * end2
-#' @return A ggplot object.
+#' ## Required aesthetics
+#' * `seqnames1`, `start1`, `end1`: First loop anchor
+#' * `seqnames2`, `start2`, `end2`: Second loop anchor
+#'
+#' ## Difference from geom_loop()
+#' This version requires a Hi-C plot to be drawn first with `geom_hic()` and
+#' takes data frames directly rather than file paths. Use [geom_loop()] for
+#' more convenience with `gghic()` workflow.
+#'
+#' @return A ggplot2 layer.
+#'
+#' @seealso [geom_loop()], [gghic()]
+#' @export
 #' @examples
 #' \dontrun{
 #' # Load Hi-C data
@@ -165,12 +174,19 @@ geom_loop2 <- function(
   na.rm = FALSE, show.legend = NA, inherit.aes = FALSE,
   style = "circle", n_arc_points = 50, ...
 ) {
+  key_glyph <- if (style == "arc") {
+    ggplot2::draw_key_path
+  } else {
+    ggplot2::draw_key_point
+  }
+
   ggplot2::layer(
     geom = GeomLoop2, mapping = mapping, data = data, stat = stat,
     position = position, show.legend = show.legend, inherit.aes = inherit.aes,
     check.param = TRUE,
     params = list(
       na.rm = na.rm, style = style, n_arc_points = n_arc_points, ...
-    )
+    ),
+    key_glyph = key_glyph
   )
 }

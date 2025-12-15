@@ -1,3 +1,6 @@
+#' StatTad
+#' @keywords internal
+#' @noRd
 StatTad <- ggplot2::ggproto(
   "StatTad",
   ggplot2::Stat,
@@ -99,6 +102,9 @@ StatTad <- ggplot2::ggproto(
   }
 )
 
+#' GeomTad
+#' @keywords internal
+#' @noRd
 GeomTad <- ggplot2::ggproto(
   "GeomTad",
   ggplot2::Geom,
@@ -126,37 +132,68 @@ GeomTad <- ggplot2::ggproto(
   }
 )
 
-#' geom_tad
+#' Visualize TAD boundaries on Hi-C heatmap
 #'
-#' @description A ggplot2 geom for drawing
-#'   topologically associating domains (TADs) and compartments on the heatmap.
+#' @description
+#' Adds topologically associating domain (TAD) boundary annotations to Hi-C
+#' contact maps. TAD boundaries are displayed as triangular outlines marking
+#' the diagonal extent of each domain.
+#'
 #' @inheritParams ggplot2::geom_line
 #' @inheritParams geom_hic
-#' @param tad_path A path to the TAD file. Default is `NULL`.
-#' @param tad_gis An InteractionSet object of TADs. Default is `NULL`.
-#' @param is_0_based Whether the TAD file is 0-based or not. Default is `FALSE`.
-#' @param colour The color of the TADs. Default is `grey`.
-#' @param ... Parameters to be ignored.
+#' @param tad_path Character. Path to BED-like file with TAD coordinates
+#'   (columns: chrom, start, end). Either `tad_path` or `tad_gis` must be
+#'   provided (default: NULL).
+#' @param tad_gis GInteractions object containing TAD coordinates as
+#'   interactions from start to end positions. Either `tad_path` or `tad_gis`
+#'   must be provided (default: NULL).
+#' @param is_0_based Logical. Whether input coordinates are 0-based (BED
+#'   format). Set TRUE for BED files (default: FALSE).
+#' @param colour Character. Color for TAD boundary lines (default: `"grey"`).
+#' @param ... Additional parameters passed to layer (unused).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames1
-#' * start1
-#' * end1
-#' * seqnames2
-#' * start2
-#' * end2
-#' @return A ggplot object.
+#' ## Required aesthetics
+#' Inherits from Hi-C data: `seqnames1`, `start1`, `end1`, `seqnames2`,
+#' `start2`, `end2`
+#'
+#' ## TAD file format
+#' Tab-delimited BED-like file with columns:
+#' ```
+#' chrom  start     end
+#' chr1   0         1000000
+#' chr1   1000000   2500000
+#' ```
+#'
+#' ## Interpretation
+#' TAD boundaries are drawn as V-shaped lines on the Hi-C diagonal. Each TAD
+#' is represented by two lines forming a triangle that encloses the domain.
+#' Darker regions inside triangles represent increased intra-TAD interactions.
+#'
+#' @return A ggplot2 layer that can be added to a gghic plot.
+#'
+#' @seealso [geom_loop()] for chromatin loops, [gghic()] for creating Hi-C plots
+#'
 #' @examples
 #' \dontrun{
-#' # Load Hi-C data
-#' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
-#'   import()
+#' # Basic usage with TAD file
+#' cc <- ChromatinContacts("file.cool", focus = "chr4") |> import()
+#' gghic(cc) + geom_tad(tad_path = "tads.bed")
 #'
-#' # Load TAD boundaries from file
-#' tad_file <- "path/to/tads.bed"
+#' # Custom color
+#' gghic(cc) + geom_tad(tad_path = "tads.bed", colour = "blue")
 #'
-#' # Add TAD boundaries to Hi-C plot
-#' gghic(cc) + geom_tad(tad_path = tad_file)
+#' # Using GInteractions object
+#' tads <- rtracklayer::import("tads.bed") |> as("GInteractions")
+#' gghic(cc) + geom_tad(tad_gis = tads)
+#'
+#' # 0-based coordinates (BED format)
+#' gghic(cc) + geom_tad(tad_path = "tads.bed", is_0_based = TRUE)
+#'
+#' # Combined with loops
+#' gghic(cc) +
+#'   geom_tad(tad_path = "tads.bed", colour = "grey") +
+#'   geom_loop(loop_path = "loops.bedpe", colour = "red")
 #' }
 #' @export
 #' @aliases geom_tad

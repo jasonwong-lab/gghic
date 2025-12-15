@@ -1,7 +1,6 @@
-#' @rdname geom_hypergraph
-#' @format NULL
-#' @usage NULL
-#' @export
+#' GeomHypergraphLine
+#' @keywords internal
+#' @noRd
 GeomHypergraphLine <- ggplot2::ggproto(
   "GeomHypergraphLine",
   ggplot2::Geom,
@@ -27,10 +26,9 @@ GeomHypergraphLine <- ggplot2::ggproto(
   }
 )
 
-#' @rdname geom_hypergraph
-#' @format NULL
-#' @usage NULL
-#' @export
+#' GeomHypergraphPoint
+#' @keywords internal
+#' @noRd
 GeomHypergraphPoint <- ggplot2::ggproto(
   "GeomHypergraphPoint",
   ggplot2::Geom,

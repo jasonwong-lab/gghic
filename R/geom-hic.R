@@ -1,3 +1,6 @@
+#' StatHic
+#' @keywords internal
+#' @noRd
 StatHic <- ggplot2::ggproto(
   "StatHic",
   ggplot2::Stat,
@@ -77,6 +80,9 @@ StatHic <- ggplot2::ggproto(
   }
 )
 
+#' GeomHic
+#' @keywords internal
+#' @noRd
 GeomHic <- ggplot2::ggproto(
   "GeomHic",
   ggplot2::Geom,
@@ -161,72 +167,41 @@ GeomHic <- ggplot2::ggproto(
 #' geom_hic
 #'
 #' @description
-#' Creates a Hi-C contact heatmap layer using diamond/rotated square geometry.
-#' This is the core visualization layer for displaying chromatin interaction
-#' frequencies.
+#' Creates Hi-C contact heatmap layer with diamond-shaped tiles.
 #'
 #' @inheritParams ggplot2::geom_polygon
-#' @param mapping Set of aesthetic mappings created by [ggplot2::aes()].
-#' @param rasterize Logical. Rasterize the heatmap for better performance with
-#'   large datasets. Default is `TRUE`.
-#' @param dpi Numeric. Resolution for rasterization. Default is `300`.
-#' @param dev Character. Graphics device for rasterization. Default is
-#'   `"cairo"`.
-#' @param scale Numeric. Scaling factor for rasterization. Default is `1`.
-#' @param draw_boundary Logical. Draw boundary lines between chromosomes in
-#'   multi-chromosome plots. Default is `TRUE`.
-#' @param boundary_colour Character. Color for boundary lines. Default is
-#'   `"black"`.
-#' @param linetype Line type for boundaries. Default is `"dashed"`.
-#' @param ... Additional parameters (currently unused).
+#' @param mapping Aesthetic mappings from [ggplot2::aes()].
+#' @param rasterize Logical. Rasterize for performance (default: TRUE).
+#' @param dpi Numeric. Rasterization resolution (default: 300).
+#' @param dev Character. Graphics device (default: `"cairo"`).
+#' @param scale Numeric. Rasterization scaling (default: 1).
+#' @param draw_boundary Logical. Draw chromosome boundaries (default: TRUE).
+#' @param boundary_colour Character. Boundary color (default: `"black"`).
+#' @param linetype Boundary line type (default: `"dashed"`).
+#' @param ... Additional parameters (unused).
 #'
 #' @details
-#' `geom_hic()` transforms rectangular interaction data into diamond-shaped
-#' heatmap tiles. Each interaction is plotted as a rotated square at 45 degrees,
-#' creating the characteristic triangular Hi-C heatmap visualization.
+#' Transforms interaction data into diamond tiles at 45°, creating the
+#' characteristic triangular Hi-C visualization.
 #'
-#' **Required aesthetics:**
-#' * `seqnames1` - Chromosome name for first anchor
-#' * `start1` - Start position for first anchor
-#' * `end1` - End position for first anchor
-#' * `seqnames2` - Chromosome name for second anchor
-#' * `start2` - Start position for second anchor
-#' * `end2` - End position for second anchor
-#' * `fill` - Value to map to color (typically scaled contact frequency)
+#' **Required aesthetics:** seqnames1, start1, end1, seqnames2, start2, end2,
+#' fill
 #'
 #' @return A ggplot2 layer.
 #'
 #' @examples
 #' \dontrun{
-#' # Load and import Hi-C data
-#' cc <- ChromatinContacts("path/to/cooler.cool") |>
-#'   import()
-#'
-#' # Basic Hi-C heatmap using geom_hic
+#' cc <- ChromatinContacts("file.cool") |> import()
 #' library(ggplot2)
 #' ggplot() +
 #'   geom_hic(
-#'     data = scaleData(cc["chr4"], "balanced", log10), aes(
-#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-#'     )
-#'   ) +
-#'   scale_fill_gradientn(colors = c("white", "red")) +
-#'   theme_hic()
-#'
-#' # Multi-chromosome plot
-#' cc_multi <- cc[c("chr4", "chr11")]
-#' ggplot() +
-#'   geom_hic(
-#'     data = scaleData(cc_multi, "balanced", log10), aes(
-#'       seqnames1 = seqnames1, start1 = start1, end1 = end1,
-#'       seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-#'     ), draw_boundary = TRUE, boundary_colour = "blue"
-#'   ) +
-#'   theme_hic()
+#'     data = scaleData(cc["chr4"], "balanced", log10),
+#'     aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+#'         seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score)
+#'   ) + theme_hic()
 #' }
 #'
-#' @seealso [gghic::gghic()], [gghic::theme_hic()], [gghic::scaleData()]
+#' @seealso [gghic()], [theme_hic()], [scaleData()]
 #' @export
 #' @aliases geom_hic
 geom_hic <- function(

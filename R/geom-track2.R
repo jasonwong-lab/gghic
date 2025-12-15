@@ -1,3 +1,6 @@
+#' StatTrack2
+#' @keywords internal
+#' @noRd
 StatTrack2 <- ggplot2::ggproto(
   "StatTrack2",
   ggplot2::Stat,
@@ -160,6 +163,9 @@ StatTrack2 <- ggplot2::ggproto(
   }
 )
 
+#' GeomTrack2
+#' @keywords internal
+#' @noRd
 GeomTrack2 <- ggplot2::ggproto(
   "GeomTrack2",
   ggplot2::Geom,
@@ -260,50 +266,123 @@ GeomTrack2 <- ggplot2::ggproto(
   }
 )
 
-#' geom_track2
+#' Add genomic signal tracks with direct data input (a second version)
 #'
-#' @description A second version of [geom_track()].
+#' @description
+#' Another version of [geom_track()] that accepts pre-loaded genomic signal
+#' data as a data frame or tibble with explicit aesthetic mappings. Displays
+#' continuous genomic signals (ChIP-seq, ATAC-seq, RNA-seq, etc.) as filled area
+#' tracks below Hi-C heatmaps. Unlike [geom_track()], this function uses
+#' standard ggplot2 aesthetic mappings, making it more flexible for custom
+#' styling and integration with ggplot2 scales and themes.
+#'
 #' @inheritParams ggplot2::geom_polygon
 #' @inheritParams geom_hic
-#'   Default is `NULL`.
-#' @param width_ratio The ratio of the width of each track relative to the
-#'   height of the Hi-C plot. Default is `1/20`.
-#' @param spacing_ratio The ratio of the spacing between two tracks.
-#'   Default is `0.5`.
-#' @param data_range The range of the x axis. It can be `"auto"`, `"maximum"`,
-#'   or a number (vector). Default is `"auto"`.
-#' @param rasterize Whether to rasterize the plot or not. Default is `TRUE`.
-#' @param dpi The resolution of the rasterised plot. Default is `300`.
-#' @param dev The device to rasterise the plot. Default is `"cairo"`.
-#' @param scale The scale of the rasterised plot. Default is `1`.
-#' @param draw_boundary Whether to draw the boundary line or not when plotting
-#'   multiple chromosomes. Default is `TRUE`.
-#' @param boundary_colour The color of the boundary line. Default is `"black"`.
-#' @param linetype The line type of the boundary line. Default is `"dashed"`.
-#' @param ... Parameters to be ignored.
+#' @param width_ratio Numeric value controlling the height of each track relative
+#'   to the Hi-C plot height. Smaller values create shorter tracks. Default is
+#'   `1/20` (5% of Hi-C plot height).
+#' @param spacing_ratio Numeric value controlling the vertical spacing between
+#'   tracks as a proportion of track height. Default is `0.5` (50% of track height).
+#' @param data_range Character string or numeric value(s) controlling y-axis scaling:
+#'   * `"auto"`: Each track scaled independently to its own maximum value
+#'   * `"maximum"`: All tracks share the same y-axis scale (global maximum)
+#'   * Numeric value: Fixed maximum for all tracks (e.g., `100`)
+#'   * Numeric vector: Individual maximum for each track (length must match number of tracks)
+#'   Default is `"auto"`.
+#' @param rasterize Logical indicating whether to rasterize the track polygons for
+#'   faster rendering and smaller file sizes. Recommended for high-resolution data.
+#'   Default is `TRUE`.
+#' @param dpi Numeric value specifying the resolution (dots per inch) for rasterized
+#'   tracks. Higher values increase quality but also file size. Default is `300`.
+#' @param dev Character string specifying the graphics device for rasterization.
+#'   Options include `"cairo"`, `"ragg"`, or other devices. Default is `"cairo"`.
+#' @param scale Numeric scaling factor for rasterized output. Values > 1 increase
+#'   resolution. Default is `1`.
+#' @param draw_boundary Logical indicating whether to draw vertical boundary lines
+#'   between chromosomes in multi-chromosome displays. Default is `TRUE`.
+#' @param boundary_colour Character string specifying the color of chromosome
+#'   boundary lines. Default is `"black"`.
+#' @param linetype Character string or integer specifying the line type for
+#'   chromosome boundaries. Default is `"dashed"`.
+#' @param ... Additional parameters (currently ignored).
+#'
 #' @details
-#' Requires the following aesthetics:
-#' * seqnames
-#' * start
-#' * end
-#' * score
-#' * name
-#' @return A ggplot object.
+#' ## Required Aesthetics
+#' This geom requires the following aesthetics to be mapped:
+#' * `seqnames`: Chromosome name for each genomic bin
+#' * `start`: Start position of each bin
+#' * `end`: End position of each bin
+#' * `score`: Signal intensity value (numeric)
+#' * `name`: Track identifier/label (groups bins into tracks)
+#'
+#' ## Comparison with geom_track()
+#' | Feature | geom_track() | geom_track2() |
+#' |---------|-------------|---------------|
+#' | Input | File paths or GRanges list | Data frame with aesthetics |
+#' | Flexibility | Simple, automatic | Full ggplot2 integration |
+#' | Color control | `fill` parameter | `aes(fill = ...)` + scales |
+#' | Data loading | Automatic from files | Manual pre-loading |
+#' | Best for | Quick visualization | Custom styling & scales |
+#'
+#' ## Input Data Format
+#' Data should be a data frame or tibble where each row represents one genomic bin:
+#' ```
+#' seqnames  start    end  score      name
+#' chr1      10000  10100   5.2    "ChIP-seq"
+#' chr1      10100  10200   6.1    "ChIP-seq"
+#' chr1      10200  10300   4.8    "ChIP-seq"
+#' ```
+#'
+#' ## Track Visualization
+#' Each track displays:
+#' * **Signal area**: Filled polygon showing signal intensity
+#' * **Y-axis**: Left side with minimum (0) and maximum value labels
+#' * **Track label**: Name (from `name` aesthetic) displayed on the left
+#' * **Baseline**: Zero line at bottom of each track
+#'
+#' ## Color and Fill Aesthetics
+#' This function fully integrates with ggplot2's aesthetic system:
+#' * Map `fill` aesthetic to track names for automatic coloring
+#' * Use `scale_fill_manual()`, `scale_fill_brewer()`, etc. for custom colors
+#' * Supports all standard ggplot2 color specifications
+#' * Can combine with other aesthetic mappings (alpha, etc.)
+#'
+#' ## Y-Axis Scaling
+#' Control track scaling via `data_range`:
+#' * **Independent** (`"auto"`): Compare patterns within each track
+#' * **Shared** (`"maximum"`): Compare absolute signal between tracks
+#' * **Fixed** (numeric): Consistent scaling across multiple plots
+#'
+#' ## Performance
+#' * Rasterization recommended for dense genomic data
+#' * Adjust `dpi` to balance quality and file size
+#' * Pre-filter data to displayed region for faster rendering
+#'
+#' ## Multi-Chromosome Support
+#' When data includes multiple chromosomes:
+#' * Coordinates automatically adjusted for proper alignment
+#' * Vertical boundaries separate chromosomes (if `draw_boundary = TRUE`)
+#' * Works seamlessly with Hi-C multi-chromosome displays
+#'
+#' @return A ggplot2 layer object that can be added to a gghic plot.
+#'
 #' @examples
 #' \dontrun{
 #' # Load Hi-C data
 #' cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
 #'   import()
 #'
-#' # Load track data from BigWig
-#' track1 <- rtracklayer::import("path/to/track1.bw")
-#' track1$name <- "ChIP-seq"
+#' # Load and prepare track data
+#' library(rtracklayer)
+#' track1 <- import("path/to/H3K27ac.bw")
+#' track1$name <- "H3K27ac"
+#' track_df <- as.data.frame(track1)
 #'
-#' # Add track using data frame with aesthetics
+#' # Basic usage with aesthetic mappings
 #' library(ggplot2)
 #' gghic(cc) +
 #'   geom_track2(
-#'     data = as.data.frame(track1),
+#'     data = track_df,
 #'     aes(
 #'       seqnames = seqnames,
 #'       start = start,
@@ -313,8 +392,8 @@ GeomTrack2 <- ggplot2::ggproto(
 #'     )
 #'   )
 #'
-#' # Multiple tracks with different colors
-#' track2 <- track1
+#' # Multiple tracks with color mapping
+#' track2 <- import("path/to/ATAC.bw")
 #' track2$name <- "ATAC-seq"
 #' tracks_df <- rbind(
 #'   as.data.frame(track1),
@@ -323,13 +402,104 @@ GeomTrack2 <- ggplot2::ggproto(
 #'
 #' gghic(cc) +
 #'   geom_track2(
-#'     data = tracks_df, aes(
-#'       seqnames = seqnames, start = start, end = end, score = score,
-#'       name = name, fill = name
-#'     ), width_ratio = 1 / 25
+#'     data = tracks_df,
+#'     aes(
+#'       seqnames = seqnames,
+#'       start = start,
+#'       end = end,
+#'       score = score,
+#'       name = name,
+#'       fill = name  # Color by track name
+#'     )
 #'   ) +
-#'   scale_fill_manual(values = c("ChIP-seq" = "blue", "ATAC-seq" = "red"))
+#'   scale_fill_manual(values = c("H3K27ac" = "#E63946", "ATAC-seq" = "#457B9D"))
+#'
+#' # Using scale_fill_brewer for automatic colors
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = tracks_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name, fill = name)
+#'   ) +
+#'   scale_fill_brewer(palette = "Set2")
+#'
+#' # Shared y-axis scaling
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = tracks_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name, fill = name),
+#'     data_range = "maximum"
+#'   )
+#'
+#' # Custom track dimensions
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = track_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name),
+#'     width_ratio = 1 / 15,    # Taller tracks
+#'     spacing_ratio = 1         # More spacing
+#'   )
+#'
+#' # Fixed y-axis maximum
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = track_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name),
+#'     data_range = 50  # Fix max to 50
+#'   )
+#'
+#' # Multiple tracks with different y-axis limits
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = tracks_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name),
+#'     data_range = c(100, 50)  # Different max for each track
+#'   )
+#'
+#' # High-resolution rasterization
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = track_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name),
+#'     rasterize = TRUE,
+#'     dpi = 600,
+#'     dev = "ragg"
+#'   )
+#'
+#' # Combine with other geoms
+#' gghic(cc) +
+#'   geom_track2(
+#'     data = track_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name),
+#'     fill = "darkblue"
+#'   ) +
+#'   geom_loop("path/to/loops.bedpe")
+#'
+#' # Multi-chromosome display
+#' cc_multi <- ChromatinContacts("path/to/cooler.cool",
+#'                               focus = c("chr4", "chr8")) |>
+#'   import()
+#' gghic(cc_multi) +
+#'   geom_track2(
+#'     data = tracks_df,
+#'     aes(seqnames = seqnames, start = start, end = end,
+#'         score = score, name = name, fill = name),
+#'     draw_boundary = TRUE
+#'   )
 #' }
+#'
+#' @seealso
+#' * [geom_track()] for file-based input with automatic data loading
+#' * [gghic()] for creating the base Hi-C plot
+#' * [geom_annotation()] for gene annotation tracks
+#' * [geom_hic()] for the Hi-C heatmap layer
+#'
 #' @export
 #' @aliases geom_track2
 geom_track2 <- function(
