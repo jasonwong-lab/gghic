@@ -1,60 +1,83 @@
-#' Scale Hi-C interaction data
+#' Scale and transform Hi-C interaction data for visualization
+#'
 #' @description
-#' Transforms and scales chromatin interaction data for visualization. Applies
-#' a scaling function to a specified column and handles missing values.
-#' @param data A `ChromatinContacts`, `GInteractions`, `data.frame`, or `tibble`
-#'   object containing chromatin interaction data.
-#' @param scale_column Character string. Name of the column to scale (e.g.,
-#'   `"balanced"`, `"count"`).
-#' @param scale_method Function to apply for scaling. Common choices include
-#'   `log10`, `log2`, or identity function `function(x) x`.
-#' @param remove_na Logical. If `TRUE`, removes rows with `NA` or infinite
-#'   values in the score column. Default is `FALSE`.
-#' @return A tibble with columns: `seqnames1`, `start1`, `end1`, `seqnames2`,
-#'   `start2`, `end2`, and `score` (the scaled values).
+#' Transforms and scales chromatin interaction data to prepare it for
+#' visualization. Applies user-defined scaling functions (e.g., log
+#' transformation) to interaction scores and handles missing values.
+#'
+#' @param data Input data in one of these formats:
+#'   * ChromatinContacts object with imported interactions
+#'   * GInteractions object with score metadata
+#'   * data.frame or tibble with columns: seqnames1, start1, end1, seqnames2,
+#'     start2, end2, plus score column
+#' @param scale_column Character. Name of column containing values to scale.
+#'   Common options:
+#'   * `"balanced"`: ICE-normalized counts (recommended)
+#'   * `"count"`: raw contact counts
+#'   * Any other numeric metadata column
+#' @param scale_method Function to apply for transformation. Common options:
+#'   * `log10`: log10 transformation (default for most Hi-C data)
+#'   * `log2`: log2 transformation
+#'   * `log1p`: log(x + 1) transformation (handles zeros)
+#'   * `identity` or `function(x) x`: no transformation
+#'   * Custom function: any function that takes numeric vector and returns
+#'     numeric vector
+#' @param remove_na Logical. Whether to remove rows with NA or infinite values
+#'   after scaling (default: FALSE). Set TRUE to remove missing data that could
+#'   cause visualization issues.
+#'
+#' @return Tibble (data frame) with standardized columns:
+#'   * `seqnames1`, `start1`, `end1`: First anchor coordinates
+#'   * `seqnames2`, `start2`, `end2`: Second anchor coordinates
+#'   * `score`: Transformed and scaled values
+#'
 #' @details
-#' The function:
-#' 1. Converts input data to a tibble format
-#' 2. Applies the scaling method to the specified column
-#' 3. Creates a `score` column with the transformed values
-#' 4. Optionally removes missing values
-#' 5. Applies out-of-bounds squishing to ensure values are within range
+#' ## Processing steps
+#' 1. Convert input to tibble format
+#' 2. Apply `scale_method` function to `scale_column`
+#' 3. Create new `score` column with transformed values
+#' 4. Optionally remove NA/infinite values
+#' 5. Squish extreme outliers to prevent visualization artifacts
+#'
+#' ## Recommended scaling
+#' For typical Hi-C data visualization:
+#' * Use `"balanced"` column with `log10` transformation
+#' * Set `remove_na = TRUE` to handle bins with no coverage
+#'
+#' ## Custom transformations
+#' You can provide any function for scaling:
+#' ```r
+#' # Square root transformation
+#' scaleData(cc, "count", sqrt)
+#'
+#' # Custom transformation
+#' scaleData(cc, "balanced", function(x) log2(x + 0.1))
+#' ```
+#'
 #' @examples
 #' \dontrun{
 #' # Load Hi-C data
-#' cc <- ChromatinContacts("path/to/cooler.cool") |>
-#'   import()
+#' cc <- ChromatinContacts("file.cool") |> import()
 #'
-#' # Scale using log10 transformation (most common)
+#' # Standard log10 scaling of balanced data
 #' scaled_data <- scaleData(cc, "balanced", log10)
-#' head(scaled_data)
 #'
-#' # Use raw counts without transformation
+#' # Raw counts without transformation
 #' scaled_raw <- scaleData(cc, "count", function(x) x)
 #'
-#' # Scale with log2 and remove missing values
+#' # Log2 scaling with NA removal
 #' scaled_clean <- scaleData(cc, "balanced", log2, remove_na = TRUE)
 #'
-#' # From GInteractions object
-#' gis <- interactions(cc)
-#' scaled_gis <- scaleData(gis, "balanced", log10)
-#'
-#' # From data frame (must have required columns)
-#' df <- as.data.frame(gis)
-#' scaled_df <- scaleData(df, "count", log10)
-#'
-#' # Percentile rank transformation
-#' percentile_rank <- function(x) {
-#'   rank(x, na.last = "keep") / sum(!is.na(x))
-#' }
-#' scaled_pct <- scaleData(cc, "balanced", percentile_rank)
-#'
-#' # Use with ggplot2 directly
+#' # Use with plotting
 #' library(ggplot2)
-#' ggplot(scaled_data, aes(x = (start1 + end1) / 2, y = score)) +
-#'   geom_point(alpha = 0.1) +
-#'   labs(title = "Distance decay", x = "Position", y = "Log10(balanced)")
+#' ggplot() +
+#'   geom_hic(data = scaleData(cc, "balanced", log10),
+#'            aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+#'                seqnames2 = seqnames2, start2 = start2, end2 = end2,
+#'                fill = score))
 #' }
+#'
+#' @seealso [gghic()], [geom_hic()], [ChromatinContacts()]
 #' @export
 scaleData <- function(data, scale_column, scale_method, remove_na = FALSE) {
   if (methods::is(data, "ChromatinContacts")) {
@@ -141,170 +164,85 @@ scaleData <- function(data, scale_column, scale_method, remove_na = FALSE) {
 }
 
 #' Create Hi-C visualization plot
+#'
 #' @name gghic
 #' @aliases gghic,ChromatinContacts-method
-#' @description
-#' High-level wrapper function to create publication-ready Hi-C contact map
-#' visualizations with optional genomic features. Automatically handles data
-#' transformation, feature integration, and theme application.
-#' @param x A `ChromatinContacts` object with imported interaction data, or a
-#'   `GInteractions` object, or a `data.frame`/`tibble` with interaction data.
-#' @param scale_method Function to apply for data transformation. Common
-#'   choices: `log10` (default), `log2`, `function(x) x` (no transformation).
-#' @param scale_column Character string. Name of the column to use for scaling
-#'   when input is `GInteractions` or `data.frame`. Default is `"balanced"`.
-#' @param ideogram Logical. Add chromosome ideogram track. Default is `FALSE`.
-#' @param ideogram_width_ratio Numeric. Height of ideogram relative to heatmap
-#'   height. Default is `1/30`.
-#' @param ideogram_fontsize Numeric. Font size for ideogram labels. Default is
-#'   `10`.
-#' @param ideogram_colour Character. Color for highlighted region on ideogram.
-#'   Default is `"red"`.
-#' @param ideogram_fill Character. Fill color for highlighted region. Default
-#'   is `"#FFE3E680"` (transparent red).
-#' @param annotation Logical. Add gene annotation track. Requires `gtf_path` in
-#'   `...`. Default is `FALSE`.
-#' @param annotation_style Character. Style for gene annotation: `"basic"` or
-#'   `"arrow"`. Default is `"basic"`.
-#' @param annotation_width_ratio Numeric. Height of annotation track relative
-#'   to heatmap. Default is `1/50`.
-#' @param annotation_spacing_ratio Numeric. Spacing between genes. Default is
-#'   `1/3`.
-#' @param annotation_fontsize Numeric. Font size for gene labels. Default is
-#'   `10`.
-#' @param annotation_colour Character. Color for gene features. Default is
-#'   `"#48CFCB"`.
-#' @param annotation_fill Character. Fill color for gene features. Default is
-#'   `"#48CFCB"`.
-#' @param track Logical. Add genomic signal tracks (e.g., ChIP-seq). Requires
-#'   `tracks` in the `ChromatinContacts` object or `data_paths` in `...`.
-#'   Default is `FALSE`.
-#' @param track_width_ratio Numeric. Height of track area relative to heatmap.
-#'   Default is `1/20`.
-#' @param track_spacing_ratio Numeric. Spacing between multiple tracks. Default
-#'   is `1/2`.
-#' @param track_fill Character or vector. Colors for track signals. Default is
-#'   `"black"`.
-#' @param track_fontsize Numeric. Font size for track labels. Default is `5`.
-#' @param tad Logical. Add TAD (topologically associating domain) boundaries.
-#'   Requires `TADs` in the `ChromatinContacts` object or `tad_path` in `...`.
-#'   Default is `FALSE`.
-#' @param tad_colour Character. Color for TAD boundaries. Default is `"grey"`.
-#' @param loop Logical. Add chromatin loop arcs. Requires `loops` in the
-#'   `ChromatinContacts` object or `loop_path` in `...`. Default is `FALSE`.
-#' @param loop_style Character. Style for loops: `"circle"` or `"arc"`.
-#'   Default is `"circle"`.
-#' @param loop_colour Character. Color for loop arcs. Default is `"black"`.
-#' @param loop_fill Fill color for loop arcs. Default is `NA`.
-#' @param concatemer Logical. Add concatemer visualization for multi-way
-#'   contacts. Requires `multi_contacts` in object. Default is `FALSE`.
-#' @param concatemer_width_ratio Numeric. Height of concatemer track. Default
-#'   is `1/100`.
-#' @param concatemer_spacing_ratio Numeric. Spacing between concatemers.
-#'   Default is `1/5`.
-#' @param expand_xaxis Logical. Expand x-axis to show full chromosome context.
-#'   Default is `FALSE`.
-#' @param expand_left Numeric. Left expansion in base pairs.
-#'   If `NULL` (default),
-#'   uses 10× resolution.
-#' @param expand_right Numeric. Right expansion in base pairs. If `NULL`
-#'   (default), uses 10× resolution.
-#' @param ... Additional arguments passed to individual geom functions:
-#'   * For `geom_ideogram()`: `genome`, `highlight`, `length_ratio`
-#'   * For `geom_annotation()`: `gtf_path`, `style`, `maxgap`, `gene_symbols`,
-#'     `include_ncrna`
-#'   * For `geom_track()`: `data_paths`, `data_range`, `rasterize`
-#'   * For `geom_tad()`: `tad_path` (path to BED file), `tad_is_0_based`
-#'     (logical, default TRUE), `stroke`
-#'   * For `geom_loop()`: `loop_path` (path to BEDPE file), `loop_is_0_based`
-#'     (logical, default TRUE), `stroke`
-#'   * For `geom_hic()`: `draw_boundary`, `rasterize`
 #'
-#' @return A `ggplot2` object that can be further customized with additional
-#'   ggplot2 layers and functions.
+#' @description
+#' High-level wrapper for publication-ready Hi-C visualizations with genomic
+#' features.
+#'
+#' @param x ChromatinContacts, GInteractions, or data.frame with interactions.
+#' @param scale_method Function for data transformation (default: log10).
+#' @param scale_column Character. Column to scale for GInteractions/data.frame
+#'   (default: `"balanced"`).
+#' @param ideogram Logical. Add chromosome ideogram (default: FALSE).
+#' @param ideogram_width_ratio Numeric. Ideogram height ratio (default: 1/30).
+#' @param ideogram_fontsize Numeric. Ideogram font size (default: 10).
+#' @param ideogram_colour Character. Highlight color (default: `"red"`).
+#' @param ideogram_fill Character. Highlight fill (default: `"#FFE3E680"`).
+#' @param annotation Logical. Add gene annotations (default: FALSE). Requires
+#'   `gtf_path` in `...`.
+#' @param annotation_style Character. `"basic"` or `"arrow"` (default:
+#'   `"basic"`).
+#' @param annotation_width_ratio Numeric. Track height (default: 1/50).
+#' @param annotation_spacing_ratio Numeric. Gene spacing (default: 1/3).
+#' @param annotation_fontsize Numeric. Label size (default: 10).
+#' @param annotation_colour Character. Feature color (default: `"#48CFCB"`).
+#' @param annotation_fill Character. Feature fill (default: `"#48CFCB"`).
+#' @param track Logical. Add genomic tracks (default: FALSE). Requires `tracks`
+#'   in object or `data_paths` in `...`.
+#' @param track_width_ratio Numeric. Track height (default: 1/20).
+#' @param track_spacing_ratio Numeric. Track spacing (default: 1/2).
+#' @param track_fill Character. Track colors (default: `"black"`).
+#' @param track_fontsize Numeric. Label size (default: 5).
+#' @param tad Logical. Add TAD boundaries (default: FALSE). Requires `TADs` in
+#'   object or `tad_path` in `...`.
+#' @param tad_colour Character. TAD color (default: `"grey"`).
+#' @param loop Logical. Add loops (default: FALSE). Requires `loops` in object
+#'   or `loop_path` in `...`.
+#' @param loop_style Character. `"circle"` or `"arc"` (default: `"circle"`).
+#' @param loop_colour Character. Loop color (default: `"black"`).
+#' @param loop_fill Fill color (default: NA).
+#' @param concatemer Logical. Add multi-way contacts (default: FALSE).
+#' @param concatemer_width_ratio Numeric. Track height (default: 1/100).
+#' @param concatemer_spacing_ratio Numeric. Spacing (default: 1/5).
+#' @param expand_xaxis Logical. Expand x-axis (default: FALSE).
+#' @param expand_left Numeric. Left expansion in bp (default: 10×resolution).
+#' @param expand_right Numeric. Right expansion in bp (default: 10×resolution).
+#' @param ... Additional arguments for geom functions.
+#' @return ggplot2 object.
 #'
 #' @details
-#' `gghic()` provides a high-level interface for creating Hi-C visualizations.
-#' It automatically:
+#' Automatically handles: data scaling, coordinate transformation, feature
+#' integration, axis labels, default theme.
 #'
-#' * Scales interaction data using the specified method
-#' * Applies appropriate coordinate transformations
-#' * Integrates genomic features from the `ChromatinContacts` object
-#' * Sets up axis labels and breaks
-#' * Applies a clean default theme
-#'
-#' **For more control**, use individual `geom_*()` functions with `ggplot2`:
-#'
-#' * `geom_hic()` - Base heatmap layer
-#' * `geom_ideogram()` - Chromosome ideogram
-#' * `geom_annotation()` - Gene annotations
-#' * `geom_track()` - Genomic signal tracks
-#' * `geom_tad()` - TAD boundaries
-#' * `geom_loop()` - Chromatin loops
-#' * `geom_concatemer()` - Multi-way contacts
+#' Use individual `geom_*()` functions for more control: `geom_hic()`,
+#' `geom_ideogram()`, `geom_annotation()`, `geom_track()`, `geom_tad()`,
+#' `geom_loop()`, `geom_concatemer()`.
 #'
 #' @examples
 #' \dontrun{
-#' # === Basic Usage ===
-#'
-#' # Load and visualize Hi-C data
-#' cc <- ChromatinContacts("path/to/cooler.cool") |>
-#'   import()
+#' # Basic usage
+#' cc <- ChromatinContacts("file.cool") |> import()
 #' gghic(cc)
+#' gghic(cc["chr4:0-50000000"])
 #'
-#' # Focus on specific region
-#' cc["chr4:0-50000000"] |>
-#'   gghic()
-#'
-#' # === With Ideogram ===
-#'
-#' # Add chromosome ideogram for context
+#' # With features
 #' gghic(cc, ideogram = TRUE, genome = "hg19")
+#' gghic(cc, tad = TRUE, tad_path = "tads.bed")
+#' gghic(cc, loop = TRUE, loop_path = "loops.bedpe")
 #'
-#' # Customize ideogram appearance
-#' gghic(cc,
-#'   ideogram = TRUE,
-#'   ideogram_width_ratio = 1 / 25,
-#'   ideogram_colour = "blue",
-#'   ideogram_fill = "#ADD8E680"
+#' # With tracks
+#' features(cc, "tracks") <- GRangesList(
+#'   H3K27ac = rtracklayer::import("track.bw")
 #' )
-#'
-#' # === Adding Genomic Features ===
-#'
-#' # Add TAD boundaries
-#' tad_file <- "path/to/tads.bed"
-#' gghic(cc, tad = TRUE, tad_path = tad_file, tad_colour = "darkgreen")
-#'
-#' # Add chromatin loops
-#' loop_file <- "path/to/loops.bedpe"
-#' gghic(cc, loop = TRUE, loop_path = loop_file, loop_colour = "red")
-#'
-#' # Add signal tracks (e.g., ChIP-seq)
-#' track1 <- "path/to/track1.bw"
-#' track2 <- "path/to/track2.bw"
-#' tracks <- GRangesList(
-#'   H3K27ac_rep1 = rtracklayer::import(track1),
-#'   H3K27ac_rep2 = rtracklayer::import(track2)
-#' )
-#' features(cc, "tracks") <- tracks
-#'
-#' gghic(cc, track = TRUE, track_fill = c("blue", "red"))
-#'
-#' # === Axis Expansion ===
-#'
-#' # Expand x-axis to show genomic context
-#' gghic(
-#'   cc,
-#'   expand_xaxis = TRUE,
-#'   expand_left = 1e6, # Extend 1 Mb to the left
-#'   expand_right = 1e6 # Extend 1 Mb to the right
-#' )
+#' gghic(cc, track = TRUE, track_fill = "blue")
 #' }
+#'
 #' @seealso
-#' * [gghic::ChromatinContacts] - Main data class
-#' * [gghic::geom_hic()] - Base heatmap layer
-#' * [gghic::theme_hic()] - Default theme
-#' * [gghic::scaleData()] - Data transformation
+#' [ChromatinContacts], [geom_hic()], [theme_hic()], [scaleData()]
+#'
 #' @export
 methods::setMethod(
   "gghic", "ChromatinContacts",
@@ -541,6 +479,7 @@ methods::setMethod(
 }
 
 #' @rdname gghic
+#'
 #' @param scale_column Character string. Name of the column to use for scaling
 #'   (e.g., `"balanced"`, `"count"`). Used when input is `GInteractions` or
 #'   `data.frame`.
@@ -548,9 +487,11 @@ methods::setMethod(
 #'   is `TRUE`.
 #' @param loop_is_0_based Logical. Whether loop coordinates are 0-based. Default
 #'   is `TRUE`.
+#'
 #' @export
 methods::setMethod("gghic", "data.frame", .function)
 
 #' @rdname gghic
+#'
 #' @export
 methods::setMethod("gghic", "GInteractions", .function)

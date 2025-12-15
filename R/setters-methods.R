@@ -1,43 +1,71 @@
 #' Set genomic features in ChromatinContacts object
 #'
+#' @name features-set
+#' @aliases features<-,ChromatinContacts,character,GRanges-method
 #' @description
-#' Assigns genomic features (TADs, compartments, multi_contacts, or tracks) to
-#' a `ChromatinContacts` object. The features are automatically confined to
-#' overlap with the imported interaction regions.
+#' Assigns or updates genomic features (TADs, loops, compartments, tracks) in
+#' a ChromatinContacts object. Features are automatically subsetted to overlap
+#' with loaded interactions, ensuring only relevant data is retained.
 #'
-#' @param x A `ChromatinContacts` object.
-#' @param name Character string. Name of the feature slot. Must be one of:
-#'   `"compartments"`, `"TADs"`, `"multi_contacts"`, or `"tracks"`.
-#' @param ... Additional arguments (not used).
-#' @param value A `GRanges` object containing the feature data.
+#' @param x ChromatinContacts object with imported interaction data.
+#' @param name Character. Feature slot name:
+#'   * `"compartments"`: A/B compartment annotations (GRanges)
+#'   * `"TADs"`: Topologically associating domains (GRanges)
+#'   * `"multi_contacts"`: Multi-way contact regions (GRanges)
+#'   * `"loops"`: Chromatin loop calls (GInteractions)
+#'   * `"tracks"`: Genomic signal tracks (GRangesList)
+#' @param ... Additional arguments (not currently used).
+#' @param value Feature data with appropriate type:
+#'   * GRanges: for compartments, TADs, multi_contacts
+#'   * GInteractions: for loops
+#'   * GRangesList or list: for tracks (will be converted to GRangesList)
 #'
-#' @return The modified `ChromatinContacts` object.
+#' @return ChromatinContacts object with updated features slot. The modified
+#'   object is returned invisibly to support piping.
 #'
 #' @details
-#' Features are automatically subsetted to only include regions that overlap
-#' with the imported interaction data. This ensures consistency when subsetting
-#' the `ChromatinContacts` object.
+#' ## Requirements
+#' Interactions must be imported before assigning features. Use
+#' `import()` first.
 #'
-#' **Note:** For tracks, use `GRangesList` instead. If a single `GRanges` is
-#' provided for tracks, it will be converted to a `GRangesList` with one element.
+#' ## Automatic subsetting
+#' Features are automatically filtered to retain only elements overlapping the
+#' loaded Hi-C interaction data. This prevents visualization errors and reduces
+#' memory usage.
 #'
-#' **Important:** Interactions must be imported before features can be assigned.
+#' ## Track naming
+#' When providing tracks as GRangesList, ensure they are named for proper
+#' labeling in plots. Unnamed tracks receive default names (`track1`, `track2`,
+#' etc.).
 #'
 #' @examples
 #' \dontrun{
-#' # Import interactions first
+#' # Load Hi-C data first
 #' cc <- ChromatinContacts("sample.cool") |> import()
 #'
-#' # Add TADs
-#' tads <- rtracklayer::import("TADs.bed")
-#' features(cc, "TADs") <- tads
+#' # Add TADs from BED file
+#' features(cc, "TADs") <- rtracklayer::import("TADs.bed")
+#'
+#' # Add chromatin loops
+#' features(cc, "loops") <- loops_ginteractions
+#'
+#' # Add multiple ChIP-seq tracks
+#' features(cc, "tracks") <- GRangesList(
+#'   H3K27ac = rtracklayer::import("H3K27ac.bw"),
+#'   H3K4me3 = rtracklayer::import("H3K4me3.bw")
+#' )
 #'
 #' # Add compartments
-#' features(cc, "compartments") <- compartments_gr
+#' features(cc, "compartments") <- compartment_gr
+#'
+#' # Chain operations
+#' cc <- ChromatinContacts("sample.cool") |>
+#'   import() |>
+#'   `features<-`("TADs", value = tads) |>
+#'   `features<-`("loops", value = loops)
 #' }
 #'
-#' @seealso [features()]
-#' @rdname features-set
+#' @seealso [features()], [ChromatinContacts()], [import-ChromatinContacts]
 #' @export
 methods::setMethod(
   "features<-", c("ChromatinContacts", "character", "GRanges"),
@@ -67,38 +95,6 @@ methods::setMethod(
   }
 )
 
-#' Set loop features in ChromatinContacts object
-#'
-#' @description
-#' Assigns chromatin loop data to a `ChromatinContacts` object. Loops are
-#' automatically confined to overlap with the imported interaction regions.
-#'
-#' @param x A `ChromatinContacts` object.
-#' @param name Character string. Must be `"loops"`.
-#' @param ... Additional arguments (not used).
-#' @param value A `GInteractions` object containing loop data.
-#'
-#' @return The modified `ChromatinContacts` object.
-#'
-#' @details
-#' Loops are stored as `GInteractions` objects representing paired genomic
-#' regions. They are automatically subsetted to only include loops that overlap
-#' with the imported interaction data.
-#'
-#' **Important:** Interactions must be imported before loops can be assigned.
-#'
-#' @examples
-#' \dontrun{
-#' # Import interactions first
-#' cc <- ChromatinContacts("sample.cool") |> import()
-#'
-#' # Add loops
-#' loops <- rtracklayer::import("loops.bedpe") |>
-#'   makeGInteractionsFromGRangesPairs()
-#' features(cc, "loops") <- loops
-#' }
-#'
-#' @seealso [features()]
 #' @rdname features-set
 #' @export
 methods::setMethod(
@@ -115,41 +111,6 @@ methods::setMethod(
   }
 )
 
-#' Set track features in ChromatinContacts object
-#'
-#' @description
-#' Assigns genomic signal tracks (e.g., ChIP-seq, ATAC-seq) to a
-#' `ChromatinContacts` object. Tracks are automatically confined to overlap with
-#' the imported interaction regions.
-#'
-#' @param x A `ChromatinContacts` object.
-#' @param name Character string. Must be `"tracks"`.
-#' @param ... Additional arguments. Can include `which` to specify track names.
-#' @param value A `GRangesList` object containing track data. Each element
-#'   should be a `GRanges` object representing a single track.
-#'
-#' @return The modified `ChromatinContacts` object.
-#'
-#' @details
-#' Tracks should be provided as a `GRangesList` where each element represents
-#' a different signal track. If the list is unnamed, default names
-#' (`track1`, `track2`, etc.) will be assigned.
-#'
-#' **Important:** Interactions must be imported before tracks can be assigned.
-#'
-#' @examples
-#' \dontrun{
-#' # Import interactions first
-#' cc <- ChromatinContacts("sample.cool") |> import()
-#'
-#' # Add tracks from BigWig files
-#' track1 <- rtracklayer::import("signal1.bw")
-#' track2 <- rtracklayer::import("signal2.bw")
-#' tracks <- GRangesList(ChIP1 = track1, ChIP2 = track2)
-#' features(cc, "tracks") <- tracks_list
-#' }
-#'
-#' @seealso [features()]
 #' @rdname features-set
 #' @export
 methods::setMethod(

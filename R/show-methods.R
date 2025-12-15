@@ -130,3 +130,126 @@ methods::setMethod("show", "ChromatinContacts", function(object) {
 
   cat(strrep("-", 50), "\n", sep = "")
 })
+
+methods::setMethod("show", "MultiWayContacts", function(object) {
+  cat("MultiWayContacts object\n")
+  cat(strrep("-", 50), "\n", sep = "")
+
+  if (length(object@pairs_path) > 0) {
+    cat("File: ", basename(object@pairs_path), "\n", sep = "")
+  }
+
+  if (!is.null(object@focus)) {
+    n_focus <- length(object@focus)
+    cat(
+      "Focus: ", paste(object@focus, collapse = ", "),
+      ifelse(n_focus > 1, paste0(" (", n_focus, " chromosomes)"), ""), "\n",
+      sep = ""
+    )
+  } else {
+    cat("Focus: genome-wide\n")
+  }
+
+  if (!is.null(object@bin_size)) {
+    cat(
+      "Bin size: ", format(object@bin_size, big.mark = ","), " bp\n",
+      sep = ""
+    )
+  }
+
+  if (!is.null(object@pairs)) {
+    n_pairs <- nrow(object@pairs)
+    cat(
+      "Pairs: ", format(n_pairs, big.mark = ","),
+      " read", ifelse(n_pairs != 1, "s", ""), "\n",
+      sep = ""
+    )
+
+    pair_cols <- colnames(object@pairs)
+    if (length(pair_cols) > 0) {
+      cat(
+        "  Columns: ", paste(head(pair_cols, 5), collapse = ", "),
+        if (length(pair_cols) > 5) ", ..." else "", "\n",
+        sep = ""
+      )
+    }
+  } else {
+    cat("Pairs: not loaded (use import() to load)\n")
+  }
+
+  if (!is.null(object@hypergraph)) {
+    n_bins <- nrow(object@hypergraph)
+    n_hyperedges <- ncol(object@hypergraph)
+    n_nonzero <- Matrix::nnzero(object@hypergraph)
+
+    cat(
+      "Hypergraph: ", format(n_bins, big.mark = ","), " bins x ",
+      format(n_hyperedges, big.mark = ","), " hyperedges\n",
+      sep = ""
+    )
+    cat(
+      "  Non-zero entries: ", format(n_nonzero, big.mark = ","),
+      " (", sprintf("%.2f%%", 100 * n_nonzero / (n_bins * n_hyperedges)),
+      " sparse)\n",
+      sep = ""
+    )
+
+    if (nrow(object@bin_info) > 0) {
+      n_bins_info <- nrow(object@bin_info)
+      cat(
+        "  Bin info: ", format(n_bins_info, big.mark = ","),
+        " bin", ifelse(n_bins_info != 1, "s", ""), "\n",
+        sep = ""
+      )
+    }
+
+    if (length(object@multiways) > 0) {
+      multiway_range <- range(object@multiways)
+      multiway_median <- stats::median(object@multiways)
+      cat(
+        "  Contact order: ", multiway_range[1], "-", multiway_range[2],
+        " (median: ", multiway_median, ")\n",
+        sep = ""
+      )
+    }
+
+    if (nrow(object@weights) > 0) {
+      weight_cols <- colnames(object@weights)
+      cat(
+        "  Weights: ", paste(weight_cols, collapse = ", "), "\n",
+        sep = ""
+      )
+    }
+  } else {
+    cat("Hypergraph: not built (use build() to construct)\n")
+  }
+
+  if (!is.null(object@tidied_hypergraph)) {
+    n_tidy <- nrow(object@tidied_hypergraph)
+    cat(
+      "Tidied hypergraph: ", format(n_tidy, big.mark = ","),
+      " edge", ifelse(n_tidy != 1, "s", ""), "\n",
+      sep = ""
+    )
+  }
+
+  if (!is.null(object@select_hypergraph)) {
+    n_select <- nrow(object@select_hypergraph)
+    cat(
+      "Selected hypergraph: ", format(n_select, big.mark = ","),
+      " hyperedge", ifelse(n_select != 1, "s", ""), " for plotting\n",
+      sep = ""
+    )
+
+    if ("type" %in% colnames(object@select_hypergraph)) {
+      type_counts <- table(object@select_hypergraph$type)
+      cat("  Types: ")
+      cat(paste(
+        names(type_counts), " (", type_counts, ")",
+        sep = "", collapse = ", "
+      ), "\n", sep = "")
+    }
+  }
+
+  cat(strrep("-", 50), "\n", sep = "")
+})

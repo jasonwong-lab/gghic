@@ -1,24 +1,20 @@
 #' Convert ChromatinContacts to tibble
 #'
+#' @name as_tibble
+#' @aliases as_tibble,ChromatinContacts-method
 #' @description
-#' Converts interaction data or feature data from a `ChromatinContacts` object
-#' to a tibble (data frame).
+#' Converts interaction or feature data from ChromatinContacts to tibble.
 #'
-#' @param x A `ChromatinContacts` object.
-#' @param which Character string. Which data to convert: `"interactions"`
-#'   (default) for Hi-C interactions, or a feature name like `"TADs"`,
-#'   `"loops"`, `"compartments"`, or `"multi_contacts"`.
+#' @param x ChromatinContacts object.
+#' @param which Character. Data to convert: `"interactions"` (default), or
+#'   feature name (`"TADs"`, `"loops"`, `"compartments"`, `"multi_contacts"`).
 #'
-#' @return A tibble containing the requested data.
+#' @return Tibble with requested data.
 #'
 #' @examples
 #' \dontrun{
 #' cc <- ChromatinContacts("sample.cool") |> import()
-#'
-#' # Convert interactions to tibble
 #' df <- as_tibble(cc)
-#'
-#' # Convert specific feature
 #' tads_df <- as_tibble(cc, which = "TADs")
 #' }
 #'

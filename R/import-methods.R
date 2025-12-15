@@ -4,72 +4,37 @@
 #' @aliases import,ChromatinContacts,ANY,ANY-method
 #'
 #' @description
-#' Imports chromatin interaction data from a cooler file into a
-#' ChromatinContacts object. The method loads bin-level interactions and
-#' applies balancing weights if available.
+#' Imports interaction data from cooler file into ChromatinContacts object.
 #'
-#' @param con A `ChromatinContacts` object containing the path to the cooler
-#'   file and optional focus regions.
-#' @param format Character string specifying the balance column name to use
-#'   for normalization. This parameter is used as the second positional
-#'   argument for convenience. Default is `"weight"`.
-#' @param text Not used. Included for compatibility with the generic.
-#' @param balance_column Character string specifying the balance column name
-#'   to use for normalization. If `format` is provided, it overrides this
-#'   parameter. Default is `"weight"`.
-#' @param ... Additional arguments (currently not used).
+#' @param con ChromatinContacts object with cooler file path.
+#' @param format Character. Balance column name for normalization (default:
+#'   `"weight"`). Can be provided as second argument for convenience.
+#' @param text Not used (compatibility).
+#' @param balance_column Character. Balance column name (overridden by
+#'   `format` if provided).
+#' @param ... Additional arguments (not used).
 #'
-#' @return A `ChromatinContacts` object with the `interactions` slot populated
-#'   by a `GInteractions` object containing:
-#'   * bin_id1: Bin ID for the first anchor
-#'   * bin_id2: Bin ID for the second anchor
-#'   * count: Raw interaction count
-#'   * balanced: Normalized interaction count (if balance weights are available)
+#' @return ChromatinContacts with `interactions` slot populated by GInteractions
+#'   containing bin_id1, bin_id2, count, and balanced columns.
 #'
 #' @details
-#' The function loads chromatin interaction data from a cooler file. If a
-#' focus region is specified in the `ChromatinContacts` object, only
-#' interactions within or between those regions are loaded. Otherwise, all
-#' genome-wide interactions are imported.
+#' Loads Hi-C data from cooler file. If focus regions are specified, only those
+#' interactions are loaded. Balance weights (e.g., "weight", "KR", "VC") are
+#' used to normalize raw counts. Warning issued if balance column not found.
 #'
-#' The balance column (e.g., "weight", "KR", "VC") is used to normalize
-#' the raw counts. If the specified balance column is not found in the
-#' cooler file, a warning is issued and unbalanced counts are returned.
-#'
-#' For convenience, the balance column name can be provided as the second
-#' positional argument: `import(cc, "KR")` is equivalent to
+#' Shorthand: `import(cc, "KR")` is equivalent to
 #' `import(cc, balance_column = "KR")`.
 #'
 #' @examples
 #' \dontrun{
-#' # Basic import from cooler file
-#' cc <- ChromatinContacts("sample.cool")
-#' cc <- import(cc)
-#'
-#' # Using pipe operator
+#' # Basic import
 #' cc <- ChromatinContacts("sample.cool") |> import()
 #'
 #' # With specific balance column
-#' cc <- import(cc, balance_column = "KR")
+#' cc <- import(cc, "KR")
 #'
-#' # Convenient syntax for balance column
-#' cc <- import(cc, "VC")
-#'
-#' # Import with focus region (more efficient)
-#' cc <- ChromatinContacts(
-#'   "sample.cool",
-#'   focus = "chr1:1000000-5000000"
-#' ) |> import()
-#'
-#' # Multi-resolution cooler
-#' cc <- ChromatinContacts(
-#'   "sample.mcool",
-#'   resolution = 10000
-#' ) |> import()
-#'
-#' # Check imported data
-#' interactions(cc)
-#' length(interactions(cc))
+#' # Focus region (more efficient)
+#' cc <- ChromatinContacts("sample.cool", focus = "chr1:1-5e6") |> import()
 #' }
 #'
 #' @export
@@ -153,6 +118,88 @@ methods::setMethod(
       message("Setting resolution based on the bin size.")
       con@resolution <- width(bins)[1]
     }
+
+    con
+  }
+)
+
+#' Import multi-way contact data
+#'
+#' @name import-MultiWayContacts
+#' @aliases import,MultiWayContacts,ANY,ANY-method
+#'
+#' @description
+#' Imports multi-way chromatin contact data from a .pairs file into a
+#' MultiWayContacts object. The method loads pairwise contacts from long-read
+#' sequencing experiments (e.g., Pore-C).
+#'
+#' @param con A `MultiWayContacts` object containing the path to the pairs file
+#'   and optional focus regions.
+#' @param format Logical indicating whether to include inter-chromosomal
+#'   contacts. This parameter is used as the second positional argument for
+#'   convenience. Default is `FALSE`.
+#' @param text Not used. Included for compatibility with the generic.
+#' @param inter_chrom Logical. If `TRUE`, includes inter-chromosomal contacts.
+#'   If `FALSE` (default), only intra-chromosomal contacts are loaded. If
+#'   `format` is provided, it overrides this parameter.
+#' @param ... Additional arguments (currently not used).
+#'
+#' @return A `MultiWayContacts` object with the `pairs` slot populated by a
+#'   data frame containing:
+#'   * read_name: Unique identifier for each read
+#'   * chrom1, chrom2: Chromosomes for each contact
+#'   * pos1, pos2: Genomic positions for each contact
+#'
+#' @details
+#' The function loads pairwise contact data from a .pairs file format (typically
+#' .pairs.gz). If a focus chromosome is specified in the `MultiWayContacts`
+#' object, only contacts involving that chromosome are loaded.
+#'
+#' When `inter_chrom = FALSE`, reads that contain any inter-chromosomal
+#' contacts are completely removed from the dataset to ensure clean
+#' intra-chromosomal analysis.
+#'
+#' The pairs file is read using optimized C code for efficient parsing of
+#' large files.
+#'
+#' For convenience, the inter_chrom parameter can be provided as the second
+#' positional argument: `import(mc, TRUE)` is equivalent to
+#' `import(mc, inter_chrom = TRUE)`.
+#'
+#' @examples
+#' \dontrun{
+#' # Basic import (intra-chromosomal only)
+#' mc <- MultiWayContacts("sample.pairs.gz")
+#' mc <- import(mc)
+#'
+#' # Using pipe operator
+#' mc <- MultiWayContacts("sample.pairs.gz") |> import()
+#'
+#' # Include inter-chromosomal contacts
+#' mc <- import(mc, inter_chrom = TRUE)
+#'
+#' # Convenient syntax
+#' mc <- import(mc, TRUE)
+#'
+#' # Import with focus on specific chromosome
+#' mc <- MultiWayContacts(
+#'   "sample.pairs.gz",
+#'   focus = "chr1"
+#' ) |> import()
+#'
+#' # Check imported data
+#' head(mc@pairs)
+#' }
+#'
+#' @export
+methods::setMethod(
+  "import", "MultiWayContacts", function(
+    con, format, text, inter_chrom = FALSE, ...
+  ) {
+    if (!missing(format)) {
+      inter_chrom <- format
+    }
+    con@pairs <- .loadPairsData(NULL, con@pairs_path, con@focus, inter_chrom)
 
     con
   }
