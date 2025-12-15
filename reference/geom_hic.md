@@ -1,8 +1,6 @@
 # geom_hic
 
-Creates a Hi-C contact heatmap layer using diamond/rotated square
-geometry. This is the core visualization layer for displaying chromatin
-interaction frequencies.
+Creates Hi-C contact heatmap layer with diamond-shaped tiles.
 
 ## Usage
 
@@ -30,7 +28,7 @@ geom_hic(
 
 - mapping:
 
-  Set of aesthetic mappings created by
+  Aesthetic mappings from
   [`ggplot2::aes()`](https://ggplot2.tidyverse.org/reference/aes.html).
 
 - data:
@@ -115,37 +113,35 @@ geom_hic(
 
 - rasterize:
 
-  Logical. Rasterize the heatmap for better performance with large
-  datasets. Default is `TRUE`.
+  Logical. Rasterize for performance (default: TRUE).
 
 - dpi:
 
-  Numeric. Resolution for rasterization. Default is `300`.
+  Numeric. Rasterization resolution (default: 300).
 
 - dev:
 
-  Character. Graphics device for rasterization. Default is `"cairo"`.
+  Character. Graphics device (default: `"cairo"`).
 
 - scale:
 
-  Numeric. Scaling factor for rasterization. Default is `1`.
+  Numeric. Rasterization scaling (default: 1).
 
 - draw_boundary:
 
-  Logical. Draw boundary lines between chromosomes in multi-chromosome
-  plots. Default is `TRUE`.
+  Logical. Draw chromosome boundaries (default: TRUE).
 
 - boundary_colour:
 
-  Character. Color for boundary lines. Default is `"black"`.
+  Character. Boundary color (default: `"black"`).
 
 - linetype:
 
-  Line type for boundaries. Default is `"dashed"`.
+  Boundary line type (default: `"dashed"`).
 
 - ...:
 
-  Additional parameters (currently unused).
+  Additional parameters (unused).
 
 ## Value
 
@@ -153,26 +149,11 @@ A ggplot2 layer.
 
 ## Details
 
-`geom_hic()` transforms rectangular interaction data into diamond-shaped
-heatmap tiles. Each interaction is plotted as a rotated square at 45
-degrees, creating the characteristic triangular Hi-C heatmap
-visualization.
+Transforms interaction data into diamond tiles at 45°, creating the
+characteristic triangular Hi-C visualization.
 
-**Required aesthetics:**
-
-- `seqnames1` - Chromosome name for first anchor
-
-- `start1` - Start position for first anchor
-
-- `end1` - End position for first anchor
-
-- `seqnames2` - Chromosome name for second anchor
-
-- `start2` - Start position for second anchor
-
-- `end2` - End position for second anchor
-
-- `fill` - Value to map to color (typically scaled contact frequency)
+**Required aesthetics:** seqnames1, start1, end1, seqnames2, start2,
+end2, fill
 
 ## See also
 
@@ -184,31 +165,13 @@ visualization.
 
 ``` r
 if (FALSE) { # \dontrun{
-# Load and import Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool") |>
-  import()
-
-# Basic Hi-C heatmap using geom_hic
+cc <- ChromatinContacts("file.cool") |> import()
 library(ggplot2)
 ggplot() +
   geom_hic(
-    data = scaleData(cc["chr4"], "balanced", log10), aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-    )
-  ) +
-  scale_fill_gradientn(colors = c("white", "red")) +
-  theme_hic()
-
-# Multi-chromosome plot
-cc_multi <- cc[c("chr4", "chr11")]
-ggplot() +
-  geom_hic(
-    data = scaleData(cc_multi, "balanced", log10), aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-    ), draw_boundary = TRUE, boundary_colour = "blue"
-  ) +
-  theme_hic()
+    data = scaleData(cc["chr4"], "balanced", log10),
+    aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+        seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score)
+  ) + theme_hic()
 } # }
 ```

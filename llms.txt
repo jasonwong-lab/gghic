@@ -59,69 +59,64 @@ devtools::install_github("jasonwong-lab/gghic")
   : ChromatinContacts S4 class
 - [`ChromatinContacts()`](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md)
   : Create a ChromatinContacts object
-- [`as_tibble(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/as_tibble-ChromatinContacts-method.md)
+- [`MultiWayContacts()`](https://jasonwong-lab.github.io/gghic/reference/MultiWayContacts-class.md)
+  : MultiWayContacts S4 class
+- [`as_tibble()`](https://jasonwong-lab.github.io/gghic/reference/as_tibble.md)
   : Convert ChromatinContacts to tibble
-- [`buildHypergraph()`](https://jasonwong-lab.github.io/gghic/reference/buildHypergraph.md)
-  : Build Hypergraph from Multi-way Contacts
+- [`build()`](https://jasonwong-lab.github.io/gghic/reference/build.md)
+  : Build hypergraph from multi-way contacts
 - [`concatemers2Gis()`](https://jasonwong-lab.github.io/gghic/reference/concatemers2gis.md)
-  : Convert concatemer reads to pairwise interactions
-- [`features(`*`<ChromatinContacts>`*`,`*`<character>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features-ChromatinContacts-character-method.md)
-  : Get specific genomic features from ChromatinContacts object
-- [`` `features<-`( ``*`<ChromatinContacts>`*`,`*`<character>`*`,`*`<GRanges>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features-set.md)
-  [`` `features<-`( ``*`<ChromatinContacts>`*`,`*`<character>`*`,`*`<GInteractions>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features-set.md)
-  [`` `features<-`( ``*`<ChromatinContacts>`*`,`*`<character>`*`,`*`<GRangesList>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features-set.md)
-  [`` `features<-`( ``*`<ChromatinContacts>`*`,`*`<character>`*`,`*`<list>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features-set.md)
+  : Convert multi-way concatemer reads to pairwise Hi-C interactions
+- [`` `features<-`() ``](https://jasonwong-lab.github.io/gghic/reference/features-set.md)
   : Set genomic features in ChromatinContacts object
-- [`features(`*`<ChromatinContacts>`*`,`*`<missing>`*`)`](https://jasonwong-lab.github.io/gghic/reference/features.md)
-  : Get all genomic features from ChromatinContacts object
-- [`focus(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/focus-ChromatinContacts-method.md)
-  : Get focus regions of ChromatinContacts object
+- [`features()`](https://jasonwong-lab.github.io/gghic/reference/features.md)
+  : Get genomic features
+- [`focus()`](https://jasonwong-lab.github.io/gghic/reference/focus.md)
+  : Get focus regions
 - [`geom_annotation()`](https://jasonwong-lab.github.io/gghic/reference/geom_annotation.md)
-  : geom_annotation
+  : Add gene annotation tracks to Hi-C plots
 - [`geom_concatemer()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer.md)
-  : geom_concatemer
+  : Visualize multi-way contact concatemers below Hi-C map
 - [`geom_concatemer2()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer2.md)
-  : geom_concatemer2
+  : Visualize concatemers (a second version)
 - [`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md)
   : geom_hic
 - [`geom_hic_under()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic_under.md)
-  : geom_hic_under
+  : Visualize inverted Hi-C heatmap below main contact map
 - [`geom_hypergraph()`](https://jasonwong-lab.github.io/gghic/reference/geom_hypergraph.md)
   : Visualize Multi-way Contacts as Hypergraph
 - [`geom_ideogram()`](https://jasonwong-lab.github.io/gghic/reference/geom_ideogram.md)
-  : geom_ideogram
+  : Add chromosome ideogram annotation to Hi-C plot
 - [`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md)
-  : geom_loop
+  : Visualize chromatin loops on Hi-C heatmap
 - [`geom_loop2()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop2.md)
-  : geom_loop2
+  : Visualize chromatin loops (a second version)
 - [`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md)
-  : geom_tad
+  : Visualize TAD boundaries on Hi-C heatmap
 - [`geom_tad2()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad2.md)
-  : geom_tad2
+  : Visualize TAD boundaries (a second version)
 - [`geom_track()`](https://jasonwong-lab.github.io/gghic/reference/geom_track.md)
-  : geom_track
+  : Add genomic signal tracks to Hi-C plots
 - [`geom_track2()`](https://jasonwong-lab.github.io/gghic/reference/geom_track2.md)
-  : geom_track2
+  : Add genomic signal tracks with direct data input (a second version)
 - [`getBreaksLabels()`](https://jasonwong-lab.github.io/gghic/reference/getBreaksLabels.md)
   : Generate axis breaks and labels for multi-chromosome plots
-- [`gghic(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
-  [`gghic(`*`<data.frame>`*`)`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
-  [`gghic(`*`<GInteractions>`*`)`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
+- [`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
   : Create Hi-C visualization plot
+- [`gghypergraph()`](https://jasonwong-lab.github.io/gghic/reference/gghypergraph.md)
+  : Visualize multi-way chromatin contacts as hypergraph network
+- [`hypergraphData()`](https://jasonwong-lab.github.io/gghic/reference/hypergraphData.md)
+  : Get hypergraph data from MultiWayContacts object
 - [`import(`*`<ChromatinContacts>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://jasonwong-lab.github.io/gghic/reference/import-ChromatinContacts.md)
   : Import chromatin contact data
+- [`import(`*`<MultiWayContacts>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://jasonwong-lab.github.io/gghic/reference/import-MultiWayContacts.md)
+  : Import multi-way contact data
 - [`interactions(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/interactions-ChromatinContacts-method.md)
-  : Get interaction data from ChromatinContacts object
+  : Get interaction data
 - [`plotCoverageCurve()`](https://jasonwong-lab.github.io/gghic/reference/plotCoverageCurve.md)
   : Plot Coverage Fraction by Resolution
-- [`plotHypergraph()`](https://jasonwong-lab.github.io/gghic/reference/plotHypergraph.md)
-  : Plot Hypergraph Visualization
 - [`plotResolutionCoverage()`](https://jasonwong-lab.github.io/gghic/reference/plotResolutionCoverage.md)
   : Plot Resolution vs Coverage
-- [`print(`*`<hypergraph>`*`)`](https://jasonwong-lab.github.io/gghic/reference/print.hypergraph.md)
-  : Print method for hypergraph objects
-- [`resolution(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/resolution-ChromatinContacts-method.md)
-  : Get resolution of ChromatinContacts object
 - [`calculateResolutionDepth()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   [`calculateGenomeCoverage()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   [`findOptimalResolution()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
@@ -130,10 +125,14 @@ devtools::install_github("jasonwong-lab/gghic")
   [`calcGenomeCovChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   [`findOptResChunked()`](https://jasonwong-lab.github.io/gghic/reference/resolution-depth.md)
   : Calculate Resolution and Depth for Pairs Data
+- [`resolution()`](https://jasonwong-lab.github.io/gghic/reference/resolution.md)
+  : Get resolution of ChromatinContacts object
 - [`scaleData()`](https://jasonwong-lab.github.io/gghic/reference/scaleData.md)
-  : Scale Hi-C interaction data
+  : Scale and transform Hi-C interaction data for visualization
+- [`select()`](https://jasonwong-lab.github.io/gghic/reference/select.md)
+  : Select top hyperedges for visualization
 - [`seqinfo(`*`<ChromatinContacts>`*`)`](https://jasonwong-lab.github.io/gghic/reference/seqinfo-ChromatinContacts-method.md)
-  : Get sequence information from ChromatinContacts object
+  : Get sequence information
 - [`subsetByOverlaps(`*`<ChromatinContacts>`*`,`*`<numeric>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
   [`subsetByOverlaps(`*`<ChromatinContacts>`*`,`*`<logical>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
   [`subsetByOverlaps(`*`<ChromatinContacts>`*`,`*`<GRanges>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
@@ -143,11 +142,11 @@ devtools::install_github("jasonwong-lab/gghic")
   [`` `[`( ``*`<ChromatinContacts>`*`,`*`<GRanges>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
   [`` `[`( ``*`<ChromatinContacts>`*`,`*`<GInteractions>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
   [`` `[`( ``*`<ChromatinContacts>`*`,`*`<character>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://jasonwong-lab.github.io/gghic/reference/subset-methods.md)
-  : Subset ChromatinContacts objects
+  : Subset ChromatinContacts objects by various criteria
 - [`theme_hic()`](https://jasonwong-lab.github.io/gghic/reference/theme_hic.md)
-  : theme_hic
-- [`tidyHypergraph()`](https://jasonwong-lab.github.io/gghic/reference/tidyHypergraph.md)
-  : Convert Hypergraph to Long Format for Visualization
+  : ggplot2 theme optimized for Hi-C contact maps
+- [`tidy()`](https://jasonwong-lab.github.io/gghic/reference/tidy.md) :
+  Tidy hypergraph to long format
 
 # Articles
 

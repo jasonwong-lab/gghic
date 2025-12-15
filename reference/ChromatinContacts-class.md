@@ -1,60 +1,55 @@
 # ChromatinContacts S4 class
 
-An S4 class to represent chromatin contact data from Hi-C experiments
-stored in cooler format (.cool or .mcool files). This lightweight object
-acts as a pointer to Hi-C data without loading the full matrix into
-memory until explicitly imported.
+S4 class representing chromatin contact data from cooler files (.cool or
+.mcool). Memory-efficient pointer that loads data only when `import()`
+is called.
 
 ## Details
 
-The `ChromatinContacts` class provides an efficient framework for
-managing Hi-C data. Key features:
+Key features:
 
-- **Memory efficient**: Only loads data when `import()` is called
+- Memory-efficient: loads data only when needed
 
-- **Flexible focusing**: Subset regions before or after loading
+- Flexible focusing: subset regions before or after import
 
-- **Feature integration**: Attach TADs, loops, and tracks that
-  auto-subset with the interaction data
+- Feature integration: automatically subsets attached features
 
-- **Multi-resolution support**: Works with both .cool and .mcool files
+- Multi-resolution: supports both .cool and .mcool files
 
-The `focus` parameter accepts flexible specifications:
+Focus parameter options:
 
 - Single region: `"chr1:1000000-2000000"`
 
 - Whole chromosome: `"chr1"`
 
-- Multiple regions with OR: `"chr1 | chr2"` (includes all interactions)
+- Multiple regions (all combinations): `"chr1 | chr2"`
 
-- Inter-regional with AND: `"chr1 & chr2"` (inter-chromosomal only)
+- Inter-chromosomal only: `"chr1 & chr2"`
 
-- GInteractions object for programmatic definition
+- GInteractions object for programmatic control
 
 ## Slots
 
 - `cooler_path`:
 
-  Character string. Path to the .cool or .mcool file.
+  Character. Path to cooler file.
 
 - `resolution`:
 
-  Integer or NULL. Resolution in base pairs for .mcool files. Required
-  for multi-resolution cooler files.
+  Integer or NULL. Resolution in base pairs (required for .mcool files).
 
 - `focus`:
 
-  GInteractions or NULL. Genomic regions of interest to focus on. Can be
-  specified as a GInteractions object, or NULL for genome-wide data.
+  GInteractions or NULL. Genomic regions of interest (NULL for
+  genome-wide).
 
 - `interactions`:
 
-  GInteractions or NULL. The imported Hi-C interaction data. Initially
-  NULL until `import()` is called.
+  GInteractions or NULL. Imported Hi-C interaction data.
 
 - `seqinfo`:
 
-  Seqinfo or NULL. Sequence information for the genome assembly.
+  Seqinfo or NULL. Genome assembly sequence information.
 
 - `compartments`:
 
@@ -62,7 +57,7 @@ The `focus` parameter accepts flexible specifications:
 
 - `TADs`:
 
-  GRanges or NULL. Topologically associating domains (TADs).
+  GRanges or NULL. Topologically associating domains.
 
 - `loops`:
 
@@ -70,58 +65,36 @@ The `focus` parameter accepts flexible specifications:
 
 - `multi_contacts`:
 
-  GRanges or NULL. Multi-way contact regions (e.g., from Pore-C data).
+  GRanges or NULL. Multi-way contact regions.
 
 - `tracks`:
 
-  GRangesList. Additional genomic signal tracks (e.g., ChIP-seq,
-  ATAC-seq).
+  GRangesList. Genomic signal tracks (ChIP-seq, ATAC-seq, etc.).
 
 ## See also
 
-- [`ChromatinContacts()`](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md) -
-  Constructor function
-
-- [import-ChromatinContacts](https://jasonwong-lab.github.io/gghic/reference/import-ChromatinContacts.md) -
-  Load interaction data
-
-- [`features()`](https://jasonwong-lab.github.io/gghic/reference/generics.md) -
-  Access or set genomic features
-
-- [`resolution()`](https://jasonwong-lab.github.io/gghic/reference/generics.md) -
-  Get resolution
-
-- [`focus()`](https://jasonwong-lab.github.io/gghic/reference/generics.md) -
-  Get focus regions
-
-- [`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md) -
-  Create visualizations
+[`ChromatinContacts()`](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md),
+[import-ChromatinContacts](https://jasonwong-lab.github.io/gghic/reference/import-ChromatinContacts.md),
+[`features()`](https://jasonwong-lab.github.io/gghic/reference/features.md),
+[`resolution()`](https://jasonwong-lab.github.io/gghic/reference/resolution.md),
+[`focus()`](https://jasonwong-lab.github.io/gghic/reference/focus.md),
+[`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Create object pointing to cooler file
-cc <- ChromatinContacts(cooler_path = "data.cool")
+# Create and import
+cc <- ChromatinContacts("data.cool") |> import()
 
-# Create with focus on specific region
-cc <- ChromatinContacts(
-  cooler_path = "data.cool",
-  focus = "chr1:1000000-2000000"
-)
+# Focus on specific region
+cc <- ChromatinContacts("data.cool", focus = "chr1:1-2e6") |> import()
 
-# Multi-resolution cooler with specific resolution
-cc <- ChromatinContacts(
-  cooler_path = "data.mcool",
-  resolution = 10000
-)
-
-# Import the data
-cc <- import(cc)
+# Multi-resolution cooler
+cc <- ChromatinContacts("data.mcool", resolution = 10000) |> import()
 
 # Add features
 features(cc, "TADs") <- tads_granges
 features(cc, "loops") <- loops_ginteractions
-features(cc, "tracks") <- tracks_grangeslist
 } # }
 ```

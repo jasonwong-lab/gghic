@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gghic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@
                         <h4 data-toc-skip class="author">Minghao
 Jiang</h4>
             
-            <h4 data-toc-skip class="date">2025-12-03</h4>
+            <h4 data-toc-skip class="date">2025-12-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/hypergraph.Rmd" class="external-link"><code>vignettes/hypergraph.Rmd</code></a></small>
       <div class="d-none name"><code>hypergraph.Rmd</code></div>
@@ -77,10 +77,10 @@ Jiang</h4>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
-<p>Pore-C and HiPore-C technologies capture <strong>multi-way chromatin
-contacts</strong> where a single long DNA molecule can contact 3, 4, 5,
-or more genomic loci simultaneously. Traditional Hi-C analysis focuses
-on pairwise interactions, but multi-way contacts provide richer
+<p>Pore-C and similar long-read technologies capture <strong>multi-way
+chromatin contacts</strong> where a single DNA molecule can contact 3,
+4, 5, or more genomic loci simultaneously. Traditional Hi-C analysis
+focuses on pairwise interactions, but multi-way contacts provide richer
 information about:</p>
 <ul>
 <li>
@@ -94,10 +94,11 @@ coordinating gene expression</li>
 participants</li>
 </ul>
 <p>This vignette shows how to analyze and visualize multi-way contacts
-using <strong>hypergraph representations</strong>, where:</p>
+using <strong>hypergraph representations</strong> with the
+<code>MultiWayContacts</code> S4 class, where:</p>
 <ul>
 <li>
-<strong>Nodes</strong> = Genomic bins</li>
+<strong>Nodes (vertices)</strong> = Genomic bins</li>
 <li>
 <strong>Hyperedges</strong> = Reads connecting multiple bins</li>
 </ul>
@@ -147,8 +148,8 @@ interactions (quantile filtering)</li>
 <strong>Multi-way degree</strong>: Keep only reads with ≥N contacts
 (e.g., ≥3)</li>
 <li>
-<strong>Chromosome focus</strong>: Analyze one chromosome at a time
-for clarity</li>
+<strong>Chromosome focus</strong>: Analyze specific chromosomes for
+clarity</li>
 </ol>
 </div>
 </div>
@@ -176,18 +177,17 @@ read_002     chr2    2000  chr2    8000
 with 4 contacts generates 6 rows (all pairs).</p>
 </div>
 <div class="section level3">
-<h3 id="generate-example-data">Generate Example Data<a class="anchor" aria-label="anchor" href="#generate-example-data"></a>
+<h3 id="prepare-example-data">Prepare Example Data<a class="anchor" aria-label="anchor" href="#prepare-example-data"></a>
 </h3>
-<p>For this vignette, we’ll create synthetic Pore-C data:</p>
+<p>For this vignette, we’ll create synthetic Pore-C data and save it to
+a temporary file:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Simulate multi-way contacts on multiple chromosomes</span></span>
-<span><span class="co"># Real Pore-C typically has 3-10 contacts per read</span></span>
-<span><span class="co"># Include both intra-chromosomal and trans-chromosomal contacts</span></span>
 <span><span class="va">n_reads</span> <span class="op">&lt;-</span> <span class="fl">500</span></span>
 <span></span>
-<span><span class="co"># Multiple chromosomes with different lengths</span></span>
+<span><span class="co"># Chromosome information</span></span>
 <span><span class="va">chroms</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  chrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span>,</span>
 <span>  length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">46e6</span>, <span class="fl">50e6</span><span class="op">)</span>, <span class="co"># 46 Mb and 50 Mb</span></span>
@@ -222,13 +222,12 @@ with 4 contacts generates 6 rows (all pairs).</p>
 <span>      <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_contacts_chr2</span>, <span class="va">center2</span>, <span class="va">spread2</span><span class="op">)</span></span>
 <span>    <span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Create all pairwise combinations (intra and inter)</span></span>
+<span>    <span class="co"># Create all pairwise combinations</span></span>
 <span>    <span class="va">all_positions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
 <span>      chr1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>chrom <span class="op">=</span> <span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, pos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pos_chr1</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>      chr2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>chrom <span class="op">=</span> <span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, pos <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">pos_chr2</span><span class="op">)</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
 <span></span>
-<span>    <span class="co"># Combine all positions</span></span>
 <span>    <span class="va">all_contacts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">all_positions</span><span class="op">$</span><span class="va">chr1</span>, <span class="va">all_positions</span><span class="op">$</span><span class="va">chr2</span><span class="op">)</span></span>
 <span>    <span class="va">n_total</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">all_contacts</span><span class="op">)</span></span>
 <span></span>
@@ -284,7 +283,7 @@ with 4 contacts generates 6 rows (all pairs).</p>
 <span></span>
 <span><span class="va">pairs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="va">read_data</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Add some noise with random contacts</span></span>
+<span><span class="co"># Add some noise</span></span>
 <span><span class="va">noise_pairs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>, <span class="kw">function</span><span class="op">(</span><span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">chr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span>  <span class="va">chr_length</span> <span class="op">&lt;-</span> <span class="va">chroms</span><span class="op">$</span><span class="va">length</span><span class="op">[</span><span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span> <span class="op">==</span> <span class="va">chr</span><span class="op">]</span></span>
@@ -300,6 +299,12 @@ with 4 contacts generates 6 rows (all pairs).</p>
 <span></span>
 <span><span class="va">pairs_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">pairs_df</span>, <span class="va">noise_pairs</span><span class="op">)</span></span>
 <span></span>
+<span><span class="co"># Save to temporary file</span></span>
+<span><span class="va">pairs_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".pairs.gz"</span><span class="op">)</span></span>
+<span><span class="va">gz</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">gzfile</a></span><span class="op">(</span><span class="va">pairs_file</span>, <span class="st">"w"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.table</a></span><span class="op">(</span><span class="va">pairs_df</span>, <span class="va">gz</span>, sep <span class="op">=</span> <span class="st">"\t"</span>, quote <span class="op">=</span> <span class="cn">FALSE</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/connections.html" class="external-link">close</a></span><span class="op">(</span><span class="va">gz</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># Summary</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>  <span class="st">"Generated %d pairwise contacts from %d reads\n"</span>,</span>
@@ -307,7 +312,6 @@ with 4 contacts generates 6 rows (all pairs).</p>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Generated 5319 pairwise contacts from 600 reads</span></span>
 <span></span>
-<span><span class="co"># Count intra vs trans contacts</span></span>
 <span><span class="va">trans_contacts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">pairs_df</span><span class="op">$</span><span class="va">chrom1</span> <span class="op">!=</span> <span class="va">pairs_df</span><span class="op">$</span><span class="va">chrom2</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>  <span class="st">"  Intra-chromosomal: %d (%.1f%%)\n"</span>,</span>
@@ -317,20 +321,9 @@ with 4 contacts generates 6 rows (all pairs).</p>
 <span><span class="co">#&gt;   Intra-chromosomal: 4438 (83.4%)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
 <span>  <span class="st">"  Trans-chromosomal: %d (%.1f%%)\n"</span>,</span>
-<span>  <span class="va">trans_contacts</span>,</span>
-<span>  <span class="fl">100</span> <span class="op">*</span> <span class="va">trans_contacts</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pairs_df</span><span class="op">)</span></span>
+<span>  <span class="va">trans_contacts</span>, <span class="fl">100</span> <span class="op">*</span> <span class="va">trans_contacts</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pairs_df</span><span class="op">)</span></span>
 <span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   Trans-chromosomal: 881 (16.6%)</span></span>
-<span></span>
-<span><span class="va">chr_counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">pairs_df</span><span class="op">$</span><span class="va">chrom1</span><span class="op">)</span></span>
-<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chroms</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>    <span class="st">"  %s: %d contacts (%.1f Mb)\n"</span>,</span>
-<span>    <span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">chr_counts</span><span class="op">[</span><span class="va">chroms</span><span class="op">$</span><span class="va">chrom</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span>, <span class="va">chroms</span><span class="op">$</span><span class="va">length</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">/</span> <span class="fl">1e6</span></span>
-<span>  <span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span><span class="co">#&gt;   chr21: 2540 contacts (46.0 Mb)</span></span>
-<span><span class="co">#&gt;   chr22: 2779 contacts (50.0 Mb)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pairs_df</span>, <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt;     read_name chrom1     pos1 chrom2     pos2</span></span>
@@ -347,651 +340,680 @@ with 4 contacts generates 6 rows (all pairs).</p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="step-1-build-hypergraph">Step 1: Build Hypergraph<a class="anchor" aria-label="anchor" href="#step-1-build-hypergraph"></a>
+<h2 id="workflow-with-multiwaycontacts">Workflow with MultiWayContacts<a class="anchor" aria-label="anchor" href="#workflow-with-multiwaycontacts"></a>
 </h2>
-<p>The <code><a href="../reference/buildHypergraph.html">buildHypergraph()</a></code> function processes pairs data into
-a hypergraph structure:</p>
+<p>The <code>MultiWayContacts</code> S4 class provides a streamlined,
+object-oriented workflow for analyzing multi-way contacts. The typical
+analysis follows these steps:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Create</strong> <code>MultiWayContacts</code> object</li>
+<li>
+<strong>Import</strong> pairs data</li>
+<li>
+<strong>Build</strong> hypergraph</li>
+<li>
+<strong>Tidy</strong> to long format</li>
+<li>
+<strong>Select</strong> top hyperedges</li>
+<li>
+<strong>Visualize</strong> with <code><a href="../reference/gghypergraph.html">gghypergraph()</a></code>
+</li>
+</ol>
+<div class="section level3">
+<h3 id="single-chromosome-analysis">Single Chromosome Analysis<a class="anchor" aria-label="anchor" href="#single-chromosome-analysis"></a>
+</h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Single chromosome example</span></span>
-<span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs <span class="op">=</span> <span class="va">pairs_df</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">500000</span>, <span class="co"># 500 Kb bins</span></span>
-<span>  chrom <span class="op">=</span> <span class="st">"chr22"</span>, <span class="co"># Focus on chr22</span></span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.80</span>, <span class="co"># Keep top 20% of pairwise contacts</span></span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">3</span> <span class="co"># Reads must contact ≥3 bins</span></span>
-<span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Create MultiWayContacts object for chr22</span></span>
+<span><span class="va">mc_chr22</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span>pairs_path <span class="op">=</span> <span class="va">pairs_file</span>, focus <span class="op">=</span> <span class="st">"chr22"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Complete workflow using pipes</span></span>
+<span><span class="va">mc_chr22</span> <span class="op">&lt;-</span> <span class="va">mc_chr22</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Load pairs data</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span></span>
+<span>    bin_size <span class="op">=</span> <span class="fl">500000L</span>, <span class="co"># 500 Kb bins</span></span>
+<span>    quantile <span class="op">=</span> <span class="fl">0.80</span>, <span class="co"># Top 20% contacts</span></span>
+<span>    min_multiway <span class="op">=</span> <span class="fl">3</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># ≥3-way contacts</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Convert to long format</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="co"># Select top hyperedges</span></span>
+<span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz</span></span>
+<span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
+<span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Total: 5320 lines processed, 2779 contacts retained</span></span>
 <span><span class="co">#&gt; Processing 2,779 contacts (chr22)</span></span>
+<span><span class="co">#&gt; Removed 471 duplicate pairwise contacts within reads (2,308 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 3 contacts (80% quantile)</span></span>
 <span><span class="co">#&gt; Retained 1,337 contacts from 341 reads</span></span>
-<span><span class="co">#&gt; Final hypergraph: 68 bins, 243 reads (min 3-way contacts)</span></span></code></pre></div>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
+<span><span class="co">#&gt; Removed 14 duplicate hyperedges (327 unique patterns)</span></span>
+<span><span class="co">#&gt; Final hypergraph: 68 bins, 238 unique hyperedges (min 3-way contacts)</span></span>
+<span></span>
+<span><span class="co"># Visualize</span></span>
+<span><span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span><span class="va">mc_chr22</span>, color_by <span class="op">=</span> <span class="st">"n_multiways"</span>, palette <span class="op">=</span> <span class="st">"viridis"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/single-chrom-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="multiple-chromosomes">Multiple Chromosomes<a class="anchor" aria-label="anchor" href="#multiple-chromosomes"></a>
+</h3>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Multiple chromosomes example (using both chr21 and chr22)</span></span>
-<span><span class="va">hg_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs <span class="op">=</span> <span class="va">pairs_df</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">500000</span>, <span class="co"># 500 Kb bins</span></span>
-<span>  chrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span>, <span class="co"># Both chromosomes</span></span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.80</span>,</span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  inter_chrom <span class="op">=</span> <span class="cn">FALSE</span> <span class="co"># Only intra-chromosomal contacts (default)</span></span>
+<code class="sourceCode R"><span><span class="co"># Analyze both chr21 and chr22</span></span>
+<span><span class="va">mc_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span></span>
+<span>  pairs_path <span class="op">=</span> <span class="va">pairs_file</span>, focus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Processing 4,438 contacts (2 chromosomes)</span></span>
-<span><span class="co">#&gt; Removed 97 reads with inter-chromosomal contacts (503 reads remaining)</span></span>
-<span><span class="co">#&gt; Filtering bin pairs with &gt;= 2 contacts (80% quantile)</span></span>
-<span><span class="co">#&gt; Retained 2,112 contacts from 397 reads</span></span>
-<span><span class="co">#&gt; Final hypergraph: 135 bins, 334 reads (min 3-way contacts)</span></span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># To include inter-chromosomal contacts between chr21 and chr22:</span></span>
-<span><span class="va">hg_multi_inter</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs <span class="op">=</span> <span class="va">pairs_df</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">500000</span>,</span>
-<span>  chrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span>,</span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.80</span>,</span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  inter_chrom <span class="op">=</span> <span class="cn">TRUE</span> <span class="co"># Include inter-chromosomal contacts</span></span>
-<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">mc_multi</span> <span class="op">&lt;-</span> <span class="va">mc_multi</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span>inter_chrom <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span>bin_size <span class="op">=</span> <span class="fl">500000L</span>, quantile <span class="op">=</span> <span class="fl">0.80</span>, min_multiway <span class="op">=</span> <span class="fl">3</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz</span></span>
+<span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
+<span><span class="co">#&gt; Mode: (intra- and inter-chromosomal)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Total: 5320 lines processed, 5319 contacts retained</span></span>
 <span><span class="co">#&gt; Processing 5,319 contacts (2 chromosomes)</span></span>
+<span><span class="co">#&gt; Removed 872 duplicate pairwise contacts within reads (4,447 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 2 contacts (80% quantile)</span></span>
 <span><span class="co">#&gt; Retained 2,873 contacts from 496 reads</span></span>
-<span><span class="co">#&gt; Final hypergraph: 138 bins, 437 reads (min 3-way contacts)</span></span></code></pre></div>
-<p><strong>Additional examples</strong> (not run with synthetic
-data):</p>
-<blockquote>
-<p><strong>⚠️ Note</strong>: The code examples in this section are
-provided for reference but are <strong>not executed</strong> in this
-vignette.</p>
-</blockquote>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Download example file with caching</span></span>
-<span><span class="va">cache_dir</span> <span class="op">&lt;-</span> <span class="fu">rappdirs</span><span class="fu">::</span><span class="fu"><a href="https://rappdirs.r-lib.org/reference/user_cache_dir.html" class="external-link">user_cache_dir</a></span><span class="op">(</span><span class="st">"gghic"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">cache_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
+<span><span class="co">#&gt; Removed 3 duplicate hyperedges (493 unique patterns)</span></span>
+<span><span class="co">#&gt; Final hypergraph: 138 bins, 435 unique hyperedges (min 3-way contacts)</span></span>
 <span></span>
-<span><span class="va">pairs_file</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">cache_dir</span>, <span class="st">"test.txt.gz"</span><span class="op">)</span></span>
-<span><span class="va">download_url</span> <span class="op">&lt;-</span> <span class="st">"https://www.dropbox.com/scl/fi/yc4axg1mf2i9zylg3d0oe/test.txt.gz?rlkey=sdsdhsnixo01koo38d242y4c8&amp;st=t4rn0js0&amp;dl=1"</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.exists</a></span><span class="op">(</span><span class="va">pairs_file</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Downloading test data to cache directory..."</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span></span>
-<span>    <span class="va">download_url</span>, <span class="va">pairs_file</span>,</span>
-<span>    method <span class="op">=</span> <span class="st">"wget"</span>, extra <span class="op">=</span> <span class="st">"-c"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span>  <span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Downloaded to: "</span>, <span class="va">pairs_file</span><span class="op">)</span></span>
-<span><span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/message.html" class="external-link">message</a></span><span class="op">(</span><span class="st">"Using cached file: "</span>, <span class="va">pairs_file</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># From large file (uses C for speed)</span></span>
-<span><span class="co"># Genome-wide, intra-chromosomal only (default)</span></span>
-<span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>, <span class="co"># Supports .gz</span></span>
-<span>  bin_size <span class="op">=</span> <span class="fl">100000</span>,</span>
-<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  inter_chrom <span class="op">=</span> <span class="cn">FALSE</span> <span class="co"># Only intra-chromosomal (default)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Genome-wide with inter-chromosomal contacts</span></span>
-<span><span class="va">hg_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">100000</span>,</span>
-<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  inter_chrom <span class="op">=</span> <span class="cn">TRUE</span> <span class="co"># Include inter-chromosomal contacts</span></span>
-<span><span class="op">)</span></span></code></pre></div>
-<div class="section level3">
-<h3 id="parameters-explained">Parameters Explained<a class="anchor" aria-label="anchor" href="#parameters-explained"></a>
-</h3>
-<p><strong><code>bin_size</code></strong>: Size of genomic bins -
-Smaller bins = higher resolution but sparser data - Typical: 50-500 Kb
-for Pore-C - Use <code>find_optimal_resolution()</code> from
-resolution-depth vignette</p>
-<p><strong><code>quantile</code></strong>: Threshold for filtering
-pairwise contacts - <code>0.85</code> = keep top 15% most frequent bin
-pairs - Higher = more stringent, fewer contacts - Alternative: use
-<code>min_contacts</code> for absolute threshold</p>
-<p><strong><code>min_multiway</code></strong>: Minimum contacts per read
-- <code>3</code> = keep 3-way, 4-way, 5-way, … contacts - Higher = focus
-on highly multi-way reads - Lower = include more reads but less
-structure</p>
-</div>
-<div class="section level3">
-<h3 id="hypergraph-object">Hypergraph Object<a class="anchor" aria-label="anchor" href="#hypergraph-object"></a>
-</h3>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hg</span></span>
-<span><span class="co">#&gt; Hypergraph object</span></span>
-<span><span class="co">#&gt; ================</span></span>
-<span><span class="co">#&gt; Chromosome(s): chr22</span></span>
-<span><span class="co">#&gt; Bin size: 5e+05 bp</span></span>
-<span><span class="co">#&gt; Bins: 68 (range: 14-85)</span></span>
-<span><span class="co">#&gt; Reads: 243</span></span>
-<span><span class="co">#&gt; Total edges: 981</span></span>
-<span><span class="co">#&gt; Contacts per read: 3-8 (median: 4)</span></span></code></pre></div>
-<p>The object contains: - <strong><code>incidence</code></strong>:
-Sparse matrix (bins × reads) - <strong><code>bins</code></strong>:
-Integer vector of bin IDs - <strong><code>reads</code></strong>:
-Character vector of read names -
-<strong><code>contacts_per_read</code></strong>: Integer vector</p>
+<span><span class="co"># Faceted view (separate panels per chromosome)</span></span>
+<span><span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span><span class="va">mc_multi</span>, facet_chrom <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/multi-chrom-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="step-2-convert-to-tidy-format">Step 2: Convert to Tidy Format<a class="anchor" aria-label="anchor" href="#step-2-convert-to-tidy-format"></a>
-</h2>
-<p>For visualization and analysis, convert to long format:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># All reads</span></span>
-<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Subset to top 100 reads by contact count</span></span>
-<span><span class="va">df_top</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg</span>, max_reads <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">df</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 981 × 7</span></span></span>
-<span><span class="co">#&gt;    bin_idx read_idx bin_id   chrom   bin read_name  n_contacts</span></span>
-<span><span class="co">#&gt;      <span style="color: #949494; font-style: italic;">&lt;int&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>           <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span>       1        1 chr22:14 chr22    14 read_00004          5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span>       1      183 chr22:14 chr22    14 read_00379          4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span>       1      212 chr22:14 chr22    14 read_00440          4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span>       2       55 chr22:17 chr22    17 read_00119          5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span>       2      116 chr22:17 chr22    17 read_00257          5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span>       3       61 chr22:18 chr22    18 read_00142          4</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span>       3      165 chr22:18 chr22    18 read_00352          6</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span>       3      176 chr22:18 chr22    18 read_00368          5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span>       4       55 chr22:19 chr22    19 read_00119          5</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span>       4       87 chr22:19 chr22    19 read_00201          6</span></span>
-<span><span class="co">#&gt; <span style="color: #949494;"># ℹ 971 more rows</span></span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="step-3-visualize-hypergraph">Step 3: Visualize Hypergraph<a class="anchor" aria-label="anchor" href="#step-3-visualize-hypergraph"></a>
+<h2 id="method-details">Method Details<a class="anchor" aria-label="anchor" href="#method-details"></a>
 </h2>
 <div class="section level3">
-<h3 id="basic-visualization">Basic Visualization<a class="anchor" aria-label="anchor" href="#basic-visualization"></a>
+<h3 id="import">import()<a class="anchor" aria-label="anchor" href="#import"></a>
 </h3>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Single chromosome</span></span>
-<span><span class="fu"><a href="../reference/plotHypergraph.html">plotHypergraph</a></span><span class="op">(</span><span class="va">hg</span>, max_reads <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotHypergraph.html">plotHypergraph</a></span><span class="op">(</span><span class="va">hg_multi</span>, max_reads <span class="op">=</span> <span class="fl">50</span>, facet_chrom <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="../reference/plotHypergraph.html">plotHypergraph</a></span><span class="op">(</span><span class="va">hg_multi_inter</span>, max_reads <span class="op">=</span> <span class="fl">50</span>, facet_chrom <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<p>This creates a plot where: - <strong>Y-axis</strong>: Genomic bins
-(sorted by position) - For multi-chromosome plots with
-<code>facet_chrom = FALSE</code>: Y-axis shows chromosome names in
-<strong>bold</strong> with alternating gray/white background shading -
-Chromosomes are separated by horizontal gray lines -
-<strong>X-axis</strong>: Individual reads - <strong>Vertical
-lines</strong>: Connect bins contacted by each read -
-<strong>Points</strong>: Individual bin positions -
-<strong>Color</strong>: Number of contacts per read -
-<strong>Trans-chromosomal contacts</strong>: Lines spanning across the
-horizontal separators show reads connecting multiple chromosomes -
-<strong>Facets</strong> (when <code>facet_chrom = TRUE</code>): Separate
-panel per chromosome</p>
+<p>Loads pairs data from file. The data can be filtered to:</p>
+<ul>
+<li>Specific chromosome(s) (via <code>focus</code> parameter in
+constructor)</li>
+<li>Intra-chromosomal only (default) or include inter-chromosomal
+(<code>inter_chrom = TRUE</code>)</li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Intra-chromosomal only (default)</span></span>
+<span><span class="va">mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span><span class="va">pairs_path</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Include inter-chromosomal</span></span>
+<span><span class="va">mc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span><span class="va">pairs_path</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span>inter_chrom <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="custom-visualization">Custom Visualization<a class="anchor" aria-label="anchor" href="#custom-visualization"></a>
+<h3 id="build">build()<a class="anchor" aria-label="anchor" href="#build"></a>
 </h3>
-<p>For more control, use <code><a href="../reference/geom_hypergraph.html">geom_hypergraph()</a></code>:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_top</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">read_idx</span>, y <span class="op">=</span> <span class="va">bin_idx</span>, group <span class="op">=</span> <span class="va">read_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">n_contacts</span><span class="op">)</span>,</span>
-<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
-<span>    line_alpha <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    point_size <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"plasma"</span>, name <span class="op">=</span> <span class="st">"Contacts\nper read"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Multi-way Contacts on chr22"</span>,</span>
-<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>      <span class="st">"%d bins, %d reads (≥3-way)"</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Read (ordered by appearance)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Genomic position"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
-<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    panel.grid.major.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.ticks.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Multi-chromosome showing trans-chromosomal connections</span></span>
-<span><span class="va">df_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg_multi_inter</span>, max_reads <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Create composite y-axis for multi-chrom visualization</span></span>
-<span><span class="va">chrom_info</span> <span class="op">&lt;-</span> <span class="va">df_multi</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">chrom</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">summarise</span><span class="op">(</span></span>
-<span>    max_bin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">bin_idx</span><span class="op">)</span>,</span>
-<span>    min_bin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">bin_idx</span><span class="op">)</span>,</span>
-<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">arrange</span><span class="op">(</span><span class="va">chrom</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">chrom_info</span><span class="op">$</span><span class="va">offset</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
-<span><span class="va">chrom_info</span><span class="op">$</span><span class="va">y_start</span> <span class="op">&lt;-</span> <span class="fl">0</span></span>
-<span><span class="va">chrom_info</span><span class="op">$</span><span class="va">y_end</span> <span class="op">&lt;-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">max_bin</span> <span class="op">-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">min_bin</span> <span class="op">+</span> <span class="fl">1</span></span>
-<span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chrom_info</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chrom_info</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="va">chrom_info</span><span class="op">$</span><span class="va">offset</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">y_end</span><span class="op">[</span><span class="va">i</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span> <span class="op">+</span></span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">0.05</span> <span class="op">*</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">y_end</span><span class="op">[</span><span class="va">i</span> <span class="op">-</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span>
-<span>    <span class="va">chrom_info</span><span class="op">$</span><span class="va">y_start</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">offset</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
-<span>    <span class="va">chrom_info</span><span class="op">$</span><span class="va">y_end</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">y_start</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span></span>
-<span>      <span class="op">(</span><span class="va">chrom_info</span><span class="op">$</span><span class="va">max_bin</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">chrom_info</span><span class="op">$</span><span class="va">min_bin</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">+</span> <span class="fl">1</span><span class="op">)</span></span>
-<span>  <span class="op">}</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">df_multi_composite</span> <span class="op">&lt;-</span> <span class="va">df_multi</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span></span>
-<span>    <span class="va">chrom_info</span> <span class="op">|&gt;</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">chrom</span>, <span class="va">offset</span>, <span class="va">min_bin</span><span class="op">)</span>,</span>
-<span>    by <span class="op">=</span> <span class="st">"chrom"</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    y_composite <span class="op">=</span> <span class="va">bin_idx</span> <span class="op">-</span> <span class="va">min_bin</span> <span class="op">+</span> <span class="va">offset</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="va">chrom_breaks</span> <span class="op">&lt;-</span> <span class="va">chrom_info</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
-<span>    mid_point <span class="op">=</span> <span class="op">(</span><span class="va">y_start</span> <span class="op">+</span> <span class="va">y_end</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span>,</span>
-<span>    fill_color <span class="op">=</span> <span class="fu">if_else</span><span class="op">(</span><span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/row_number.html" class="external-link">row_number</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">2</span> <span class="op">==</span> <span class="fl">0</span>, <span class="st">"gray95"</span>, <span class="st">"white"</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_multi_composite</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">read_idx</span>, y <span class="op">=</span> <span class="va">y_composite</span>, group <span class="op">=</span> <span class="va">read_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="co"># Add alternating background shading for chromosomes</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="va">chrom_breaks</span>,</span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span></span>
-<span>      xmin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, xmax <span class="op">=</span> <span class="cn">Inf</span>,</span>
-<span>      ymin <span class="op">=</span> <span class="va">y_start</span>, ymax <span class="op">=</span> <span class="va">y_end</span>,</span>
-<span>      fill <span class="op">=</span> <span class="va">fill_color</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    alpha <span class="op">=</span> <span class="fl">0.3</span>,</span>
-<span>    inherit.aes <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_fill_identity</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">n_contacts</span><span class="op">)</span>,</span>
-<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
-<span>    line_alpha <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    point_size <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chrom_breaks</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span> <span class="va">chrom_breaks</span><span class="op">[</span><span class="fl">2</span><span class="op">:</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">chrom_breaks</span><span class="op">)</span>, <span class="op">]</span> <span class="kw">else</span> <span class="cn">NULL</span>,</span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">y_start</span><span class="op">)</span>,</span>
-<span>    linetype <span class="op">=</span> <span class="st">"solid"</span>,</span>
-<span>    color <span class="op">=</span> <span class="st">"gray40"</span>,</span>
-<span>    linewidth <span class="op">=</span> <span class="fl">0.8</span>,</span>
-<span>    alpha <span class="op">=</span> <span class="fl">0.7</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"plasma"</span>, name <span class="op">=</span> <span class="st">"Contacts\nper read"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span></span>
-<span>    breaks <span class="op">=</span> <span class="va">chrom_breaks</span><span class="op">$</span><span class="va">mid_point</span>,</span>
-<span>    labels <span class="op">=</span> <span class="va">chrom_breaks</span><span class="op">$</span><span class="va">chrom</span>,</span>
-<span>    expand <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/expansion.html" class="external-link">expansion</a></span><span class="op">(</span>mult <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.02</span>, <span class="fl">0.02</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Trans-chromosomal Multi-way Contacts"</span>,</span>
-<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>      <span class="st">"%d bins, %d reads (≥3-way) - Lines crossing gray bars show trans contacts"</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hg_multi</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">hg_multi</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Read (ordered by appearance)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Chromosome | Genomic position"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
-<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    panel.grid.major.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.ticks.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span>, size <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Multi-chromosome with faceting (separate panels)</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_multi</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">read_idx</span>, y <span class="op">=</span> <span class="va">bin_idx</span>, group <span class="op">=</span> <span class="va">read_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">n_contacts</span><span class="op">)</span>,</span>
-<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
-<span>    line_alpha <span class="op">=</span> <span class="fl">0.7</span>,</span>
-<span>    point_size <span class="op">=</span> <span class="fl">1</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"plasma"</span>, name <span class="op">=</span> <span class="st">"Contacts\nper read"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="va">chrom</span> <span class="op">~</span> <span class="va">.</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, space <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Multi-way Contacts on chr21 and chr22 (Faceted)"</span>,</span>
-<span>    subtitle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>      <span class="st">"%d bins, %d reads (≥3-way)"</span>,</span>
-<span>      <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">hg_multi</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">hg_multi</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Read (ordered by appearance)"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Genomic position"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
-<span>    panel.grid.minor <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    panel.grid.major.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    axis.ticks.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>    strip.text.y <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
-<span>  <span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="interpretation">Interpretation<a class="anchor" aria-label="anchor" href="#interpretation"></a>
-</h3>
-<p><strong>Vertical patterns</strong>: Reads spanning similar regions
-(local contacts)</p>
-<p><strong>Diagonal patterns</strong>: Sequential bins contacted
-together (chromatin fiber)</p>
-<p><strong>Dense clusters</strong>: Bins with many shared reads
-(potential hubs/compartments)</p>
-<p><strong>Long lines</strong>: Reads with many contacts (high-order
-structure)</p>
-<p><strong>Lines crossing chromosome boundaries</strong>:
-Trans-chromosomal contacts showing inter-chromosomal interactions - Look
-for lines that cross the horizontal gray separator bars - These
-represent reads that physically link multiple chromosomes</p>
-<p><strong>Background shading</strong>: Alternating gray/white bands
-distinguish different chromosomes - Y-axis labels show chromosome names
-in bold - Makes it easy to identify which genomic region belongs to
-which chromosome</p>
-<p><strong>Color intensity</strong>: Reads with more contacts (highly
-connected molecules)</p>
-</div>
-</div>
-<div class="section level2">
-<h2 id="step-4-analyze-hypergraph-properties">Step 4: Analyze Hypergraph Properties<a class="anchor" aria-label="anchor" href="#step-4-analyze-hypergraph-properties"></a>
-</h2>
-<div class="section level3">
-<h3 id="contact-degree-distribution">Contact Degree Distribution<a class="anchor" aria-label="anchor" href="#contact-degree-distribution"></a>
-</h3>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Distribution of contacts per read</span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>n_contacts <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">contacts_per_read</span><span class="op">)</span>,</span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_contacts</span><span class="op">)</span></span>
-<span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>binwidth <span class="op">=</span> <span class="fl">1</span>, fill <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.7</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Multi-way Contact Distribution"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Number of bins per read"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Count"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/degree-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-</div>
-<div class="section level3">
-<h3 id="bin-popularity">Bin Popularity<a class="anchor" aria-label="anchor" href="#bin-popularity"></a>
-</h3>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># How many reads contact each bin?</span></span>
-<span><span class="va">bin_degrees</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">df_bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  bin_id <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">bin_ids</span>,</span>
-<span>  bin_num <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">bin_info</span><span class="op">$</span><span class="va">bin_num</span>,</span>
-<span>  degree <span class="op">=</span> <span class="va">bin_degrees</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_bins</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">bin_num</span>, y <span class="op">=</span> <span class="va">degree</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>color <span class="op">=</span> <span class="st">"steelblue"</span>, alpha <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Bin Connectivity Profile"</span>,</span>
-<span>    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"Genomic bin (%s bp)"</span>, <span class="fu"><a href="https://rdrr.io/r/base/format.html" class="external-link">format</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">bin_size</span>, big.mark <span class="op">=</span> <span class="st">","</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Number of reads contacting bin"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="hypergraph_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
-<p>High-degree bins may represent: - <strong>Chromatin hubs</strong>:
-Architectural features (TAD boundaries, loop anchors) - <strong>Active
-compartments</strong>: Gene-dense regions - <strong>Technical
-artifacts</strong>: High mappability, repetitive elements</p>
-</div>
-<div class="section level3">
-<h3 id="pairwise-co-occurrence-matrix">Pairwise Co-occurrence Matrix<a class="anchor" aria-label="anchor" href="#pairwise-co-occurrence-matrix"></a>
-</h3>
-<p>Which bins are frequently contacted together?</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Compute bin-bin co-occurrence</span></span>
-<span><span class="va">cooccur</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/matmult-methods.html" class="external-link">tcrossprod</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Convert to dense for visualization (if small enough)</span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">cooccur</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">500</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">pheatmap</span><span class="op">)</span></span>
-<span></span>
-<span>  <span class="fu">pheatmap</span><span class="fu">::</span><span class="fu">pheatmap</span><span class="op">(</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">cooccur</span><span class="op">)</span>,</span>
-<span>    cluster_rows <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    cluster_cols <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"steelblue"</span>, <span class="st">"darkblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>,</span>
-<span>    main <span class="op">=</span> <span class="st">"Bin Co-occurrence Matrix"</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-</div>
-</div>
-<div class="section level2">
-<h2 id="advanced-usage">Advanced Usage<a class="anchor" aria-label="anchor" href="#advanced-usage"></a>
-</h2>
-<div class="section level3">
-<h3 id="multi-chromosome-analysis">Multi-Chromosome Analysis<a class="anchor" aria-label="anchor" href="#multi-chromosome-analysis"></a>
-</h3>
-<p>Analyze contacts across multiple chromosomes to study:</p>
+<p>Constructs the hypergraph through several steps:</p>
+<ol style="list-style-type: decimal">
+<li>
+<strong>Binning</strong>: Aggregate contacts into genomic bins</li>
+<li>
+<strong>Filtering</strong>: Remove low-frequency bin pairs (by
+<code>quantile</code> threshold)</li>
+<li>
+<strong>Incidence matrix</strong>: Build sparse matrix (bins ×
+reads)</li>
+<li>
+<strong>Deduplication</strong>: Merge identical hyperedge
+patterns</li>
+<li>
+<strong>Multiway filtering</strong>: Keep only hyperedges with ≥
+<code>min_multiway</code> contacts</li>
+</ol>
+<p><strong>Parameters:</strong></p>
 <ul>
 <li>
-<strong>Inter-TAD interactions</strong> across chromosomes</li>
+<code>bin_size</code>: Genomic bin size (default 1 Mb). Smaller =
+higher resolution but sparser</li>
 <li>
-<strong>Chromosome territories</strong> and
-compartmentalization</li>
+<code>quantile</code>: Threshold for bin pair filtering (default
+0.85). Higher = more stringent</li>
 <li>
-<strong>Trans-chromosomal hubs</strong> (e.g., nucleolar organizing
-regions)</li>
+<code>min_multiway</code>: Minimum contacts per hyperedge (default
+2)</li>
 </ul>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Analyze chromosome 21 and 22 together</span></span>
-<span><span class="va">hg_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">500000</span>, <span class="co"># Larger bins for multi-chrom</span></span>
-<span>  chrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span>,</span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.90</span>, <span class="co"># More stringent</span></span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>  inter_chrom <span class="op">=</span> <span class="cn">TRUE</span></span>
-<span><span class="op">)</span></span>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># High resolution, strict filtering</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span>bin_size <span class="op">=</span> <span class="fl">100000L</span>, quantile <span class="op">=</span> <span class="fl">0.90</span>, min_multiway <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Visualize with chromosome facets</span></span>
-<span><span class="fu"><a href="../reference/plotHypergraph.html">plotHypergraph</a></span><span class="op">(</span></span>
-<span>  <span class="va">hg_multi</span>,</span>
-<span>  max_reads <span class="op">=</span> <span class="fl">100</span>, facet_chrom <span class="op">=</span> <span class="cn">FALSE</span>, chrom <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr12"</span>, <span class="st">"chr22"</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Identify inter-chromosomal reads</span></span>
-<span><span class="va">df_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg_multi</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">trans_reads</span> <span class="op">&lt;-</span> <span class="va">df_multi</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">read_name</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">summarise</span><span class="op">(</span></span>
-<span>    n_chroms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">chrom</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    chroms <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">chrom</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">","</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">n_chroms</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span></span>
-<span>  <span class="st">"Found %d reads with trans-chromosomal contacts (%.1f%%)\n"</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">trans_reads</span><span class="op">)</span>,</span>
-<span>  <span class="fl">100</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">trans_reads</span><span class="op">)</span> <span class="op">/</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">df_multi</span><span class="op">$</span><span class="va">read_name</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Lower resolution, permissive filtering</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span>bin_size <span class="op">=</span> <span class="fl">1000000L</span>, quantile <span class="op">=</span> <span class="fl">0.75</span>, min_multiway <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="genome-wide-hypergraph">Genome-wide Hypergraph<a class="anchor" aria-label="anchor" href="#genome-wide-hypergraph"></a>
+<h3 id="tidy">tidy()<a class="anchor" aria-label="anchor" href="#tidy"></a>
 </h3>
-<p>For a complete picture, analyze all chromosomes:</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Build genome-wide hypergraph (intra-chromosomal only)</span></span>
-<span><span class="va">hg_genome</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/buildHypergraph.html">buildHypergraph</a></span><span class="op">(</span></span>
-<span>  pairs_file <span class="op">=</span> <span class="va">pairs_file</span>,</span>
-<span>  bin_size <span class="op">=</span> <span class="fl">1000000</span>, <span class="co"># 1 Mb bins</span></span>
-<span>  chrom <span class="op">=</span> <span class="cn">NULL</span>, <span class="co"># All chromosomes</span></span>
-<span>  quantile <span class="op">=</span> <span class="fl">0.95</span>, <span class="co"># Very stringent</span></span>
-<span>  min_multiway <span class="op">=</span> <span class="fl">5</span></span>
-<span><span class="op">)</span></span>
+<p>Converts the sparse incidence matrix to a tidy long-format data
+frame.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<code>max_hyperedges</code>: Subset to top N hyperedges by contact
+order (default: all)</li>
+<li>
+<code>weight_normalization</code>: Weight transformation:
+<ul>
+<li>
+<code>"none"</code>: Raw frequency counts (default)</li>
+<li>
+<code>"log"</code>: Log-transformed</li>
+<li>
+<code>"by_order"</code>: Normalized within each contact order</li>
+<li>
+<code>"minmax"</code>: Scaled to [0, 1]</li>
+</ul>
+</li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Top 50 hyperedges with log weights</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span>max_hyperedges <span class="op">=</span> <span class="fl">50</span>, weight_normalization <span class="op">=</span> <span class="st">"log"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Summary by chromosome</span></span>
-<span><span class="va">df_genome</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg_genome</span>, max_reads <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">chr_summary</span> <span class="op">&lt;-</span> <span class="va">df_genome</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">group_by</span><span class="op">(</span><span class="va">chrom</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">summarise</span><span class="op">(</span></span>
-<span>    n_bins <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">bin_idx</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    n_reads <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">read_name</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    mean_contacts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">n_contacts</span><span class="op">)</span></span>
-<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">arrange</span><span class="op">(</span><span class="fu">desc</span><span class="op">(</span><span class="va">n_reads</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">chr_summary</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Visualize top chromosomes</span></span>
-<span><span class="fu"><a href="../reference/plotHypergraph.html">plotHypergraph</a></span><span class="op">(</span><span class="va">hg_genome</span>, max_reads <span class="op">=</span> <span class="fl">200</span>, facet_chrom <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># All hyperedges with normalized weights</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span>weight_normalization <span class="op">=</span> <span class="st">"by_order"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="tad-identification-from-multi-way-contacts">TAD Identification from Multi-way Contacts<a class="anchor" aria-label="anchor" href="#tad-identification-from-multi-way-contacts"></a>
+<h3 id="select">select()<a class="anchor" aria-label="anchor" href="#select"></a>
 </h3>
-<p>Multi-way contacts can reveal TAD boundaries:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bin_degrees</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/colSums-methods.html" class="external-link">rowSums</a></span><span class="op">(</span><span class="va">hg_genome</span><span class="op">$</span><span class="va">incidence</span><span class="op">)</span></span>
+<p>Selects top-weighted hyperedges for visualization. For each
+chromosome, selects:</p>
+<ul>
+<li>Top <code>n_intra</code> intra-chromosomal hyperedges</li>
+<li>Top <code>n_inter</code> inter-chromosomal hyperedges</li>
+</ul>
+<p>If fewer intra-chromosomal hyperedges exist, the remaining quota is
+added to inter-chromosomal selection.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<code>n_intra</code>: Number of intra-chromosomal hyperedges per
+chromosome (default 5)</li>
+<li>
+<code>n_inter</code>: Number of inter-chromosomal hyperedges per
+chromosome (default 5)</li>
+<li>
+<code>n_multiways_filter</code>: Keep only specific contact orders
+(e.g., <code>c(3, 4)</code>)</li>
+<li>
+<code>chroms</code>: Focus on specific chromosome(s)</li>
+<li>
+<code>append</code>: Add to existing selection (<code>TRUE</code>)
+or replace (<code>FALSE</code>)</li>
+</ul>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Select more hyperedges</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">15</span>, n_inter <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">df_bins</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  bin_id <span class="op">=</span> <span class="va">hg_genome</span><span class="op">$</span><span class="va">bin_ids</span>,</span>
-<span>  bin_num <span class="op">=</span> <span class="va">hg_genome</span><span class="op">$</span><span class="va">bin_info</span><span class="op">$</span><span class="va">bin_num</span>,</span>
-<span>  degree <span class="op">=</span> <span class="va">bin_degrees</span></span>
-<span><span class="op">)</span></span>
+<span><span class="co"># Only 3-way and 4-way contacts</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_multiways_filter <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Bins with high connectivity may mark TAD boundaries</span></span>
-<span><span class="va">boundary_candidates</span> <span class="op">&lt;-</span> <span class="va">df_bins</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">degree</span> <span class="op">&gt;</span> <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">degree</span>, <span class="fl">0.9</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">pull</span><span class="op">(</span><span class="va">bin_num</span><span class="op">)</span></span>
+<span><span class="co"># Focus on chr1</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>chroms <span class="op">=</span> <span class="st">"chr1"</span>, append <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Visualize on hypergraph</span></span>
-<span><span class="va">df_viz</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tidyHypergraph.html">tidyHypergraph</a></span><span class="op">(</span><span class="va">hg</span>, max_reads <span class="op">=</span> <span class="fl">100</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu">mutate</span><span class="op">(</span>is_boundary <span class="op">=</span> <span class="va">bin</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">boundary_candidates</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_viz</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">read_idx</span>, y <span class="op">=</span> <span class="va">bin_idx</span>, group <span class="op">=</span> <span class="va">read_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">n_contacts</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span></span>
-<span>    data <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>bin <span class="op">=</span> <span class="va">boundary_candidates</span><span class="op">)</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="va">bin</span><span class="op">)</span>,</span>
-<span>    color <span class="op">=</span> <span class="st">"red"</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span>, alpha <span class="op">=</span> <span class="fl">0.5</span>, inherit.aes <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"Potential TAD Boundaries (red)"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Accumulate selections</span></span>
+<span><span class="va">mc</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>chroms <span class="op">=</span> <span class="st">"chr1"</span>, append <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>chroms <span class="op">=</span> <span class="st">"chr2"</span>, append <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="comparing-samples">Comparing Samples<a class="anchor" aria-label="anchor" href="#comparing-samples"></a>
+<h3 id="gghypergraph">gghypergraph()<a class="anchor" aria-label="anchor" href="#gghypergraph"></a>
 </h3>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Build hypergraphs for multiple samples</span></span>
-<span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"control"</span>, <span class="st">"treatment"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">hgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">samples</span>, <span class="kw">function</span><span class="op">(</span><span class="va">sample</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu">build_hypergraph</span><span class="op">(</span></span>
-<span>    pairs_file <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">sample</span>, <span class="st">"_pairs.txt"</span><span class="op">)</span>,</span>
-<span>    bin_size <span class="op">=</span> <span class="fl">100000</span>,</span>
-<span>    chrom <span class="op">=</span> <span class="st">"chr22"</span>,</span>
-<span>    quantile <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>    min_multiway <span class="op">=</span> <span class="fl">3</span></span>
-<span>  <span class="op">)</span></span>
-<span><span class="op">}</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Compare contact distributions</span></span>
-<span><span class="va">df_compare</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">samples</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">hgs</span>, <span class="kw">function</span><span class="op">(</span><span class="va">h</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">h</span><span class="op">$</span><span class="va">contacts_per_read</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  n_contacts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">hgs</span>, <span class="kw">function</span><span class="op">(</span><span class="va">h</span><span class="op">)</span> <span class="va">h</span><span class="op">$</span><span class="va">contacts_per_read</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df_compare</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_contacts</span>, fill <span class="op">=</span> <span class="va">sample</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">geom_histogram</a></span><span class="op">(</span>binwidth <span class="op">=</span> <span class="fl">1</span>, alpha <span class="op">=</span> <span class="fl">0.7</span>, position <span class="op">=</span> <span class="st">"identity"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"steelblue"</span>, <span class="st">"coral"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
-<span>    title <span class="op">=</span> <span class="st">"Multi-way Contact Distribution by Sample"</span>,</span>
-<span>    x <span class="op">=</span> <span class="st">"Contacts per read"</span>,</span>
-<span>    y <span class="op">=</span> <span class="st">"Count"</span></span>
-<span>  <span class="op">)</span> <span class="op">+</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="export-for-network-analysis">Export for Network Analysis<a class="anchor" aria-label="anchor" href="#export-for-network-analysis"></a>
-</h3>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Export incidence matrix for external tools (Cytoscape, igraph, etc.)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://Matrix.R-forge.R-project.org" class="external-link">Matrix</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Sparse matrix format</span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/externalFormats.html" class="external-link">writeMM</a></span><span class="op">(</span><span class="va">hg</span><span class="op">$</span><span class="va">incidence</span>, <span class="st">"hypergraph_incidence.mtx"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Metadata</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>bin_id <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">bins</span>, bin_pos <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">bins</span> <span class="op">*</span> <span class="va">hg</span><span class="op">$</span><span class="va">bin_size</span><span class="op">)</span>,</span>
-<span>  <span class="st">"bins.csv"</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/write.table.html" class="external-link">write.csv</a></span><span class="op">(</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>    read_id <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">reads</span>,</span>
-<span>    n_contacts <span class="op">=</span> <span class="va">hg</span><span class="op">$</span><span class="va">contacts_per_read</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  <span class="st">"reads.csv"</span>,</span>
-<span>  row.names <span class="op">=</span> <span class="cn">FALSE</span></span>
+<p>Creates a ggplot2 visualization of selected hyperedges.</p>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li>
+<code>point_size</code>: Size of bin points (default 2)</li>
+<li>
+<code>line_width</code>: Base width of hyperedge lines (default
+0.3)</li>
+<li>
+<code>line_alpha</code>: Transparency of lines (default 0.6)</li>
+<li>
+<code>color_by</code>: Variable for coloring
+(<code>"n_multiways"</code> or other)</li>
+<li>
+<code>palette</code>: Color palette (<code>"viridis"</code>,
+<code>"magma"</code>, <code>"plasma"</code>, etc.)</li>
+<li>
+<code>facet_chrom</code>: Separate panels per chromosome
+(<code>TRUE</code>) or composite y-axis (<code>FALSE</code>)</li>
+</ul>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span></span>
+<span>  <span class="va">mc_chr22</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  line_width <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  line_alpha <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  palette <span class="op">=</span> <span class="st">"plasma"</span>,</span>
+<span>  facet_chrom <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/viz-custom-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+<p>The plot shows:</p>
+<ul>
+<li>
+<strong>X-axis</strong>: Hyperedges (sorted by genomic
+position)</li>
+<li>
+<strong>Y-axis</strong>: Genomic bins (position within
+chromosome)</li>
+<li>
+<strong>Line width</strong>: Scales with hyperedge weight</li>
+<li>
+<strong>Line color</strong>: By contact order (number of bins)</li>
+</ul>
 </div>
 </div>
 <div class="section level2">
-<h2 id="biological-insights">Biological Insights<a class="anchor" aria-label="anchor" href="#biological-insights"></a>
+<h2 id="other-examples">Other Examples<a class="anchor" aria-label="anchor" href="#other-examples"></a>
 </h2>
 <div class="section level3">
-<h3 id="what-multi-way-contacts-reveal">What Multi-way Contacts Reveal<a class="anchor" aria-label="anchor" href="#what-multi-way-contacts-reveal"></a>
+<h3 id="filtering-by-contact-order">Filtering by Contact Order<a class="anchor" aria-label="anchor" href="#filtering-by-contact-order"></a>
 </h3>
-<p><strong>High-order contacts (≥5-way)</strong> suggest: -
-Phase-separated condensates (e.g., Polycomb bodies) - Transcription
-factories with multiple genes - Regulatory hubs with many enhancers</p>
-<p><strong>3-4 way contacts</strong> typically represent: - TAD internal
-structure - Enhancer-promoter-CTCF triplets - Local chromatin fiber
-folding</p>
-<p><strong>Bin hubs</strong> (high-degree nodes) may be: - Architectural
-proteins (CTCF, cohesin) - Super-enhancer clusters - Gene-dense
-compartments</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Focus on high-order contacts only (≥5-way)</span></span>
+<span><span class="va">mc_high_order</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span><span class="va">pairs_file</span>, focus <span class="op">=</span> <span class="st">"chr22"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span>bin_size <span class="op">=</span> <span class="fl">500000L</span>, quantile <span class="op">=</span> <span class="fl">0.85</span>, min_multiway <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz</span></span>
+<span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
+<span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Total: 5320 lines processed, 2779 contacts retained</span></span>
+<span><span class="co">#&gt; Processing 2,779 contacts (chr22)</span></span>
+<span><span class="co">#&gt; Removed 471 duplicate pairwise contacts within reads (2,308 remaining)</span></span>
+<span><span class="co">#&gt; Filtering bin pairs with &gt;= 4 contacts (85% quantile)</span></span>
+<span><span class="co">#&gt; Retained 860 contacts from 301 reads</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
+<span><span class="co">#&gt; Removed 36 duplicate hyperedges (265 unique patterns)</span></span>
+<span><span class="co">#&gt; Final hypergraph: 60 bins, 46 unique hyperedges (min 5-way contacts)</span></span>
+<span></span>
+<span><span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span><span class="va">mc_high_order</span>, palette <span class="op">=</span> <span class="st">"inferno"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/filter-order-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="comparing-chromosomes">Comparing Chromosomes<a class="anchor" aria-label="anchor" href="#comparing-chromosomes"></a>
+</h3>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Select from both chromosomes independently</span></span>
+<span><span class="va">mc_compare</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/MultiWayContacts-class.html">MultiWayContacts</a></span><span class="op">(</span><span class="va">pairs_file</span>, focus <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"chr21"</span>, <span class="st">"chr22"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">import</span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="../reference/build.html">build</a></span><span class="op">(</span>bin_size <span class="op">=</span> <span class="fl">500000L</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">5</span>, append <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz</span></span>
+<span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
+<span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Total: 5320 lines processed, 4438 contacts retained</span></span>
+<span><span class="co">#&gt; Processing 4,438 contacts (2 chromosomes)</span></span>
+<span><span class="co">#&gt; Removed 97 reads with inter-chromosomal contacts (503 reads remaining)</span></span>
+<span><span class="co">#&gt; Removed 649 duplicate pairwise contacts within reads (3,140 remaining)</span></span>
+<span><span class="co">#&gt; Filtering bin pairs with &gt;= 3 contacts (85% quantile)</span></span>
+<span><span class="co">#&gt; Retained 1,290 contacts from 353 reads</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
+<span><span class="co">#&gt; Removed 18 duplicate hyperedges (335 unique patterns)</span></span>
+<span><span class="co">#&gt; Final hypergraph: 112 bins, 331 unique hyperedges (min 2-way contacts)</span></span>
+<span></span>
+<span><span class="co"># Faceted comparison</span></span>
+<span><span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span><span class="va">mc_compare</span>, facet_chrom <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/compare-chroms-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="customizing-plots">Customizing Plots<a class="anchor" aria-label="anchor" href="#customizing-plots"></a>
+</h3>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get base plot and customize</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/gghypergraph.html">gghypergraph</a></span><span class="op">(</span><span class="va">mc_chr22</span>, facet_chrom <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add custom styling</span></span>
+<span><span class="va">p</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Multi-way Chromatin Contacts on chr22"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Colored by contact order, line width = frequency"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">16</span>, face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
+<span>    plot.subtitle <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">12</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/custom-plot-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
 </div>
 </div>
 <div class="section level2">
-<h2 id="troubleshooting">Troubleshooting<a class="anchor" aria-label="anchor" href="#troubleshooting"></a>
+<h2 id="interpreting-results">Interpreting Results<a class="anchor" aria-label="anchor" href="#interpreting-results"></a>
 </h2>
-<p><strong>No contacts after filtering</strong> - Lower
-<code>quantile</code> threshold (e.g., 0.7) - Lower
-<code>min_multiway</code> (e.g., 2) - Check data quality:
-<code>nrow(pairs)</code></p>
-<p><strong>Memory issues</strong> - Use <code>pairs_file</code> instead
-of loading to memory - Increase <code>quantile</code> to filter more
-aggressively - Process chromosomes separately - Use
-<code>max_reads</code> in visualization</p>
-<p><strong>Visualization too dense</strong> - Increase
-<code>min_multiway</code> - Use <code>max_reads</code> parameter -
-Subset to genomic regions with <code><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">dplyr::filter()</a></code></p>
-<p><strong>Slow performance</strong> - Ensure C functions are compiled:
-check <code>R CMD INSTALL</code> - Use larger <code>bin_size</code> to
-reduce bins - Filter data before building hypergraph</p>
+<div class="section level3">
+<h3 id="contact-order-distribution">Contact Order Distribution<a class="anchor" aria-label="anchor" href="#contact-order-distribution"></a>
+</h3>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Examine distribution of contact orders</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_multi</span>, <span class="st">"selected"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">contact_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_multi</span>, <span class="st">"selected"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">hyperedge_idx</span>, <span class="va">n_multiways</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">n_multiways</span>, name <span class="op">=</span> <span class="st">"n_hyperedges"</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">contact_summary</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>    <span class="va">contact_summary</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">n_multiways</span>, y <span class="op">=</span> <span class="va">n_hyperedges</span><span class="op">)</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_bar.html" class="external-link">geom_col</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"steelblue"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>      x <span class="op">=</span> <span class="st">"Number of contacts (multiway order)"</span>,</span>
+<span>      y <span class="op">=</span> <span class="st">"Number of hyperedges"</span>,</span>
+<span>      title <span class="op">=</span> <span class="st">"Distribution of Contact Orders"</span></span>
+<span>    <span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 2</span></span></span>
+<span><span class="co">#&gt;   n_multiways n_hyperedges</span></span>
+<span><span class="co">#&gt;         <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>        <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>           3           13</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>           4            9</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>           5            5</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>           6            2</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>           7            1</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/contact-dist-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="intra-vs-inter-chromosomal">Intra vs Inter-chromosomal<a class="anchor" aria-label="anchor" href="#intra-vs-inter-chromosomal"></a>
+</h3>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Check balance of intra vs inter contacts</span></span>
+<span><span class="kw">if</span> <span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_multi</span>, <span class="st">"selected"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">type_summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_multi</span>, <span class="st">"selected"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="va">hyperedge_idx</span>, <span class="va">type</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>    <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/count.html" class="external-link">count</a></span><span class="op">(</span><span class="va">type</span><span class="op">)</span></span>
+<span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">type_summary</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 2 × 2</span></span></span>
+<span><span class="co">#&gt;   type      n</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span> inter    10</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span> intra    20</span></span></code></pre></div>
+</div>
+</div>
+<div class="section level2">
+<h2 id="best-practices">Best Practices<a class="anchor" aria-label="anchor" href="#best-practices"></a>
+</h2>
+<ol style="list-style-type: decimal">
+<li><p><strong>Start with single chromosome</strong>: Easier to
+interpret and faster to compute</p></li>
+<li><p><strong>Tune bin size</strong>: Use <code>resolution_depth</code>
+vignette to find optimal resolution</p></li>
+<li><p><strong>Adjust quantile</strong>:</p></li>
+</ol>
+<ul>
+<li>Higher (0.9-0.95): Very strict, fewer but high-confidence
+contacts</li>
+<li>Lower (0.75-0.85): More permissive, capture weaker signals</li>
+</ul>
+<ol start="5" style="list-style-type: decimal">
+<li><p><strong>Filter by multiway order</strong>: Focus on specific
+contact orders for targeted analysis</p></li>
+<li><p><strong>Use composite view</strong>
+(<code>facet_chrom = FALSE</code>) for multi-chromosome to see
+relationships</p></li>
+<li><p><strong>Weight normalization</strong>: Use
+<code>"by_order"</code> to compare across different contact orders
+fairly</p></li>
+</ol>
+</div>
+<div class="section level2">
+<h2 id="using-geom_hypergraph-for-custom-plots">Using geom_hypergraph for Custom Plots<a class="anchor" aria-label="anchor" href="#using-geom_hypergraph-for-custom-plots"></a>
+</h2>
+<p>While <code><a href="../reference/gghypergraph.html">gghypergraph()</a></code> provides a convenient high-level
+interface, you can also use <code><a href="../reference/geom_hypergraph.html">geom_hypergraph()</a></code> directly for
+more customization. This is useful when you want to:</p>
+<ul>
+<li>Combine hypergraph with other ggplot2 layers</li>
+<li>Create custom faceting or layouts</li>
+<li>Apply custom themes and styling</li>
+<li>Build complex multi-panel figures</li>
+</ul>
+<div class="section level3">
+<h3 id="basic-usage">Basic Usage<a class="anchor" aria-label="anchor" href="#basic-usage"></a>
+</h3>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Extract the selected hypergraph data</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_chr22</span>, <span class="st">"selected"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create custom x-axis ordering (by genomic position)</span></span>
+<span><span class="va">hyperedge_order</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>chrom_num <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"\\D"</span>, <span class="st">""</span>, <span class="va">chrom</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">hyperedge_idx</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    min_chrom_num <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">chrom_num</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    min_bin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">bin</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">min_chrom_num</span>, <span class="va">min_bin</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">hyperedge_idx</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">hyperedge_idx</span>, levels <span class="op">=</span> <span class="va">hyperedge_order</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    y <span class="op">=</span> <span class="va">bin</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create plot with geom_hypergraph</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, group <span class="op">=</span> <span class="va">hyperedge_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">n_multiways</span><span class="op">)</span>,</span>
+<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    line_alpha <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>    point_size <span class="op">=</span> <span class="fl">2.5</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Contact Order"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Multi-way Contacts on chr22"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Hyperedge"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Genomic Position (bin)"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    panel.grid.minor <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.text.x <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.ticks.x <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/geom-basic-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="multi-chromosome-with-custom-layout">Multi-Chromosome with Custom Layout<a class="anchor" aria-label="anchor" href="#multi-chromosome-with-custom-layout"></a>
+</h3>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Get multi-chromosome data</span></span>
+<span><span class="va">df_multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hypergraphData.html">hypergraphData</a></span><span class="op">(</span><span class="va">mc_multi</span>, <span class="st">"selected"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Order hyperedges</span></span>
+<span><span class="va">hyperedge_order_multi</span> <span class="op">&lt;-</span> <span class="va">df_multi</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>chrom_num <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"\\D"</span>, <span class="st">""</span>, <span class="va">chrom</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/group_by.html" class="external-link">group_by</a></span><span class="op">(</span><span class="va">hyperedge_idx</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span></span>
+<span>    min_chrom_num <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">chrom_num</span>, na.rm <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>    min_chrom <span class="op">=</span> <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/nth.html" class="external-link">first</a></span><span class="op">(</span><span class="va">chrom</span><span class="op">[</span><span class="va">chrom_num</span> <span class="op">==</span> <span class="va">min_chrom_num</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>    min_bin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">bin</span><span class="op">[</span><span class="va">chrom</span> <span class="op">==</span> <span class="va">min_chrom</span><span class="op">]</span><span class="op">)</span>,</span>
+<span>    .groups <span class="op">=</span> <span class="st">"drop"</span></span>
+<span>  <span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/arrange.html" class="external-link">arrange</a></span><span class="op">(</span><span class="va">min_chrom_num</span>, <span class="va">min_bin</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/pull.html" class="external-link">pull</a></span><span class="op">(</span><span class="va">hyperedge_idx</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">df_multi</span> <span class="op">&lt;-</span> <span class="va">df_multi</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">hyperedge_idx</span>, levels <span class="op">=</span> <span class="va">hyperedge_order_multi</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Create faceted plot</span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">df_multi</span>,</span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">bin</span>, group <span class="op">=</span> <span class="va">hyperedge_idx</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">weight</span><span class="op">)</span>,</span>
+<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    point_size <span class="op">=</span> <span class="fl">2</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_color_gradient</a></span><span class="op">(</span></span>
+<span>    low <span class="op">=</span> <span class="st">"lightblue"</span>,</span>
+<span>    high <span class="op">=</span> <span class="st">"darkred"</span>,</span>
+<span>    name <span class="op">=</span> <span class="st">"Weight"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_grid.html" class="external-link">facet_grid</a></span><span class="op">(</span><span class="va">chrom</span> <span class="op">~</span> <span class="va">.</span>, scales <span class="op">=</span> <span class="st">"free_y"</span>, space <span class="op">=</span> <span class="st">"free_y"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Multi-way Contacts Across Chromosomes"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Hyperedge"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Genomic Position"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span></span>
+<span>    strip.text <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>face <span class="op">=</span> <span class="st">"bold"</span><span class="op">)</span>,</span>
+<span>    axis.text.x <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>    axis.ticks.x <span class="op">=</span> <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/geom-multi-chrom-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="adding-annotations">Adding Annotations<a class="anchor" aria-label="anchor" href="#adding-annotations"></a>
+</h3>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Add regions of interest</span></span>
+<span><span class="va">regions_of_interest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  ymin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">60</span><span class="op">)</span>,</span>
+<span>  ymax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">70</span><span class="op">)</span>,</span>
+<span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Region A"</span>, <span class="st">"Region B"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">df</span>, <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, group <span class="op">=</span> <span class="va">hyperedge_idx</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add shaded regions</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">regions_of_interest</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="op">-</span><span class="cn">Inf</span>, xmax <span class="op">=</span> <span class="cn">Inf</span>, ymin <span class="op">=</span> <span class="va">ymin</span>, ymax <span class="op">=</span> <span class="va">ymax</span><span class="op">)</span>,</span>
+<span>    fill <span class="op">=</span> <span class="st">"yellow"</span>, alpha <span class="op">=</span> <span class="fl">0.2</span>, inherit.aes <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add hypergraph</span></span>
+<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">n_multiways</span><span class="op">)</span>,</span>
+<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    line_alpha <span class="op">=</span> <span class="fl">0.7</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="co"># Add region labels</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_text.html" class="external-link">geom_text</a></span><span class="op">(</span></span>
+<span>    data <span class="op">=</span> <span class="va">regions_of_interest</span>,</span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">x</span><span class="op">)</span> <span class="op">*</span> <span class="fl">0.95</span>, y <span class="op">=</span> <span class="op">(</span><span class="va">ymin</span> <span class="op">+</span> <span class="va">ymax</span><span class="op">)</span> <span class="op">/</span> <span class="fl">2</span>, label <span class="op">=</span> <span class="va">label</span><span class="op">)</span>,</span>
+<span>    hjust <span class="op">=</span> <span class="fl">1</span>, fontface <span class="op">=</span> <span class="st">"bold"</span>, inherit.aes <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>name <span class="op">=</span> <span class="st">"Contacts"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Hypergraph with Annotated Regions"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Hyperedge"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Genomic Bin"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/geom-annotate-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="highlighting-specific-hyperedges">Highlighting Specific Hyperedges<a class="anchor" aria-label="anchor" href="#highlighting-specific-hyperedges"></a>
+</h3>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Highlight high-order contacts (≥5-way)</span></span>
+<span><span class="va">df_highlight</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span></span>
+<span>    is_high_order <span class="op">=</span> <span class="va">n_multiways</span> <span class="op">&gt;=</span> <span class="fl">5</span>,</span>
+<span>    alpha_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">is_high_order</span>, <span class="fl">0.9</span>, <span class="fl">0.3</span><span class="op">)</span>,</span>
+<span>    line_color <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">is_high_order</span>, <span class="st">"red"</span>, <span class="st">"gray70"</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span>
+<span></span>
+<span><span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span></span>
+<span>  <span class="va">df_highlight</span>,</span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, group <span class="op">=</span> <span class="va">hyperedge_idx</span><span class="op">)</span></span>
+<span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="../reference/geom_hypergraph.html">geom_hypergraph</a></span><span class="op">(</span></span>
+<span>    <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="va">line_color</span>, alpha <span class="op">=</span> <span class="va">alpha_value</span><span class="op">)</span>,</span>
+<span>    line_width <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    point_size <span class="op">=</span> <span class="fl">2</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_color_identity</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_identity.html" class="external-link">scale_alpha_identity</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span></span>
+<span>    title <span class="op">=</span> <span class="st">"Highlighting High-Order Contacts (≥5-way)"</span>,</span>
+<span>    subtitle <span class="op">=</span> <span class="st">"Red = high-order, Gray = lower-order"</span>,</span>
+<span>    x <span class="op">=</span> <span class="st">"Hyperedge"</span>,</span>
+<span>    y <span class="op">=</span> <span class="st">"Genomic Bin"</span></span>
+<span>  <span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu">ggplot2</span><span class="fu">::</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_minimal</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="hypergraph_files/figure-html/geom-highlight-1.png" class="r-plt" alt="Hypergraph visualization" width="100%"></p>
+</div>
+<div class="section level3">
+<h3 id="geom_hypergraph-parameters">geom_hypergraph Parameters<a class="anchor" aria-label="anchor" href="#geom_hypergraph-parameters"></a>
+</h3>
+<p>The <code><a href="../reference/geom_hypergraph.html">geom_hypergraph()</a></code> layer accepts these key
+parameters:</p>
+<ul>
+<li>
+<strong><code>line_width</code></strong>: Width of hyperedge lines
+(default: 0.3)</li>
+<li>
+<strong><code>line_alpha</code></strong>: Transparency of lines
+(default: 0.6)</li>
+<li>
+<strong><code>point_size</code></strong>: Size of bin points
+(default: 2)</li>
+<li>
+<strong><code>point_alpha</code></strong>: Transparency of points
+(default: 0.8)</li>
+<li>
+<strong><code>colour_by</code></strong>: What to color by
+(“n_contacts” or “none”)</li>
+</ul>
+<p>You can also map aesthetics directly using <code><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes()</a></code>:</p>
+<ul>
+<li>
+<strong><code>colour</code></strong>: Color by any variable</li>
+<li>
+<strong><code>group</code></strong>: Must be the hyperedge
+identifier</li>
+<li>
+<strong><code>x</code>, <code>y</code></strong>: Position
+mappings</li>
+</ul>
+</div>
+</div>
+<div class="section level2">
+<h2 id="cleanup">Cleanup<a class="anchor" aria-label="anchor" href="#cleanup"></a>
+</h2>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Remove temporary file</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">pairs_file</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
 </h2>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="co">#&gt; R version 4.5.2 (2025-10-31)</span></span>
 <span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
@@ -1014,77 +1036,52 @@ reduce bins - Filter data before building hypergraph</p>
 <span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; other attached packages:</span></span>
-<span><span class="co">#&gt; [1] gghic_0.2.0   ggplot2_4.0.1 dplyr_1.1.4  </span></span>
+<span><span class="co">#&gt; [1] gghic_0.2.1   ggplot2_4.0.1 dplyr_1.1.4  </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
-<span><span class="co">#&gt;   [1] RColorBrewer_1.1-3          rstudioapi_0.17.1          </span></span>
-<span><span class="co">#&gt;   [3] jsonlite_2.0.0              magrittr_2.0.4             </span></span>
-<span><span class="co">#&gt;   [5] GenomicFeatures_1.62.0      farver_2.1.2               </span></span>
-<span><span class="co">#&gt;   [7] rmarkdown_2.30              fs_1.6.6                   </span></span>
-<span><span class="co">#&gt;   [9] BiocIO_1.20.0               ragg_1.5.0                 </span></span>
-<span><span class="co">#&gt;  [11] vctrs_0.6.5                 memoise_2.0.1              </span></span>
-<span><span class="co">#&gt;  [13] Rsamtools_2.26.0            RCurl_1.98-1.17            </span></span>
-<span><span class="co">#&gt;  [15] base64enc_0.1-3             htmltools_0.5.8.1          </span></span>
-<span><span class="co">#&gt;  [17] S4Arrays_1.10.0             progress_1.2.3             </span></span>
-<span><span class="co">#&gt;  [19] curl_7.0.0                  Rhdf5lib_1.32.0            </span></span>
-<span><span class="co">#&gt;  [21] rhdf5_2.54.0                SparseArray_1.10.3         </span></span>
-<span><span class="co">#&gt;  [23] Formula_1.2-5               sass_0.4.10                </span></span>
-<span><span class="co">#&gt;  [25] bslib_0.9.0                 htmlwidgets_1.6.4          </span></span>
-<span><span class="co">#&gt;  [27] desc_1.4.3                  Gviz_1.54.0                </span></span>
-<span><span class="co">#&gt;  [29] httr2_1.2.1                 cachem_1.1.0               </span></span>
-<span><span class="co">#&gt;  [31] GenomicAlignments_1.46.0    lifecycle_1.0.4            </span></span>
-<span><span class="co">#&gt;  [33] pkgconfig_2.0.3             Matrix_1.7-4               </span></span>
-<span><span class="co">#&gt;  [35] R6_2.6.1                    fastmap_1.2.0              </span></span>
-<span><span class="co">#&gt;  [37] MatrixGenerics_1.22.0       digest_0.6.39              </span></span>
-<span><span class="co">#&gt;  [39] colorspace_2.1-2            AnnotationDbi_1.72.0       </span></span>
-<span><span class="co">#&gt;  [41] S4Vectors_0.48.0            textshaping_1.0.4          </span></span>
-<span><span class="co">#&gt;  [43] Hmisc_5.2-4                 GenomicRanges_1.62.0       </span></span>
-<span><span class="co">#&gt;  [45] RSQLite_2.4.5               labeling_0.4.3             </span></span>
-<span><span class="co">#&gt;  [47] filelock_1.0.3              httr_1.4.7                 </span></span>
-<span><span class="co">#&gt;  [49] abind_1.4-8                 compiler_4.5.2             </span></span>
-<span><span class="co">#&gt;  [51] bit64_4.6.0-1               withr_3.0.2                </span></span>
-<span><span class="co">#&gt;  [53] htmlTable_2.4.3             S7_0.2.1                   </span></span>
-<span><span class="co">#&gt;  [55] backports_1.5.0             BiocParallel_1.44.0        </span></span>
-<span><span class="co">#&gt;  [57] DBI_1.2.3                   biomaRt_2.66.0             </span></span>
-<span><span class="co">#&gt;  [59] rappdirs_0.3.3              DelayedArray_0.36.0        </span></span>
-<span><span class="co">#&gt;  [61] rjson_0.2.23                tools_4.5.2                </span></span>
-<span><span class="co">#&gt;  [63] foreign_0.8-90              nnet_7.3-20                </span></span>
-<span><span class="co">#&gt;  [65] glue_1.8.0                  restfulr_0.0.16            </span></span>
-<span><span class="co">#&gt;  [67] InteractionSet_1.38.0       rhdf5filters_1.22.0        </span></span>
-<span><span class="co">#&gt;  [69] grid_4.5.2                  checkmate_2.3.3            </span></span>
-<span><span class="co">#&gt;  [71] cluster_2.1.8.1             generics_0.1.4             </span></span>
-<span><span class="co">#&gt;  [73] gtable_0.3.6                BSgenome_1.78.0            </span></span>
-<span><span class="co">#&gt;  [75] tidyr_1.3.1                 ensembldb_2.34.0           </span></span>
-<span><span class="co">#&gt;  [77] data.table_1.17.8           hms_1.1.4                  </span></span>
-<span><span class="co">#&gt;  [79] utf8_1.2.6                  XVector_0.50.0             </span></span>
-<span><span class="co">#&gt;  [81] BiocGenerics_0.56.0         pillar_1.11.1              </span></span>
-<span><span class="co">#&gt;  [83] stringr_1.6.0               BiocFileCache_3.0.0        </span></span>
-<span><span class="co">#&gt;  [85] lattice_0.22-7              rtracklayer_1.70.0         </span></span>
-<span><span class="co">#&gt;  [87] bit_4.6.0                   deldir_2.0-4               </span></span>
-<span><span class="co">#&gt;  [89] biovizBase_1.58.0           tidyselect_1.2.1           </span></span>
-<span><span class="co">#&gt;  [91] Biostrings_2.78.0           knitr_1.50                 </span></span>
-<span><span class="co">#&gt;  [93] gridExtra_2.3               IRanges_2.44.0             </span></span>
-<span><span class="co">#&gt;  [95] Seqinfo_1.0.0               ProtGenerics_1.42.0        </span></span>
-<span><span class="co">#&gt;  [97] SummarizedExperiment_1.40.0 stats4_4.5.2               </span></span>
-<span><span class="co">#&gt;  [99] xfun_0.54                   Biobase_2.70.0             </span></span>
-<span><span class="co">#&gt; [101] matrixStats_1.5.0           stringi_1.8.7              </span></span>
-<span><span class="co">#&gt; [103] UCSC.utils_1.6.0            lazyeval_0.2.2             </span></span>
-<span><span class="co">#&gt; [105] yaml_2.3.11                 evaluate_1.0.5             </span></span>
-<span><span class="co">#&gt; [107] codetools_0.2-20            cigarillo_1.0.0            </span></span>
-<span><span class="co">#&gt; [109] interp_1.1-6                tibble_3.3.0               </span></span>
-<span><span class="co">#&gt; [111] cli_3.6.5                   rpart_4.1.24               </span></span>
-<span><span class="co">#&gt; [113] systemfonts_1.3.1           jquerylib_0.1.4            </span></span>
-<span><span class="co">#&gt; [115] dichromat_2.0-0.1           Rcpp_1.1.0                 </span></span>
-<span><span class="co">#&gt; [117] GenomeInfoDb_1.46.1         dbplyr_2.5.1               </span></span>
-<span><span class="co">#&gt; [119] png_0.1-8                   XML_3.99-0.20              </span></span>
-<span><span class="co">#&gt; [121] parallel_4.5.2              pkgdown_2.2.0              </span></span>
-<span><span class="co">#&gt; [123] blob_1.2.4                  prettyunits_1.2.0          </span></span>
-<span><span class="co">#&gt; [125] latticeExtra_0.6-31         jpeg_0.1-11                </span></span>
-<span><span class="co">#&gt; [127] AnnotationFilter_1.34.0     bitops_1.0-9               </span></span>
-<span><span class="co">#&gt; [129] txdbmaker_1.6.0             viridisLite_0.4.2          </span></span>
-<span><span class="co">#&gt; [131] VariantAnnotation_1.56.0    scales_1.4.0               </span></span>
-<span><span class="co">#&gt; [133] purrr_1.2.0                 crayon_1.5.3               </span></span>
-<span><span class="co">#&gt; [135] rlang_1.1.6                 KEGGREST_1.50.0</span></span></code></pre></div>
+<span><span class="co">#&gt;  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               </span></span>
+<span><span class="co">#&gt;  [3] rjson_0.2.23                xfun_0.54                  </span></span>
+<span><span class="co">#&gt;  [5] bslib_0.9.0                 htmlwidgets_1.6.4          </span></span>
+<span><span class="co">#&gt;  [7] rhdf5_2.54.1                Biobase_2.70.0             </span></span>
+<span><span class="co">#&gt;  [9] lattice_0.22-7              bitops_1.0-9               </span></span>
+<span><span class="co">#&gt; [11] rhdf5filters_1.22.0         vctrs_0.6.5                </span></span>
+<span><span class="co">#&gt; [13] tools_4.5.2                 generics_0.1.4             </span></span>
+<span><span class="co">#&gt; [15] parallel_4.5.2              stats4_4.5.2               </span></span>
+<span><span class="co">#&gt; [17] curl_7.0.0                  tibble_3.3.0               </span></span>
+<span><span class="co">#&gt; [19] pkgconfig_2.0.3             Matrix_1.7-4               </span></span>
+<span><span class="co">#&gt; [21] RColorBrewer_1.1-3          cigarillo_1.0.0            </span></span>
+<span><span class="co">#&gt; [23] S7_0.2.1                    desc_1.4.3                 </span></span>
+<span><span class="co">#&gt; [25] S4Vectors_0.48.0            lifecycle_1.0.4            </span></span>
+<span><span class="co">#&gt; [27] compiler_4.5.2              farver_2.1.2               </span></span>
+<span><span class="co">#&gt; [29] Rsamtools_2.26.0            Biostrings_2.78.0          </span></span>
+<span><span class="co">#&gt; [31] textshaping_1.0.4           codetools_0.2-20           </span></span>
+<span><span class="co">#&gt; [33] Seqinfo_1.0.0               InteractionSet_1.38.0      </span></span>
+<span><span class="co">#&gt; [35] htmltools_0.5.9             sass_0.4.10                </span></span>
+<span><span class="co">#&gt; [37] RCurl_1.98-1.17             yaml_2.3.12                </span></span>
+<span><span class="co">#&gt; [39] tidyr_1.3.1                 crayon_1.5.3               </span></span>
+<span><span class="co">#&gt; [41] pillar_1.11.1               pkgdown_2.2.0              </span></span>
+<span><span class="co">#&gt; [43] jquerylib_0.1.4             BiocParallel_1.44.0        </span></span>
+<span><span class="co">#&gt; [45] cachem_1.1.0                DelayedArray_0.36.0        </span></span>
+<span><span class="co">#&gt; [47] abind_1.4-8                 tidyselect_1.2.1           </span></span>
+<span><span class="co">#&gt; [49] digest_0.6.39               purrr_1.2.0                </span></span>
+<span><span class="co">#&gt; [51] restfulr_0.0.16             labeling_0.4.3             </span></span>
+<span><span class="co">#&gt; [53] fastmap_1.2.0               grid_4.5.2                 </span></span>
+<span><span class="co">#&gt; [55] cli_3.6.5                   SparseArray_1.10.6         </span></span>
+<span><span class="co">#&gt; [57] magrittr_2.0.4              S4Arrays_1.10.1            </span></span>
+<span><span class="co">#&gt; [59] utf8_1.2.6                  dichromat_2.0-0.1          </span></span>
+<span><span class="co">#&gt; [61] XML_3.99-0.20               withr_3.0.2                </span></span>
+<span><span class="co">#&gt; [63] scales_1.4.0                rmarkdown_2.30             </span></span>
+<span><span class="co">#&gt; [65] XVector_0.50.0              httr_1.4.7                 </span></span>
+<span><span class="co">#&gt; [67] matrixStats_1.5.0           ragg_1.5.0                 </span></span>
+<span><span class="co">#&gt; [69] evaluate_1.0.5              knitr_1.50                 </span></span>
+<span><span class="co">#&gt; [71] BiocIO_1.20.0               GenomicRanges_1.62.1       </span></span>
+<span><span class="co">#&gt; [73] IRanges_2.44.0              viridisLite_0.4.2          </span></span>
+<span><span class="co">#&gt; [75] rtracklayer_1.70.0          rlang_1.1.6                </span></span>
+<span><span class="co">#&gt; [77] Rcpp_1.1.0                  glue_1.8.0                 </span></span>
+<span><span class="co">#&gt; [79] BiocGenerics_0.56.0         jsonlite_2.0.0             </span></span>
+<span><span class="co">#&gt; [81] R6_2.6.1                    Rhdf5lib_1.32.0            </span></span>
+<span><span class="co">#&gt; [83] GenomicAlignments_1.46.0    MatrixGenerics_1.22.0      </span></span>
+<span><span class="co">#&gt; [85] systemfonts_1.3.1           fs_1.6.6</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

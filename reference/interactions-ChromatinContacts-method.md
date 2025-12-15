@@ -1,7 +1,6 @@
-# Get interaction data from ChromatinContacts object
+# Get interaction data
 
-Retrieves the imported Hi-C interaction data as a `GInteractions`
-object.
+Retrieves imported Hi-C interactions.
 
 ## Usage
 
@@ -14,18 +13,16 @@ interactions(x)
 
 - x:
 
-  A `ChromatinContacts` object.
+  ChromatinContacts object.
 
 ## Value
 
-A `GInteractions` object containing the Hi-C interactions, or NULL if
-data has not been imported yet.
+GInteractions (Hi-C data) or NULL (not yet imported).
 
 ## Details
 
-The interactions must be loaded first using `import()`. The returned
-`GInteractions` object contains bin coordinates and metadata columns
-such as `count` and `balanced`.
+Must load with `import()` first. GInteractions contains bin coordinates
+and metadata (count, balanced).
 
 ## Examples
 

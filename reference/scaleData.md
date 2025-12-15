@@ -1,8 +1,8 @@
-# Scale Hi-C interaction data
+# Scale and transform Hi-C interaction data for visualization
 
-Transforms and scales chromatin interaction data for visualization.
-Applies a scaling function to a specified column and handles missing
-values.
+Transforms and scales chromatin interaction data to prepare it for
+visualization. Applies user-defined scaling functions (e.g., log
+transformation) to interaction scores and handles missing values.
 
 ## Usage
 
@@ -14,79 +14,116 @@ scaleData(data, scale_column, scale_method, remove_na = FALSE)
 
 - data:
 
-  A `ChromatinContacts`, `GInteractions`, `data.frame`, or `tibble`
-  object containing chromatin interaction data.
+  Input data in one of these formats:
+
+  - ChromatinContacts object with imported interactions
+
+  - GInteractions object with score metadata
+
+  - data.frame or tibble with columns: seqnames1, start1, end1,
+    seqnames2, start2, end2, plus score column
 
 - scale_column:
 
-  Character string. Name of the column to scale (e.g., `"balanced"`,
-  `"count"`).
+  Character. Name of column containing values to scale. Common options:
+
+  - `"balanced"`: ICE-normalized counts (recommended)
+
+  - `"count"`: raw contact counts
+
+  - Any other numeric metadata column
 
 - scale_method:
 
-  Function to apply for scaling. Common choices include `log10`, `log2`,
-  or identity function `function(x) x`.
+  Function to apply for transformation. Common options:
+
+  - `log10`: log10 transformation (default for most Hi-C data)
+
+  - `log2`: log2 transformation
+
+  - `log1p`: log(x + 1) transformation (handles zeros)
+
+  - `identity` or `function(x) x`: no transformation
+
+  - Custom function: any function that takes numeric vector and returns
+    numeric vector
 
 - remove_na:
 
-  Logical. If `TRUE`, removes rows with `NA` or infinite values in the
-  score column. Default is `FALSE`.
+  Logical. Whether to remove rows with NA or infinite values after
+  scaling (default: FALSE). Set TRUE to remove missing data that could
+  cause visualization issues.
 
 ## Value
 
-A tibble with columns: `seqnames1`, `start1`, `end1`, `seqnames2`,
-`start2`, `end2`, and `score` (the scaled values).
+Tibble (data frame) with standardized columns:
+
+- `seqnames1`, `start1`, `end1`: First anchor coordinates
+
+- `seqnames2`, `start2`, `end2`: Second anchor coordinates
+
+- `score`: Transformed and scaled values
 
 ## Details
 
-The function:
+### Processing steps
 
-1.  Converts input data to a tibble format
+1.  Convert input to tibble format
 
-2.  Applies the scaling method to the specified column
+2.  Apply `scale_method` function to `scale_column`
 
-3.  Creates a `score` column with the transformed values
+3.  Create new `score` column with transformed values
 
-4.  Optionally removes missing values
+4.  Optionally remove NA/infinite values
 
-5.  Applies out-of-bounds squishing to ensure values are within range
+5.  Squish extreme outliers to prevent visualization artifacts
+
+### Recommended scaling
+
+For typical Hi-C data visualization:
+
+- Use `"balanced"` column with `log10` transformation
+
+- Set `remove_na = TRUE` to handle bins with no coverage
+
+### Custom transformations
+
+You can provide any function for scaling:
+
+    # Square root transformation
+    scaleData(cc, "count", sqrt)
+
+    # Custom transformation
+    scaleData(cc, "balanced", function(x) log2(x + 0.1))
+
+## See also
+
+[`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md),
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md),
+[`ChromatinContacts()`](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
 # Load Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool") |>
-  import()
+cc <- ChromatinContacts("file.cool") |> import()
 
-# Scale using log10 transformation (most common)
+# Standard log10 scaling of balanced data
 scaled_data <- scaleData(cc, "balanced", log10)
-head(scaled_data)
 
-# Use raw counts without transformation
+# Raw counts without transformation
 scaled_raw <- scaleData(cc, "count", function(x) x)
 
-# Scale with log2 and remove missing values
+# Log2 scaling with NA removal
 scaled_clean <- scaleData(cc, "balanced", log2, remove_na = TRUE)
 
-# From GInteractions object
-gis <- interactions(cc)
-scaled_gis <- scaleData(gis, "balanced", log10)
-
-# From data frame (must have required columns)
-df <- as.data.frame(gis)
-scaled_df <- scaleData(df, "count", log10)
-
-# Percentile rank transformation
-percentile_rank <- function(x) {
-  rank(x, na.last = "keep") / sum(!is.na(x))
-}
-scaled_pct <- scaleData(cc, "balanced", percentile_rank)
-
-# Use with ggplot2 directly
+# Use with plotting
 library(ggplot2)
-ggplot(scaled_data, aes(x = (start1 + end1) / 2, y = score)) +
-  geom_point(alpha = 0.1) +
-  labs(title = "Distance decay", x = "Position", y = "Log10(balanced)")
+ggplot() +
+  geom_hic(data = scaleData(cc, "balanced", log10),
+           aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+               seqnames2 = seqnames2, start2 = start2, end2 = end2,
+               fill = score))
 } # }
 ```

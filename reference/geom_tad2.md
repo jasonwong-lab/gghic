@@ -1,7 +1,9 @@
-# geom_tad2
+# Visualize TAD boundaries (a second version)
 
-A second version of
-[`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md).
+Another version of
+[`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md)
+that requires direct data frame input. Draws TAD boundaries as
+triangular outlines on the Hi-C heatmap.
 
 ## Usage
 

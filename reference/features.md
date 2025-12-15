@@ -1,11 +1,15 @@
-# Get all genomic features from ChromatinContacts object
+# Get genomic features
 
-Retrieves all genomic features (TADs, loops, compartments,
-multi-contacts) as a SimpleList.
+Retrieves specific or all genomic features.
 
 ## Usage
 
 ``` r
+features(x, name)
+
+# S4 method for class 'ChromatinContacts,character'
+features(x, name)
+
 # S4 method for class 'ChromatinContacts,missing'
 features(x)
 ```
@@ -14,20 +18,24 @@ features(x)
 
 - x:
 
-  A `ChromatinContacts` object.
+  ChromatinContacts object.
+
+- name:
+
+  Character. Feature name: `"compartments"`, `"TADs"`, `"loops"`, or
+  `"multi_contacts"`. If missing, returns all as SimpleList.
 
 ## Value
 
-A `SimpleList` containing all features: compartments, TADs, loops, and
-multi_contacts.
+GRanges (TADs, compartments, multi_contacts), GInteractions (loops), or
+SimpleList (all features).
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# Get all features
+tads <- features(cc, "TADs")
+loops <- features(cc, "loops")
 all_features <- features(cc)
-all_features$TADs
-all_features$loops
 } # }
 ```

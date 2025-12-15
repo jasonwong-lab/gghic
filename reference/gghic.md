@@ -1,12 +1,13 @@
 # Create Hi-C visualization plot
 
-High-level wrapper function to create publication-ready Hi-C contact map
-visualizations with optional genomic features. Automatically handles
-data transformation, feature integration, and theme application.
+High-level wrapper for publication-ready Hi-C visualizations with
+genomic features.
 
 ## Usage
 
 ``` r
+gghic(x, ...)
+
 # S4 method for class 'ChromatinContacts'
 gghic(
   x,
@@ -126,177 +127,135 @@ gghic(
 
 - x:
 
-  A `ChromatinContacts` object with imported interaction data, or a
-  `GInteractions` object, or a `data.frame`/`tibble` with interaction
-  data.
-
-- scale_method:
-
-  Function to apply for data transformation. Common choices: `log10`
-  (default), `log2`, `function(x) x` (no transformation).
-
-- ideogram:
-
-  Logical. Add chromosome ideogram track. Default is `FALSE`.
-
-- ideogram_width_ratio:
-
-  Numeric. Height of ideogram relative to heatmap height. Default is
-  `1/30`.
-
-- ideogram_fontsize:
-
-  Numeric. Font size for ideogram labels. Default is `10`.
-
-- ideogram_colour:
-
-  Character. Color for highlighted region on ideogram. Default is
-  `"red"`.
-
-- ideogram_fill:
-
-  Character. Fill color for highlighted region. Default is `"#FFE3E680"`
-  (transparent red).
-
-- annotation:
-
-  Logical. Add gene annotation track. Requires `gtf_path` in `...`.
-  Default is `FALSE`.
-
-- annotation_style:
-
-  Character. Style for gene annotation: `"basic"` or `"arrow"`. Default
-  is `"basic"`.
-
-- annotation_width_ratio:
-
-  Numeric. Height of annotation track relative to heatmap. Default is
-  `1/50`.
-
-- annotation_spacing_ratio:
-
-  Numeric. Spacing between genes. Default is `1/3`.
-
-- annotation_fontsize:
-
-  Numeric. Font size for gene labels. Default is `10`.
-
-- annotation_colour:
-
-  Character. Color for gene features. Default is `"#48CFCB"`.
-
-- annotation_fill:
-
-  Character. Fill color for gene features. Default is `"#48CFCB"`.
-
-- track:
-
-  Logical. Add genomic signal tracks (e.g., ChIP-seq). Requires `tracks`
-  in the `ChromatinContacts` object or `data_paths` in `...`. Default is
-  `FALSE`.
-
-- track_width_ratio:
-
-  Numeric. Height of track area relative to heatmap. Default is `1/20`.
-
-- track_spacing_ratio:
-
-  Numeric. Spacing between multiple tracks. Default is `1/2`.
-
-- track_fill:
-
-  Character or vector. Colors for track signals. Default is `"black"`.
-
-- track_fontsize:
-
-  Numeric. Font size for track labels. Default is `5`.
-
-- tad:
-
-  Logical. Add TAD (topologically associating domain) boundaries.
-  Requires `TADs` in the `ChromatinContacts` object or `tad_path` in
-  `...`. Default is `FALSE`.
-
-- tad_colour:
-
-  Character. Color for TAD boundaries. Default is `"grey"`.
-
-- loop:
-
-  Logical. Add chromatin loop arcs. Requires `loops` in the
-  `ChromatinContacts` object or `loop_path` in `...`. Default is
-  `FALSE`.
-
-- loop_style:
-
-  Character. Style for loops: `"circle"` or `"arc"`. Default is
-  `"circle"`.
-
-- loop_colour:
-
-  Character. Color for loop arcs. Default is `"black"`.
-
-- loop_fill:
-
-  Fill color for loop arcs. Default is `NA`.
-
-- concatemer:
-
-  Logical. Add concatemer visualization for multi-way contacts. Requires
-  `multi_contacts` in object. Default is `FALSE`.
-
-- concatemer_width_ratio:
-
-  Numeric. Height of concatemer track. Default is `1/100`.
-
-- concatemer_spacing_ratio:
-
-  Numeric. Spacing between concatemers. Default is `1/5`.
-
-- expand_xaxis:
-
-  Logical. Expand x-axis to show full chromosome context. Default is
-  `FALSE`.
-
-- expand_left:
-
-  Numeric. Left expansion in base pairs. If `NULL` (default), uses 10×
-  resolution.
-
-- expand_right:
-
-  Numeric. Right expansion in base pairs. If `NULL` (default), uses 10×
-  resolution.
+  ChromatinContacts, GInteractions, or data.frame with interactions.
 
 - ...:
 
-  Additional arguments passed to individual geom functions:
+  Additional arguments for geom functions.
 
-  - For
-    [`geom_ideogram()`](https://jasonwong-lab.github.io/gghic/reference/geom_ideogram.md):
-    `genome`, `highlight`, `length_ratio`
+- scale_method:
 
-  - For
-    [`geom_annotation()`](https://jasonwong-lab.github.io/gghic/reference/geom_annotation.md):
-    `gtf_path`, `style`, `maxgap`, `gene_symbols`, `include_ncrna`
+  Function for data transformation (default: log10).
 
-  - For
-    [`geom_track()`](https://jasonwong-lab.github.io/gghic/reference/geom_track.md):
-    `data_paths`, `data_range`, `rasterize`
+- ideogram:
 
-  - For
-    [`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md):
-    `tad_path` (path to BED file), `tad_is_0_based` (logical, default
-    TRUE), `stroke`
+  Logical. Add chromosome ideogram (default: FALSE).
 
-  - For
-    [`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md):
-    `loop_path` (path to BEDPE file), `loop_is_0_based` (logical,
-    default TRUE), `stroke`
+- ideogram_width_ratio:
 
-  - For
-    [`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md):
-    `draw_boundary`, `rasterize`
+  Numeric. Ideogram height ratio (default: 1/30).
+
+- ideogram_fontsize:
+
+  Numeric. Ideogram font size (default: 10).
+
+- ideogram_colour:
+
+  Character. Highlight color (default: `"red"`).
+
+- ideogram_fill:
+
+  Character. Highlight fill (default: `"#FFE3E680"`).
+
+- annotation:
+
+  Logical. Add gene annotations (default: FALSE). Requires `gtf_path` in
+  `...`.
+
+- annotation_style:
+
+  Character. `"basic"` or `"arrow"` (default: `"basic"`).
+
+- annotation_width_ratio:
+
+  Numeric. Track height (default: 1/50).
+
+- annotation_spacing_ratio:
+
+  Numeric. Gene spacing (default: 1/3).
+
+- annotation_fontsize:
+
+  Numeric. Label size (default: 10).
+
+- annotation_colour:
+
+  Character. Feature color (default: `"#48CFCB"`).
+
+- annotation_fill:
+
+  Character. Feature fill (default: `"#48CFCB"`).
+
+- track:
+
+  Logical. Add genomic tracks (default: FALSE). Requires `tracks` in
+  object or `data_paths` in `...`.
+
+- track_width_ratio:
+
+  Numeric. Track height (default: 1/20).
+
+- track_spacing_ratio:
+
+  Numeric. Track spacing (default: 1/2).
+
+- track_fill:
+
+  Character. Track colors (default: `"black"`).
+
+- track_fontsize:
+
+  Numeric. Label size (default: 5).
+
+- tad:
+
+  Logical. Add TAD boundaries (default: FALSE). Requires `TADs` in
+  object or `tad_path` in `...`.
+
+- tad_colour:
+
+  Character. TAD color (default: `"grey"`).
+
+- loop:
+
+  Logical. Add loops (default: FALSE). Requires `loops` in object or
+  `loop_path` in `...`.
+
+- loop_style:
+
+  Character. `"circle"` or `"arc"` (default: `"circle"`).
+
+- loop_colour:
+
+  Character. Loop color (default: `"black"`).
+
+- loop_fill:
+
+  Fill color (default: NA).
+
+- concatemer:
+
+  Logical. Add multi-way contacts (default: FALSE).
+
+- concatemer_width_ratio:
+
+  Numeric. Track height (default: 1/100).
+
+- concatemer_spacing_ratio:
+
+  Numeric. Spacing (default: 1/5).
+
+- expand_xaxis:
+
+  Logical. Expand x-axis (default: FALSE).
+
+- expand_left:
+
+  Numeric. Left expansion in bp (default: 10×resolution).
+
+- expand_right:
+
+  Numeric. Right expansion in bp (default: 10×resolution).
 
 - scale_column:
 
@@ -314,119 +273,47 @@ gghic(
 
 ## Value
 
-A `ggplot2` object that can be further customized with additional
-ggplot2 layers and functions.
+ggplot2 object.
 
 ## Details
 
-`gghic()` provides a high-level interface for creating Hi-C
-visualizations. It automatically:
+Automatically handles: data scaling, coordinate transformation, feature
+integration, axis labels, default theme.
 
-- Scales interaction data using the specified method
-
-- Applies appropriate coordinate transformations
-
-- Integrates genomic features from the `ChromatinContacts` object
-
-- Sets up axis labels and breaks
-
-- Applies a clean default theme
-
-**For more control**, use individual `geom_*()` functions with
-`ggplot2`:
-
-- [`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md) -
-  Base heatmap layer
-
-- [`geom_ideogram()`](https://jasonwong-lab.github.io/gghic/reference/geom_ideogram.md) -
-  Chromosome ideogram
-
-- [`geom_annotation()`](https://jasonwong-lab.github.io/gghic/reference/geom_annotation.md) -
-  Gene annotations
-
-- [`geom_track()`](https://jasonwong-lab.github.io/gghic/reference/geom_track.md) -
-  Genomic signal tracks
-
-- [`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md) -
-  TAD boundaries
-
-- [`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md) -
-  Chromatin loops
-
-- [`geom_concatemer()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer.md) -
-  Multi-way contacts
+Use individual `geom_*()` functions for more control:
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md),
+[`geom_ideogram()`](https://jasonwong-lab.github.io/gghic/reference/geom_ideogram.md),
+[`geom_annotation()`](https://jasonwong-lab.github.io/gghic/reference/geom_annotation.md),
+[`geom_track()`](https://jasonwong-lab.github.io/gghic/reference/geom_track.md),
+[`geom_tad()`](https://jasonwong-lab.github.io/gghic/reference/geom_tad.md),
+[`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md),
+[`geom_concatemer()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer.md).
 
 ## See also
 
-- [ChromatinContacts](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md) -
-  Main data class
-
-- [`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md) -
-  Base heatmap layer
-
-- [`theme_hic()`](https://jasonwong-lab.github.io/gghic/reference/theme_hic.md) -
-  Default theme
-
-- [`scaleData()`](https://jasonwong-lab.github.io/gghic/reference/scaleData.md) -
-  Data transformation
+[ChromatinContacts](https://jasonwong-lab.github.io/gghic/reference/ChromatinContacts.md),
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md),
+[`theme_hic()`](https://jasonwong-lab.github.io/gghic/reference/theme_hic.md),
+[`scaleData()`](https://jasonwong-lab.github.io/gghic/reference/scaleData.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
-# === Basic Usage ===
-
-# Load and visualize Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool") |>
-  import()
+# Basic usage
+cc <- ChromatinContacts("file.cool") |> import()
 gghic(cc)
+gghic(cc["chr4:0-50000000"])
 
-# Focus on specific region
-cc["chr4:0-50000000"] |>
-  gghic()
-
-# === With Ideogram ===
-
-# Add chromosome ideogram for context
+# With features
 gghic(cc, ideogram = TRUE, genome = "hg19")
+gghic(cc, tad = TRUE, tad_path = "tads.bed")
+gghic(cc, loop = TRUE, loop_path = "loops.bedpe")
 
-# Customize ideogram appearance
-gghic(cc,
-  ideogram = TRUE,
-  ideogram_width_ratio = 1 / 25,
-  ideogram_colour = "blue",
-  ideogram_fill = "#ADD8E680"
+# With tracks
+features(cc, "tracks") <- GRangesList(
+  H3K27ac = rtracklayer::import("track.bw")
 )
-
-# === Adding Genomic Features ===
-
-# Add TAD boundaries
-tad_file <- "path/to/tads.bed"
-gghic(cc, tad = TRUE, tad_path = tad_file, tad_colour = "darkgreen")
-
-# Add chromatin loops
-loop_file <- "path/to/loops.bedpe"
-gghic(cc, loop = TRUE, loop_path = loop_file, loop_colour = "red")
-
-# Add signal tracks (e.g., ChIP-seq)
-track1 <- "path/to/track1.bw"
-track2 <- "path/to/track2.bw"
-tracks <- GRangesList(
-  H3K27ac_rep1 = rtracklayer::import(track1),
-  H3K27ac_rep2 = rtracklayer::import(track2)
-)
-features(cc, "tracks") <- tracks
-
-gghic(cc, track = TRUE, track_fill = c("blue", "red"))
-
-# === Axis Expansion ===
-
-# Expand x-axis to show genomic context
-gghic(
-  cc,
-  expand_xaxis = TRUE,
-  expand_left = 1e6, # Extend 1 Mb to the left
-  expand_right = 1e6 # Extend 1 Mb to the right
-)
+gghic(cc, track = TRUE, track_fill = "blue")
 } # }
 ```

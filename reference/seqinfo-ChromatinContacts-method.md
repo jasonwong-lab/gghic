@@ -1,7 +1,6 @@
-# Get sequence information from ChromatinContacts object
+# Get sequence information
 
-Retrieves the sequence information (chromosome names, lengths) from a
-`ChromatinContacts` object.
+Retrieves chromosome/sequence information.
 
 ## Usage
 
@@ -14,11 +13,11 @@ seqinfo(x)
 
 - x:
 
-  A `ChromatinContacts` object.
+  ChromatinContacts object.
 
 ## Value
 
-A `Seqinfo` object containing sequence/chromosome information.
+Seqinfo object.
 
 ## Examples
 

@@ -1129,10 +1129,10 @@ sessionInfo()
 #> 
 #> other attached packages:
 #>  [1] GenomicFeatures_1.62.0      AnnotationDbi_1.72.0       
-#>  [3] gghic_0.2.0                 InteractionSet_1.38.0      
+#>  [3] gghic_0.2.1                 InteractionSet_1.38.0      
 #>  [5] SummarizedExperiment_1.40.0 Biobase_2.70.0             
 #>  [7] MatrixGenerics_1.22.0       matrixStats_1.5.0          
-#>  [9] GenomicRanges_1.62.0        Seqinfo_1.0.0              
+#>  [9] GenomicRanges_1.62.1        Seqinfo_1.0.0              
 #> [11] IRanges_2.44.0              S4Vectors_0.48.0           
 #> [13] BiocGenerics_0.56.0         generics_0.1.4             
 #> [15] dplyr_1.1.4                 ggplot2_4.0.1              
@@ -1142,16 +1142,16 @@ sessionInfo()
 #>   [4] magrittr_2.0.4           farver_2.1.2             rmarkdown_2.30          
 #>   [7] fs_1.6.6                 BiocIO_1.20.0            ragg_1.5.0              
 #>  [10] vctrs_0.6.5              memoise_2.0.1            Rsamtools_2.26.0        
-#>  [13] RCurl_1.98-1.17          base64enc_0.1-3          htmltools_0.5.8.1       
-#>  [16] S4Arrays_1.10.0          progress_1.2.3           curl_7.0.0              
-#>  [19] Rhdf5lib_1.32.0          rhdf5_2.54.0             SparseArray_1.10.3      
-#>  [22] Formula_1.2-5            sass_0.4.10              bslib_0.9.0             
+#>  [13] RCurl_1.98-1.17          base64enc_0.1-3          htmltools_0.5.9         
+#>  [16] S4Arrays_1.10.1          progress_1.2.3           curl_7.0.0              
+#>  [19] Rhdf5lib_1.32.0          SparseArray_1.10.6       Formula_1.2-5           
+#>  [22] rhdf5_2.54.1             sass_0.4.10              bslib_0.9.0             
 #>  [25] htmlwidgets_1.6.4        desc_1.4.3               Gviz_1.54.0             
-#>  [28] httr2_1.2.1              cachem_1.1.0             GenomicAlignments_1.46.0
+#>  [28] httr2_1.2.2              cachem_1.1.0             GenomicAlignments_1.46.0
 #>  [31] lifecycle_1.0.4          pkgconfig_2.0.3          Matrix_1.7-4            
 #>  [34] R6_2.6.1                 fastmap_1.2.0            digest_0.6.39           
 #>  [37] colorspace_2.1-2         textshaping_1.0.4        Hmisc_5.2-4             
-#>  [40] RSQLite_2.4.5            labeling_0.4.3           filelock_1.0.3          
+#>  [40] RSQLite_2.4.5            filelock_1.0.3           labeling_0.4.3          
 #>  [43] httr_1.4.7               abind_1.4-8              compiler_4.5.2          
 #>  [46] bit64_4.6.0-1            withr_3.0.2              htmlTable_2.4.3         
 #>  [49] S7_0.2.1                 backports_1.5.0          BiocParallel_1.44.0     
@@ -1163,18 +1163,18 @@ sessionInfo()
 #>  [67] BSgenome_1.78.0          tidyr_1.3.1              ensembldb_2.34.0        
 #>  [70] data.table_1.17.8        hms_1.1.4                XVector_0.50.0          
 #>  [73] pillar_1.11.1            stringr_1.6.0            BiocFileCache_3.0.0     
-#>  [76] lattice_0.22-7           rtracklayer_1.70.0       bit_4.6.0               
-#>  [79] deldir_2.0-4             biovizBase_1.58.0        tidyselect_1.2.1        
+#>  [76] lattice_0.22-7           deldir_2.0-4             rtracklayer_1.70.0      
+#>  [79] bit_4.6.0                biovizBase_1.58.0        tidyselect_1.2.1        
 #>  [82] Biostrings_2.78.0        knitr_1.50               gridExtra_2.3           
 #>  [85] ProtGenerics_1.42.0      xfun_0.54                stringi_1.8.7           
-#>  [88] UCSC.utils_1.6.0         lazyeval_0.2.2           yaml_2.3.11             
+#>  [88] UCSC.utils_1.6.0         lazyeval_0.2.2           yaml_2.3.12             
 #>  [91] evaluate_1.0.5           codetools_0.2-20         cigarillo_1.0.0         
 #>  [94] interp_1.1-6             tibble_3.3.0             cli_3.6.5               
 #>  [97] rpart_4.1.24             systemfonts_1.3.1        jquerylib_0.1.4         
-#> [100] dichromat_2.0-0.1        Rcpp_1.1.0               GenomeInfoDb_1.46.1     
+#> [100] dichromat_2.0-0.1        Rcpp_1.1.0               GenomeInfoDb_1.46.2     
 #> [103] dbplyr_2.5.1             png_0.1-8                XML_3.99-0.20           
 #> [106] parallel_4.5.2           pkgdown_2.2.0            blob_1.2.4              
-#> [109] prettyunits_1.2.0        latticeExtra_0.6-31      jpeg_0.1-11             
+#> [109] prettyunits_1.2.0        jpeg_0.1-11              latticeExtra_0.6-31     
 #> [112] AnnotationFilter_1.34.0  bitops_1.0-9             txdbmaker_1.6.0         
 #> [115] viridisLite_0.4.2        VariantAnnotation_1.56.0 scales_1.4.0            
 #> [118] purrr_1.2.0              crayon_1.5.3             rlang_1.1.6             

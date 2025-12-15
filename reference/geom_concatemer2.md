@@ -1,7 +1,10 @@
-# geom_concatemer2
+# Visualize concatemers (a second version)
 
-A second version of
-[`geom_concatemer()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer.md).
+Another version of
+[`geom_concatemer()`](https://jasonwong-lab.github.io/gghic/reference/geom_concatemer.md)
+that requires a Hi-C plot to be drawn first and takes direct data frame
+input. Displays multi-way contact reads as horizontal bars below the
+Hi-C heatmap.
 
 ## Usage
 

@@ -1,6 +1,8 @@
-# geom_hic_under
+# Visualize inverted Hi-C heatmap below main contact map
 
-A ggplot2 layer to plot flipped Hi-C interaction data.
+Creates a flipped (inverted) Hi-C contact heatmap positioned below the
+main plot. Useful for comparing two datasets or showing the same data
+with different color scales/transformations.
 
 ## Usage
 
@@ -30,6 +32,7 @@ geom_hic_under(
 
   Set of aesthetic mappings created by
   [`ggplot2::aes()`](https://ggplot2.tidyverse.org/reference/aes.html).
+  Must include `fill` aesthetic.
 
 - data:
 
@@ -113,63 +116,92 @@ geom_hic_under(
 
 - rasterize:
 
-  Whether to rasterize the plot or not. Default is `TRUE`.
+  Logical. Rasterize for performance (default: TRUE).
 
 - dpi:
 
-  The resolution of the rasterised plot. Default is `300`.
+  Numeric. Rasterization resolution (default: 300).
 
 - dev:
 
-  The device to rasterise the plot. Default is `"cairo"`.
+  Character. Graphics device for rasterization (default: `"cairo"`).
 
 - scale:
 
-  The scale of the rasterised plot. Default is `1`.
+  Numeric. Rasterization scaling factor (default: 1).
 
 - draw_boundary:
 
-  Whether to draw the boundary line or not when plotting multiple
-  chromosomes. Default is `TRUE`.
+  Logical. Draw chromosome boundaries for multi-chromosome plots
+  (default: TRUE).
 
 - boundary_colour:
 
-  The color of the boundary line. Default is `"black"`.
+  Character. Boundary line color (default: `"black"`).
 
 - linetype:
 
-  The line type of the boundary line. Default is `"dashed"`.
+  Boundary line type (default: `"dashed"`).
 
 - ...:
 
-  Parameters to be ignored.
+  Additional parameters (unused).
 
 ## Value
 
-A ggplot object.
+A ggplot2 layer for the inverted Hi-C heatmap.
 
 ## Details
 
-Requires the following aesthetics:
+### Required aesthetics
 
-- seqnames1
+- `seqnames1`, `start1`, `end1`: First anchor coordinates
 
-- start1
+- `seqnames2`, `start2`, `end2`: Second anchor coordinates
 
-- end1
+- `fill`: Color scale values
 
-- seqnames2
+### Usage
 
-- start2
+This geom requires a main Hi-C plot created with
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md)
+first. The inverted heatmap is automatically positioned below, using
+independent color scales via `fill2` aesthetic.
 
-- end2
+### Common use cases
 
-- fill
+- Compare two experimental conditions
+
+- Show raw vs. normalized data
+
+- Display same data with different color scales
+
+## See also
+
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md),
+[`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md),
+[`renameGeomAes()`](https://jasonwong-lab.github.io/gghic/reference/renameGeomAes.md)
 
 ## Examples
 
 ``` r
 if (FALSE) { # \dontrun{
+# Compare two datasets
+cc1 <- ChromatinContacts("sample1.cool") |> import()
+cc2 <- ChromatinContacts("sample2.cool") |> import()
+
+library(ggplot2)
+ggplot() +
+  geom_hic(data = scaleData(cc1, "balanced", log10),
+           aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+               seqnames2 = seqnames2, start2 = start2, end2 = end2,
+               fill = score)) +
+  geom_hic_under(data = scaleData(cc2, "balanced", log10),
+                 aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+                     seqnames2 = seqnames2, start2 = start2, end2 = end2,
+                     fill2 = score)) +
+  scale_fill_viridis_c() +
+  scale_fill2_viridis_c(option = "magma")
 # Load two Hi-C datasets for comparison
 cc1 <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()

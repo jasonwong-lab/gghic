@@ -1,7 +1,9 @@
-# geom_loop2
+# Visualize chromatin loops (a second version)
 
-A second version of
-[`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md).
+Another version of
+[`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md)
+that requires direct data frame input with loop coordinates instead of
+file paths. Supports both circle and arc visualization styles.
 
 ## Usage
 
@@ -112,37 +114,47 @@ geom_loop2(
 
 - style:
 
-  The style for drawing loops: `"circle"` for points/circles or `"arc"`
-  for arcs under the Hi-C heatmap. Default is `"circle"`.
+  Character. Visualization style:
+
+  - `"circle"`: Display loops as circular points (default)
+
+  - `"arc"`: Display loops as curved arcs connecting anchors
 
 - n_arc_points:
 
-  Number of points used to draw each arc (only used when
-  `style = "arc"`). Default is `50`.
+  Integer. Number of points for drawing smooth arcs when
+  `style = "arc"`. Higher values = smoother curves (default: 50).
 
 - ...:
 
-  Parameters to be ignored.
+  Additional parameters (unused).
 
 ## Value
 
-A ggplot object.
+A ggplot2 layer.
 
 ## Details
 
-Requires the following aesthetics:
+### Required aesthetics
 
-- seqnames1
+- `seqnames1`, `start1`, `end1`: First loop anchor
 
-- start1
+- `seqnames2`, `start2`, `end2`: Second loop anchor
 
-- end1
+### Difference from geom_loop()
 
-- seqnames2
+This version requires a Hi-C plot to be drawn first with
+[`geom_hic()`](https://jasonwong-lab.github.io/gghic/reference/geom_hic.md)
+and takes data frames directly rather than file paths. Use
+[`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md)
+for more convenience with
+[`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
+workflow.
 
-- start2
+## See also
 
-- end2
+[`geom_loop()`](https://jasonwong-lab.github.io/gghic/reference/geom_loop.md),
+[`gghic()`](https://jasonwong-lab.github.io/gghic/reference/gghic.md)
 
 ## Examples
 

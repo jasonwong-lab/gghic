@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">gghic</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,6 +37,67 @@
       <small>Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.1" id="gghic-021">gghic 0.2.1<a class="anchor" aria-label="anchor" href="#gghic-021"></a></h2>
+<div class="section level3">
+<h3 id="major-changes-0-2-1">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-0-2-1"></a></h3>
+<ul><li>
+<strong>S4 Method System for Hypergraphs</strong>: Converted hypergraph construction workflow from S3 to S4 methods for better type safety and extensibility.
+<ul><li>
+<code>buildHypergraph()</code> is now a generic S4 method <code><a href="../reference/build.html">build()</a></code> with methods for <code>MultiWayContacts</code> objects.</li>
+<li>
+<code>tidyHypergraph()</code> replaced with S4 generic <code><a href="../reference/tidy.html">tidy()</a></code> method.</li>
+<li>
+<code>selectHypergraph()</code> replaced with S4 generic <code><a href="../reference/select.html">select()</a></code> method.</li>
+<li>All methods support method dispatch on <code>MultiWayContacts</code> class.</li>
+<li>Maintains backward compatibility through consistent API design.</li>
+<li>Added <code><a href="https://rdrr.io/r/methods/show.html" class="external-link">show()</a></code> method for <code>MultiWayContacts</code> class providing informative object summaries.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="documentation-improvements-0-2-1">Documentation Improvements<a class="anchor" aria-label="anchor" href="#documentation-improvements-0-2-1"></a></h3>
+<ul><li>
+<strong>Comprehensive Documentation Overhaul</strong>: Significantly enhanced roxygen2 documentation across all user-facing functions.
+<ul><li>Added detailed <code>@details</code> sections explaining algorithms, workflows, and technical considerations.</li>
+<li>Expanded <code>@param</code> descriptions with valid options, defaults, and usage guidance.</li>
+<li>Included 8-12 practical examples per major function covering common use cases.</li>
+<li>Added <code>@seealso</code> cross-references linking related functions.</li>
+</ul></li>
+<li>
+<strong>Enhanced Function Documentation</strong>:
+<ul><li>
+<code><a href="../reference/geom_hic.html">geom_hic()</a></code>: Added coordinate system explanation, transformation details, scaling algorithms.</li>
+<li>
+<code><a href="../reference/geom_loop.html">geom_loop()</a></code> and <code><a href="../reference/geom_loop2.html">geom_loop2()</a></code>: Detailed BEDPE format specification, styling options.</li>
+<li>
+<code><a href="../reference/geom_tad.html">geom_tad()</a></code> and <code><a href="../reference/geom_tad2.html">geom_tad2()</a></code>: Comprehensive boundary visualization guidance.</li>
+<li>
+<code><a href="../reference/geom_track.html">geom_track()</a></code> and <code><a href="../reference/geom_track2.html">geom_track2()</a></code>: File format support, scaling strategies, comparison table.</li>
+<li>
+<code><a href="../reference/geom_annotation.html">geom_annotation()</a></code>: Gene model visualization, GTF parsing, style comparison.</li>
+<li>
+<code><a href="../reference/geom_concatemer.html">geom_concatemer()</a></code> and <code><a href="../reference/geom_concatemer2.html">geom_concatemer2()</a></code>: Multi-way contact representation.</li>
+<li>
+<code><a href="../reference/geom_hypergraph.html">geom_hypergraph()</a></code>: Network visualization workflow and layout algorithms.</li>
+<li>
+<code><a href="../reference/geom_ideogram.html">geom_ideogram()</a></code>: Cytogenetic band display, genome assembly support.</li>
+<li>
+<code><a href="../reference/geom_hic_under.html">geom_hic_under()</a></code>: Inverted heatmap visualization for comparative displays.</li>
+<li>
+<code><a href="../reference/scaleData.html">scaleData()</a></code>: Transformation functions (log, asinh, sqrt) with mathematical formulas.</li>
+<li>All S4 classes and methods: Comprehensive slot descriptions and usage examples.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-2-1">Bug Fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-2-1"></a></h3>
+<ul><li>Fixed unresolved roxygen2 link in <code>setters-methods.R</code> (changed <code>[import()]</code> to <code>[import-ChromatinContacts]</code>).</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-changes-0-2-1">Internal Changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-2-1"></a></h3>
+<ul><li>Improved consistency in function naming and parameter conventions.</li>
+<li>Enhanced code organization for hypergraph workflow methods.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="gghic-020">gghic 0.2.0<a class="anchor" aria-label="anchor" href="#gghic-020"></a></h2>
 <div class="section level3">
