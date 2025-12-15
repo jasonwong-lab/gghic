@@ -7,72 +7,40 @@
 ChromatinContacts(cooler_path, focus = NULL, resolution = NULL)
 }
 \arguments{
-\item{cooler_path}{Character string. Path to a .cool or .mcool file.}
+\item{cooler_path}{Character. Path to .cool or .mcool file.}
 
-\item{focus}{Character string, GInteractions object, or NULL. Specifies the
-genomic region(s) to focus on. Can be specified as:
+\item{focus}{Character, GInteractions, or NULL. Genomic region(s) to focus:
 \itemize{
-\item A single region: \code{"chr1"} or \code{"chr1:1-1000000"}
-\item Multiple regions with \code{&} (inter-chromosomal pairs only):
-\code{"chr1&chr2"} or \code{"chr1:1-1000000&chr2:1-2000000"}
-\item Multiple regions with \code{|} (all combinations including intra):
-\code{"chr1|chr2"} or \code{"chr1:1-1000000|chr2:1-2000000"}
-\item Multiple specs as a character vector:
-c("chr1&chr2", "chr3:1-2e6|chr4", "chr5")
-\item (Legacy) Single comma-separated string: "chr1&chr2,chr3|chr4"
-\item A GInteractions object
+\item Single region: \code{"chr1"} or \code{"chr1:1-1000000"}
+\item Inter-chromosomal: \code{"chr1&chr2"} (excludes diagonal)
+\item All combinations: \code{"chr1|chr2"} (includes intra-chromosomal)
+\item Multiple: \code{c("chr1&chr2", "chr3|chr4")}
 \item NULL for genome-wide (default)
 }}
 
-\item{resolution}{Integer. Resolution in base pairs. Required for .mcool
-files, ignored for .cool files.}
+\item{resolution}{Integer. Resolution in base pairs (required for .mcool).}
 }
 \value{
 A ChromatinContacts object.
 }
 \description{
-Constructor function for creating a ChromatinContacts object from a cooler
-file (.cool or .mcool format).
-}
-\details{
-The focus parameter allows flexible specification of regions of interest:
-\itemize{
-\item \code{&} operator: Creates inter-chromosomal pairs only (excludes diagonal)
-\item \code{|} operator: Creates all combinations including intra-chromosomal
-\item Multiple specifications can be combined with commas
-}
+Constructor for ChromatinContacts from cooler files (.cool or .mcool).
 }
 \examples{
 \dontrun{
-# Create object from .cool file (genome-wide)
-cc <- ChromatinContacts("path/to/file.cool")
+# Genome-wide .cool file
+cc <- ChromatinContacts("file.cool")
 
-# Create object from .mcool file with specific resolution
-cc <- ChromatinContacts("path/to/file.mcool", resolution = 5000L)
+# Multi-resolution .mcool
+cc <- ChromatinContacts("file.mcool", resolution = 5000L)
 
-# Focus on a single chromosome
-cc <- ChromatinContacts("path/to/file.cool", focus = "chr1")
+# Focus on chromosome
+cc <- ChromatinContacts("file.cool", focus = "chr1")
 
-# Focus on a specific region
-cc <- ChromatinContacts("path/to/file.cool", focus = "chr1:1-1000000")
-
-# Focus on inter-chromosomal interactions between chr1 and chr2
-cc <- ChromatinContacts("path/to/file.cool", focus = "chr1&chr2")
-
-# Focus on all combinations of chr1 and chr2 (including intra)
-cc <- ChromatinContacts("path/to/file.cool", focus = "chr1|chr2")
-
-# Multiple focus specifications
-cc <- ChromatinContacts(
-  "path/to/file.cool",
-  focus = "chr1&chr2,chr3:1-1000000|chr4"
-)
-
-# Import the interaction data
-cc <- import(cc)
+# Inter-chromosomal between chr1 and chr2
+cc <- ChromatinContacts("file.cool", focus = "chr1&chr2")
 }
 }
 \seealso{
-\link{import-ChromatinContacts}, \code{\link[Seqinfo:seqinfo]{Seqinfo::seqinfo()}},
-\code{\link[=resolution]{resolution()}}, \code{\link[=focus]{focus()}}, \code{\link[=features]{features()}}
+\link{import-ChromatinContacts}, \code{\link[=resolution]{resolution()}}, \code{\link[=focus]{focus()}}, \code{\link[=features]{features()}}
 }

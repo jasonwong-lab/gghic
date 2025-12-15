@@ -11,7 +11,7 @@
 \alias{subsetByOverlaps,ChromatinContacts,logical-method}
 \alias{subsetByOverlaps,ChromatinContacts,GRanges-method}
 \alias{subsetByOverlaps,ChromatinContacts,GInteractions-method}
-\title{Subset ChromatinContacts objects}
+\title{Subset ChromatinContacts objects by various criteria}
 \usage{
 \S4method{subsetByOverlaps}{ChromatinContacts,numeric}(x, ranges)
 
@@ -52,9 +52,10 @@ A subsetted \code{ChromatinContacts} object. Features (TADs, loops,
 tracks) are automatically subsetted to match the new interaction data.
 }
 \description{
-Subset \code{ChromatinContacts} objects using various methods: numeric indices,
-logical vectors, character strings (genomic regions), GRanges, or
-GInteractions.
+Flexibly subset ChromatinContacts objects using multiple indexing methods:
+numeric indices, logical vectors, character strings (genomic regions),
+GRanges, or GInteractions. All attached genomic features (TADs, loops,
+tracks) are automatically filtered to match the subset.
 }
 \details{
 Subsetting methods:
@@ -76,18 +77,38 @@ All methods automatically update:
 }
 \examples{
 \dontrun{
+# Load Hi-C data with features
 cc <- ChromatinContacts("sample.cool") |> import()
+features(cc, "TADs") <- rtracklayer::import("tads.bed")
+features(cc, "loops") <- loops_gi
 
-# By character region
-cc_sub <- cc["chr1"]
-cc_sub <- cc["chr1:1000000-5000000"]
+# Subset by character region string
+cc_chr1 <- cc["chr1"]  # Entire chromosome
+cc_region <- cc["chr1:1000000-5000000"]  # Specific region
+cc_multi <- cc["chr1|chr2"]  # Multiple regions
 
-# By numeric index
-cc_sub <- cc[1:1000]
+# Subset by numeric index
+cc_first_1000 <- cc[1:1000]  # First 1000 interactions
 
-# By logical vector
-high_counts <- interactions(cc)$count > 100
-cc_sub <- cc[high_counts]
+# Subset by logical vector
+gis <- interactions(cc)
+high_counts <- gis$count > 100
+cc_high <- cc[high_counts]  # Only high-count interactions
+
+# Subset by GRanges
+region_gr <- GRanges("chr1:1000000-2000000")
+cc_overlap <- cc[region_gr]  # Interactions overlapping region
+
+# Subset by GInteractions
+specific_pairs <- GInteractions(
+  GRanges("chr1:1000000-1100000"),
+  GRanges("chr1:2000000-2100000")
+)
+cc_pairs <- cc[specific_pairs]
+
+# All features are automatically subset
+length(features(cc, "TADs"))  # Original TAD count
+length(features(cc_chr1, "TADs"))  # Fewer TADs after subsetting
 
 # By GRanges
 roi <- GRanges("chr1:1000000-5000000")

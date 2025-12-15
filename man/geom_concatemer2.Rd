@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-concatemer2.R
 \name{geom_concatemer2}
 \alias{geom_concatemer2}
-\title{geom_concatemer2}
+\title{Visualize concatemers (a second version)}
 \usage{
 geom_concatemer2(
   mapping = NULL,
@@ -96,7 +96,9 @@ Default is \code{1/5}.}
 A ggplot object.
 }
 \description{
-A second version of \code{\link[=geom_concatemer]{geom_concatemer()}}.
+Another version of \code{\link[=geom_concatemer]{geom_concatemer()}} that requires a Hi-C plot to be
+drawn first and takes direct data frame input.
+Displays multi-way contact reads as horizontal bars below the Hi-C heatmap.
 }
 \details{
 Requires the following aesthetics:

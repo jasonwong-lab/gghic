@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-hic-under.R
 \name{geom_hic_under}
 \alias{geom_hic_under}
-\title{geom_hic_under}
+\title{Visualize inverted Hi-C heatmap below main contact map}
 \usage{
 geom_hic_under(
   mapping = NULL,
@@ -23,7 +23,8 @@ geom_hic_under(
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{ggplot2::aes()}}.}
+\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{ggplot2::aes()}}. Must
+include \code{fill} aesthetic.}
 
 \item{data}{The data to be displayed in this layer. There are three
 options:
@@ -82,43 +83,73 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{rasterize}{Whether to rasterize the plot or not. Default is \code{TRUE}.}
+\item{rasterize}{Logical. Rasterize for performance (default: TRUE).}
 
-\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
+\item{dpi}{Numeric. Rasterization resolution (default: 300).}
 
-\item{dev}{The device to rasterise the plot. Default is \code{"cairo"}.}
+\item{dev}{Character. Graphics device for rasterization (default: \code{"cairo"}).}
 
-\item{scale}{The scale of the rasterised plot. Default is \code{1}.}
+\item{scale}{Numeric. Rasterization scaling factor (default: 1).}
 
-\item{draw_boundary}{Whether to draw the boundary line or not when plotting
-multiple chromosomes. Default is \code{TRUE}.}
+\item{draw_boundary}{Logical. Draw chromosome boundaries for multi-chromosome
+plots (default: TRUE).}
 
-\item{boundary_colour}{The color of the boundary line. Default is \code{"black"}.}
+\item{boundary_colour}{Character. Boundary line color (default: \code{"black"}).}
 
-\item{linetype}{The line type of the boundary line. Default is \code{"dashed"}.}
+\item{linetype}{Boundary line type (default: \code{"dashed"}).}
 
-\item{...}{Parameters to be ignored.}
+\item{...}{Additional parameters (unused).}
 }
 \value{
-A ggplot object.
+A ggplot2 layer for the inverted Hi-C heatmap.
 }
 \description{
-A ggplot2 layer to plot flipped Hi-C interaction data.
+Creates a flipped (inverted) Hi-C contact heatmap positioned below the main
+plot. Useful for comparing two datasets or showing the same data with
+different color scales/transformations.
 }
 \details{
-Requires the following aesthetics:
+\subsection{Required aesthetics}{
 \itemize{
-\item seqnames1
-\item start1
-\item end1
-\item seqnames2
-\item start2
-\item end2
-\item fill
+\item \code{seqnames1}, \code{start1}, \code{end1}: First anchor coordinates
+\item \code{seqnames2}, \code{start2}, \code{end2}: Second anchor coordinates
+\item \code{fill}: Color scale values
+}
+}
+
+\subsection{Usage}{
+
+This geom requires a main Hi-C plot created with \code{geom_hic()} first. The
+inverted heatmap is automatically positioned below, using independent color
+scales via \code{fill2} aesthetic.
+}
+
+\subsection{Common use cases}{
+\itemize{
+\item Compare two experimental conditions
+\item Show raw vs. normalized data
+\item Display same data with different color scales
+}
 }
 }
 \examples{
 \dontrun{
+# Compare two datasets
+cc1 <- ChromatinContacts("sample1.cool") |> import()
+cc2 <- ChromatinContacts("sample2.cool") |> import()
+
+library(ggplot2)
+ggplot() +
+  geom_hic(data = scaleData(cc1, "balanced", log10),
+           aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+               seqnames2 = seqnames2, start2 = start2, end2 = end2,
+               fill = score)) +
+  geom_hic_under(data = scaleData(cc2, "balanced", log10),
+                 aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+                     seqnames2 = seqnames2, start2 = start2, end2 = end2,
+                     fill2 = score)) +
+  scale_fill_viridis_c() +
+  scale_fill2_viridis_c(option = "magma")
 # Load two Hi-C datasets for comparison
 cc1 <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
@@ -149,4 +180,7 @@ ggplot() +
   ) +
   theme_hic()
 }
+}
+\seealso{
+\code{\link[=geom_hic]{geom_hic()}}, \code{\link[=gghic]{gghic()}}, \code{\link[=renameGeomAes]{renameGeomAes()}}
 }

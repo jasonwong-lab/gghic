@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-loop.R
 \name{geom_loop}
 \alias{geom_loop}
-\title{geom_loop}
+\title{Visualize chromatin loops on Hi-C heatmap}
 \usage{
 geom_loop(
   mapping = NULL,
@@ -88,63 +88,99 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{loop_path}{A path to the loop file. Default is \code{NULL}.}
+\item{loop_path}{Character. Path to loop file in BEDPE-like format with
+columns: chrom1, start1, end1, chrom2, start2, end2. Either \code{loop_path}
+or \code{loop_gis} must be provided (default: NULL).}
 
-\item{loop_gis}{An InteractionSet object of loops. Default is \code{NULL}.}
+\item{loop_gis}{GInteractions object containing loop coordinates. Either
+\code{loop_path} or \code{loop_gis} must be provided (default: NULL).}
 
-\item{is_0_based}{Whether the loop file is 0-based or not.
-Default is \code{FALSE}.}
+\item{is_0_based}{Logical. Whether input coordinates are 0-based (e.g., BED
+format). Set TRUE for BEDPE files (default: FALSE).}
 
-\item{style}{The style for drawing loops: \code{"circle"} for points/circles
-or \code{"arc"} for arcs under the Hi-C heatmap. Default is \code{"circle"}.}
+\item{style}{Character. Visualization style:
+\itemize{
+\item \code{"circle"}: display loops as circular points (default)
+\item \code{"arc"}: display loops as curved arcs connecting anchors
+}}
 
-\item{n_arc_points}{Number of points used to draw each arc (only used when
-\code{style = "arc"}). Default is \code{50}.}
+\item{n_arc_points}{Integer. Number of points used to draw each arc when
+\code{style = "arc"}. Higher values produce smoother curves (default: 50).}
 
-\item{colour}{The color of the loops. Default is \code{"black"}.}
+\item{colour}{Character. Color for loop markers or arcs (default: \code{"black"}).}
 
-\item{shape}{The shape of the loops (only used when \code{style = "circle"}).
-Default is \code{21}.}
+\item{shape}{Integer. Point shape when \code{style = "circle"} (default: 21 =
+filled circle).}
 
-\item{fill}{The fill color of the loops
-(only used when \code{style = "circle"}).
-Default is \code{NA}.}
+\item{fill}{Character. Fill color for points when \code{style = "circle"}
+(default: NA for transparent).}
 
-\item{size}{The size of the loops (only used when \code{style = "circle"}).
-Default is \code{grid::unit(1 / 80, "native")}.}
+\item{size}{Unit or numeric. Size of loop markers. Can be a grid unit or
+numeric value in mm (default: \code{unit(1/80, "native")}).}
 
-\item{stroke}{The line width of the loops. Default is \code{1}.}
+\item{stroke}{Numeric. Line width for point borders or arc lines (default: 1).}
 
-\item{...}{Parameters to be ignored.}
+\item{...}{Additional parameters passed to layer (unused).}
 }
 \value{
-A ggplot object.
+A ggplot2 layer that can be added to a gghic plot.
 }
 \description{
-A ggplot2 geom for drawing chromatin loops on the heatmap.
+Adds chromatin loop annotations to Hi-C contact maps. Loops can be
+displayed as circles (points) or arcs. Automatically filters loops to
+display only those within the plotted region.
 }
 \details{
-Requires the following aesthetics:
-\itemize{
-\item seqnames1
-\item start1
-\item end1
-\item seqnames2
-\item start2
-\item end2
+\subsection{Required aesthetics}{
+
+Inherits from Hi-C data: \code{seqnames1}, \code{start1}, \code{end1}, \code{seqnames2},
+\code{start2}, \code{end2}
+}
+
+\subsection{Loop file format}{
+
+Tab-delimited file with columns:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{chrom1  start1  end1  chrom2  start2  end2
+chr1    1000000 1005000 chr1  2000000 2005000
+}\if{html}{\out{</div>}}
+}
+
+\subsection{Performance tips}{
+
+For large loop files, pre-filter to region of interest before plotting.
+Arc style is more computationally intensive than circle style.
 }
 }
 \examples{
 \dontrun{
-# Load Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
-  import()
+# Basic usage with loop file
+cc <- ChromatinContacts("file.cool", focus = "chr4") |> import()
+gghic(cc) + geom_loop(loop_path = "loops.bedpe")
 
-# Add loops from file
-loop_file <- "path/to/loops.bedpe"
-gghic(cc) + geom_loop(loop_path = loop_file)
+# Arc style visualization
+gghic(cc) + 
+  geom_loop(loop_path = "loops.bedpe", style = "arc", colour = "red")
 
-# Draw loops as arcs
-gghic(cc) + geom_loop(loop_path = loop_file, style = "arc")
+# Using GInteractions object
+loops <- rtracklayer::import("loops.bedpe")
+gghic(cc) + geom_loop(loop_gis = loops, colour = "blue", size = 2)
+
+# 0-based coordinates (BEDPE format)
+gghic(cc) + geom_loop(loop_path = "loops.bedpe", is_0_based = TRUE)
+
+# Customized appearance
+gghic(cc) +
+  geom_loop(
+    loop_path = "loops.bedpe",
+    colour = "darkred",
+    fill = "red",
+    size = 3,
+    stroke = 1.5,
+    shape = 21
+  )
 }
+}
+\seealso{
+\code{\link[=geom_tad]{geom_tad()}} for TAD boundaries, \code{\link[=gghic]{gghic()}} for creating Hi-C plots
 }

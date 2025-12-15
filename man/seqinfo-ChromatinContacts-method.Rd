@@ -2,19 +2,18 @@
 % Please edit documentation in R/getters-methods.R
 \name{seqinfo,ChromatinContacts-method}
 \alias{seqinfo,ChromatinContacts-method}
-\title{Get sequence information from ChromatinContacts object}
+\title{Get sequence information}
 \usage{
 \S4method{seqinfo}{ChromatinContacts}(x)
 }
 \arguments{
-\item{x}{A \code{ChromatinContacts} object.}
+\item{x}{ChromatinContacts object.}
 }
 \value{
-A \code{Seqinfo} object containing sequence/chromosome information.
+Seqinfo object.
 }
 \description{
-Retrieves the sequence information (chromosome names, lengths) from a
-\code{ChromatinContacts} object.
+Retrieves chromosome/sequence information.
 }
 \examples{
 \dontrun{

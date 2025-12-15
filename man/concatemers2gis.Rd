@@ -2,50 +2,70 @@
 % Please edit documentation in R/concatemers.R
 \name{concatemers2Gis}
 \alias{concatemers2Gis}
-\title{Convert concatemer reads to pairwise interactions}
+\title{Convert multi-way concatemer reads to pairwise Hi-C interactions}
 \usage{
 concatemers2Gis(grs, region = NULL, bin_size = 1e+05, read_group = "read_name")
 }
 \arguments{
-\item{grs}{A \code{GRanges} object containing concatemer reads. Must have a
-metadata column (default \code{read_name}) identifying which fragments belong
-to the same read.}
+\item{grs}{GRanges object containing concatemer fragment coordinates. Must
+include metadata column identifying which fragments belong to the same
+read (specified by \code{read_group} parameter).}
 
-\item{region}{A \code{GRanges} object specifying the genomic region of interest.
-Default is \code{NULL}, which uses the entire range of \code{grs}.}
+\item{region}{GRanges object defining genomic region(s) of interest. Only
+reads overlapping this region are included (default: NULL for genome-wide
+analysis).}
 
-\item{bin_size}{Integer. The size of bins (in base pairs) to divide the
-genomic region into. Default is \code{100000} (100 kb).}
+\item{bin_size}{Integer. Genomic bin size in base pairs for aggregating
+contacts. Typical values: 5000-1000000 (default: 100000 = 100kb).}
 
-\item{read_group}{Character string. The name of the metadata column in \code{grs}
-that defines read groups (typically read names or IDs). Default is
-\code{"read_name"}.}
+\item{read_group}{Character. Name of metadata column in \code{grs} that contains
+read identifiers grouping fragments from the same sequencing read
+(default: \code{"read_name"}).}
 }
 \value{
-A \code{GInteractions} object containing all pairwise combinations of
-fragments within each concatemer read, binned at the specified resolution.
+GInteractions object containing:
+\itemize{
+\item Binned pairwise interactions from all concatemers
+\item \code{count} metadata column: number of reads supporting each interaction
+\item Compatible with \code{\link[=gghic]{gghic()}}, \code{\link[=ChromatinContacts]{ChromatinContacts()}}, and other Hi-C tools
+}
 }
 \description{
-Converts multi-way contact reads (concatemers) from Pore-C or other
-multi-contact sequencing to pairwise interactions in a \code{GInteractions}
-object. Useful for comparing multi-way data with traditional Hi-C.
+Transforms multi-way chromatin contact reads (concatemers from Pore-C,
+Tri-C, Multi-C, etc.) into traditional pairwise Hi-C format. Generates all
+pairwise combinations of fragments within each read, bins to specified
+resolution, and creates a GInteractions object compatible with standard
+Hi-C analysis tools.
 }
 \details{
-For each multi-way contact (concatemer), this function generates all possible
-pairwise combinations of the fragments and bins them to the specified
-resolution. This allows visualization of Pore-C or other multi-contact data
-alongside traditional Hi-C data.
-
-The resulting interaction counts represent the number of concatemer reads
-supporting each pairwise interaction, which differs from traditional Hi-C
-counting.
-
-\strong{Workflow:}
+\subsection{Algorithm}{
 \enumerate{
-\item Groups fragments by read identifier
-\item For each read with multiple fragments, generates all pairwise combinations
-\item Bins fragment coordinates to specified resolution
-\item Counts interactions per bin pair
+\item Group fragments by read identifier (\code{read_group})
+\item For each read with ≥2 fragments, generate all pairwise combinations
+\item Bin both anchors of each pair to specified resolution
+\item Aggregate identical bin pairs, counting supporting reads
+\item Remove self-interactions (same bin pairs)
+}
+}
+
+\subsection{Multi-way to pairwise conversion}{
+
+A read contacting N fragments generates N×(N-1)/2 pairwise interactions.
+For example:
+\itemize{
+\item 2-way contact → 1 pair
+\item 3-way contact → 3 pairs
+\item 4-way contact → 6 pairs
+}
+
+This inflation should be considered when comparing multi-way and traditional
+Hi-C datasets.
+}
+
+\subsection{Memory considerations}{
+
+For large datasets, use \code{region} parameter to process chromosomes
+individually and reduce memory usage.
 }
 }
 \examples{
@@ -53,15 +73,33 @@ counting.
 # Load concatemer data
 concatemers <- readRDS("concatemers.rds")
 
-# Convert to pairwise interactions at 100kb resolution
+# Convert to pairwise at 100kb resolution
 gis <- concatemers2Gis(concatemers, bin_size = 100000)
 
-# Visualize
+# Visualize as Hi-C map
 gghic(gis)
 
-# Focus on specific region
+# Focus on specific region at higher resolution
 region <- GRanges("chr1:1000000-5000000")
-gis_sub <- concatemers2Gis(concatemers, region = region, bin_size = 10000)
+gis_region <- concatemers2Gis(
+  concatemers,
+  region = region,
+  bin_size = 10000
+)
+
+# Process by chromosome to manage memory
+chr_gis <- lapply(paste0("chr", 1:22), function(chr) {
+  region <- GRanges(seqnames = chr,
+                    ranges = IRanges(1, 250000000))
+  concatemers2Gis(concatemers, region, bin_size = 100000)
+})
+
+# Use with ChromatinContacts
+gis_all <- do.call(c, chr_gis)
+# Then visualize or analyze
 }
 
+}
+\seealso{
+\code{\link[=ChromatinContacts]{ChromatinContacts()}}, \code{\link[=gghic]{gghic()}}, \code{\link[=MultiWayContacts]{MultiWayContacts()}}
 }

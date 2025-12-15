@@ -2,7 +2,7 @@
 % Please edit documentation in R/theme-hic.R
 \name{theme_hic}
 \alias{theme_hic}
-\title{theme_hic}
+\title{ggplot2 theme optimized for Hi-C contact maps}
 \usage{
 theme_hic(
   hide_y = TRUE,
@@ -16,46 +16,96 @@ theme_hic(
 )
 }
 \arguments{
-\item{hide_y}{A logical value indicating whether to hide the y-axis.
-Default is \code{TRUE}.}
+\item{hide_y}{Logical. Hide y-axis elements (axis title, text, ticks)
+(default: TRUE). Y-axis typically uninformative for Hi-C plots.}
 
-\item{coord_ratio}{The ratio of the \link[ggplot2:coord_fixed]{ggplot2::coord_fixed}. Default is \code{1}.}
+\item{coord_ratio}{Numeric. Aspect ratio for \code{\link[ggplot2:coord_fixed]{ggplot2::coord_fixed()}}. 1
+maintains equal x/y scaling (default: 1).}
 
-\item{scale_fill_gradientn}{A logical value indicating whether to apply the
-gradient color scale. Default is \code{TRUE}.}
+\item{scale_fill_gradientn}{Logical. Apply custom Hi-C color gradient
+(white → yellow → orange → red → black) (default: TRUE). Set FALSE to use
+custom scales.}
 
-\item{breaks}{This argument is passed to \link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous}.}
+\item{breaks}{Numeric vector or \code{\link[ggplot2:waiver]{ggplot2::waiver()}}. X-axis break positions
+for \code{\link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous()}}. Default uses automatic breaks.}
 
-\item{labels}{This argument is passed to \link[ggplot2:scale_continuous]{ggplot2::scale_x_continuous}.}
+\item{labels}{Function or character vector. X-axis label formatter. Default
+displays genomic coordinates in megabases (e.g., "10M" for 10,000,000 bp).}
 
-\item{xmin}{The minimum x-axis value. Default is \code{NULL}.}
+\item{xmin}{Numeric or NULL. Minimum x-axis limit. If NULL, uses data range
+(default: NULL).}
 
-\item{xmax}{The maximum x-axis value. Default is \code{NULL}.}
+\item{xmax}{Numeric or NULL. Maximum x-axis limit. If NULL, uses data range
+(default: NULL).}
 
-\item{expand_x}{A numeric vector of length 2 to expand the x-axis.
-Default is \code{c(0, 0)}.}
+\item{expand_x}{Numeric vector (length 2). X-axis expansion in plot units:
+\code{c(left_expansion, right_expansion)} (default: \code{c(0, 0)} for no
+expansion).}
 }
 \value{
-A ggplot2 theme.
+List of ggplot2 theme elements and scales that can be added to a
+ggplot object.
 }
 \description{
-Generate a ggplot2 theme for Hi-C plots.
+Creates a clean, publication-ready theme for Hi-C visualization with
+optimized defaults: hidden y-axis, fixed coordinate ratio, and custom color
+gradient. Provides fine control over axis formatting and limits.
 }
 \details{
-If either \code{xmin} or \code{xmax} is \code{NULL}, the x-axis will not be expanded.
+\subsection{Theme components}{
+\itemize{
+\item Based on \code{theme_bw()} with minimal grid lines
+\item Hidden y-axis (configurable)
+\item Fixed 1:1 coordinate ratio for accurate distance representation
+\item Custom color gradient optimized for Hi-C data
+\item Genomic coordinate formatting (Mb units)
+}
+}
+
+\subsection{Color gradient}{
+
+The default gradient transitions through 13 colors from white (no contacts)
+to black (maximum contacts), providing excellent dynamic range for typical
+Hi-C data.
+}
+
+\subsection{Customization}{
+
+Combine with other ggplot2 theme elements for additional customization:
+
+\if{html}{\out{<div class="sourceCode r">}}\preformatted{gghic(cc) + theme_hic() + theme(text = element_text(size = 14))
+}\if{html}{\out{</div>}}
+}
 }
 \examples{
 \dontrun{
-# Load Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
-  import()
+cc <- ChromatinContacts("file.cool", focus = "chr4") |> import()
 
-# Apply default theme_hic
+# Basic usage with default theme
 gghic(cc) + theme_hic()
 
-# Disable default color scale
+# Custom color scale
 gghic(cc) +
   theme_hic(scale_fill_gradientn = FALSE) +
   scale_fill_viridis_c()
+
+# Show y-axis
+gghic(cc) + theme_hic(hide_y = FALSE)
+
+# Custom axis limits and breaks
+gghic(cc) +
+  theme_hic(
+    xmin = 1e6,
+    xmax = 5e6,
+    breaks = seq(1e6, 5e6, by = 1e6)
+  )
+
+# Custom axis labels (show kb instead of Mb)
+gghic(cc) +
+  theme_hic(labels = scales::unit_format(unit = "kb", scale = 1e-3))
 }
+
+}
+\seealso{
+\code{\link[=gghic]{gghic()}}, \code{\link[=geom_hic]{geom_hic()}}, \code{\link[ggplot2:theme]{ggplot2::theme()}}
 }

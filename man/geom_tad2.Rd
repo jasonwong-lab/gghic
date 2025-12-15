@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-tad2.R
 \name{geom_tad2}
 \alias{geom_tad2}
-\title{geom_tad2}
+\title{Visualize TAD boundaries (a second version)}
 \usage{
 geom_tad2(
   mapping = NULL,
@@ -84,7 +84,8 @@ the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{ann
 A ggplot object.
 }
 \description{
-A second version of \code{\link[=geom_tad]{geom_tad()}}.
+Another version of \code{\link[=geom_tad]{geom_tad()}} that requires direct data frame input.
+Draws TAD boundaries as triangular outlines on the Hi-C heatmap.
 }
 \details{
 Requires the following aesthetics:

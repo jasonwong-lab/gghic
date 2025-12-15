@@ -2,24 +2,22 @@
 % Please edit documentation in R/getters-methods.R
 \name{interactions,ChromatinContacts-method}
 \alias{interactions,ChromatinContacts-method}
-\title{Get interaction data from ChromatinContacts object}
+\title{Get interaction data}
 \usage{
 \S4method{interactions}{ChromatinContacts}(x)
 }
 \arguments{
-\item{x}{A \code{ChromatinContacts} object.}
+\item{x}{ChromatinContacts object.}
 }
 \value{
-A \code{GInteractions} object containing the Hi-C interactions, or NULL
-if data has not been imported yet.
+GInteractions (Hi-C data) or NULL (not yet imported).
 }
 \description{
-Retrieves the imported Hi-C interaction data as a \code{GInteractions} object.
+Retrieves imported Hi-C interactions.
 }
 \details{
-The interactions must be loaded first using \code{import()}. The returned
-\code{GInteractions} object contains bin coordinates and metadata columns such as
-\code{count} and \code{balanced}.
+Must load with \code{import()} first. GInteractions contains bin coordinates and
+metadata (count, balanced).
 }
 \examples{
 \dontrun{

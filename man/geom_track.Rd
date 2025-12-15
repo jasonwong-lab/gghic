@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-track.R
 \name{geom_track}
 \alias{geom_track}
-\title{geom_track}
+\title{Add genomic signal tracks to Hi-C plots}
 \usage{
 geom_track(
   mapping = NULL,
@@ -92,71 +92,265 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{data_paths}{The paths to the sequencing data files. Default is \code{NULL}.}
+\item{data_paths}{Character vector of file paths to genomic signal files. Supported
+formats include BigWig (.bw, .bigWig), BED, and bedGraph files. Files are
+automatically read using rtracklayer. Named vectors are recommended to provide
+track labels (e.g., \code{c("H3K27ac" = "chip.bw", "ATAC" = "atac.bw")}).
+Either \code{data_paths} or \code{track_grs} must be provided. Default is \code{NULL}.}
 
-\item{track_grs}{The GRanges object of the sequencing data.
+\item{track_grs}{Named list of GRanges objects containing genomic signal data.
+Each GRanges should have a \code{score} metadata column with signal values. Names
+are used as track labels. Either \code{data_paths} or \code{track_grs} must be provided.
 Default is \code{NULL}.}
 
-\item{width_ratio}{The ratio of the width of each track relative to the
-height of the Hi-C plot. Default is \code{1/20}.}
+\item{width_ratio}{Numeric value controlling the height of each track relative
+to the Hi-C plot height. Smaller values create shorter tracks. Default is
+\code{1/20} (5\% of Hi-C plot height).}
 
-\item{spacing_ratio}{The ratio of the spacing between two tracks.
-Default is \code{0.5}.}
+\item{spacing_ratio}{Numeric value controlling the vertical spacing between
+tracks as a proportion of track height. Default is \code{0.5} (50\% of track height).}
 
-\item{data_range}{The range of the x axis. It can be \code{"auto"}, \code{"maximum"},
-or a number (vector). Default is \code{"auto"}.}
+\item{data_range}{Character string or numeric value(s) controlling y-axis scaling:
+\itemize{
+\item \code{"auto"}: Each track scaled independently to its own maximum value
+\item \code{"maximum"}: All tracks share the same y-axis scale (global maximum)
+\item Numeric value: Fixed maximum for all tracks (e.g., \code{100})
+\item Numeric vector: Individual maximum for each track (length must match number of tracks)
+Default is \code{"auto"}.
+}}
 
-\item{fill}{The fill color of the track. Default is \code{"black"}.}
+\item{fill}{Character string or named character vector specifying fill colors
+for tracks. If named, names should match track names. If unnamed, colors are
+recycled across tracks. Default is \code{"black"}.}
 
-\item{fontsize}{The font size of the track names. Default is \code{5}.}
+\item{fontsize}{Numeric value specifying the font size for track labels and
+axis annotations. Default is \code{5}.}
 
-\item{rasterize}{Whether to rasterize the plot or not. Default is \code{TRUE}.}
+\item{rasterize}{Logical indicating whether to rasterize the track polygons for
+faster rendering and smaller file sizes. Recommended for high-resolution data.
+Default is \code{TRUE}.}
 
-\item{dpi}{The resolution of the rasterised plot. Default is \code{300}.}
+\item{dpi}{Numeric value specifying the resolution (dots per inch) for rasterized
+tracks. Higher values increase quality but also file size. Default is \code{300}.}
 
-\item{dev}{The device to rasterise the plot. Default is \code{"cairo"}.}
+\item{dev}{Character string specifying the graphics device for rasterization.
+Options include \code{"cairo"}, \code{"ragg"}, or other devices. Default is \code{"cairo"}.}
 
-\item{scale}{The scale of the rasterised plot. Default is \code{1}.}
+\item{scale}{Numeric scaling factor for rasterized output. Values > 1 increase
+resolution. Default is \code{1}.}
 
-\item{draw_boundary}{Logical. Draw boundary lines between chromosomes in
-multi-chromosome plots. Default is \code{TRUE}.}
+\item{draw_boundary}{Logical indicating whether to draw vertical boundary lines
+between chromosomes in multi-chromosome displays. Default is \code{TRUE}.}
 
-\item{boundary_colour}{Character. Color for boundary lines. Default is
-\code{"black"}.}
+\item{boundary_colour}{Character string specifying the color of chromosome
+boundary lines. Default is \code{"black"}.}
 
-\item{linetype}{Line type for boundaries. Default is \code{"dashed"}.}
+\item{linetype}{Character string or integer specifying the line type for
+chromosome boundaries. Default is \code{"dashed"}.}
 
-\item{...}{Parameters to be ignored.}
+\item{...}{Additional parameters (currently ignored).}
 }
 \value{
-A ggplot object.
+A ggplot2 layer object that can be added to a gghic plot.
 }
 \description{
-A ggplot2 geom for sequencing data tracks.
+Displays continuous genomic signal data (ChIP-seq, ATAC-seq, RNA-seq, etc.) as
+tracks below Hi-C heatmaps. Data is read from standard genomic file formats
+(BigWig, BED, bedGraph) or provided as GRanges objects. Each track shows signal
+intensity as a filled area plot with automatic y-axis scaling and labeled axes.
+Multiple tracks can be stacked vertically with independent or shared scaling.
 }
 \details{
-Requires the following aesthetics:
+\subsection{Required Aesthetics}{
+
+This geom inherits aesthetics from the Hi-C data and requires:
 \itemize{
-\item seqnames1
-\item start1
-\item end1
-\item seqnames2
-\item start2
-\item end2
+\item \code{seqnames1}, \code{seqnames2}: Chromosome names
+\item \code{start1}, \code{start2}: Start positions
+\item \code{end1}, \code{end2}: End positions
+}
+}
+
+\subsection{Input Data Formats}{
+
+Tracks can be provided via two methods:
+\subsection{File-based input (\code{data_paths})}{
+\itemize{
+\item Reads directly from genomic signal files
+\item Automatically extracts data for displayed genomic region
+\item Supports BigWig (.bw), BED, bedGraph formats
+\item Named vector provides track labels
+}
+}
+
+\subsection{GRanges input (\code{track_grs})}{
+\itemize{
+\item Pre-loaded genomic data as GRanges objects
+\item Must contain \code{score} metadata column
+\item Useful for custom data or pre-processed signals
+\item Automatically filtered to displayed region
+}
+}
+
+}
+
+\subsection{Track Visualization}{
+
+Each track displays:
+\itemize{
+\item \strong{Signal area}: Filled polygon showing signal intensity
+\item \strong{Y-axis}: Left side with minimum (0) and maximum value labels
+\item \strong{Track label}: Name displayed on the left
+\item \strong{Baseline}: Zero line at bottom of each track
+}
+}
+
+\subsection{Y-Axis Scaling Options}{
+
+The \code{data_range} parameter controls how tracks are scaled:
+\itemize{
+\item \strong{Independent scaling} (\code{"auto"}): Each track scaled to its own maximum,
+best for comparing patterns within each dataset
+\item \strong{Shared scaling} (\code{"maximum"}): All tracks use the same scale, enabling
+direct amplitude comparison between tracks
+\item \strong{Fixed scaling} (numeric): Manually set maximum value(s) for consistent
+scaling across multiple plots or known value ranges
+}
+}
+
+\subsection{Color Specification}{
+
+The \code{fill} parameter accepts:
+\itemize{
+\item Single color: Applied to all tracks (e.g., \code{"black"})
+\item Named vector: Specific colors for each track (e.g., \code{c("ChIP" = "blue", "ATAC" = "red")})
+\item Unnamed vector: Colors recycled across tracks in order
+}
+}
+
+\subsection{Performance Optimization}{
+\itemize{
+\item \strong{Rasterization} (\code{rasterize = TRUE}): Converts high-resolution tracks to
+raster images, dramatically reducing file size and rendering time
+\item \strong{DPI setting}: Balance quality vs. file size (150-300 dpi typical)
+\item \strong{Data filtering}: Only overlapping regions are loaded from files
+}
+}
+
+\subsection{Multi-Chromosome Display}{
+
+When displaying multiple chromosomes:
+\itemize{
+\item Track coordinates automatically adjusted for proper alignment
+\item Vertical boundaries drawn between chromosomes (if \code{draw_boundary = TRUE})
+\item Y-axis labels positioned consistently across chromosomes
+}
 }
 }
 \examples{
 \dontrun{
-# Load Hi-C data
+# Basic usage with BigWig files
 cc <- ChromatinContacts("path/to/cooler.cool", focus = "chr4") |>
   import()
 
-# Load track data from BigWig files
-track1 <- "path/to/track1.bw"
-track2 <- "path/to/track2.bw"
+track1 <- "path/to/H3K27ac.bw"
+track2 <- "path/to/ATAC.bw"
 
 # Add tracks using file paths
 gghic(cc) +
   geom_track(data_paths = c(track1, track2))
+
+# Named tracks with labels
+gghic(cc) +
+  geom_track(
+    data_paths = c(
+      "H3K27ac" = "path/to/H3K27ac.bw",
+      "ATAC-seq" = "path/to/ATAC.bw",
+      "RNA-seq" = "path/to/RNA.bw"
+    )
+  )
+
+# Custom colors for each track
+gghic(cc) +
+  geom_track(
+    data_paths = c("H3K27ac" = track1, "ATAC" = track2),
+    fill = c("H3K27ac" = "#E63946", "ATAC" = "#457B9D")
+  )
+
+# Shared y-axis scaling for comparison
+gghic(cc) +
+  geom_track(
+    data_paths = c("Condition1" = "cond1.bw", "Condition2" = "cond2.bw"),
+    data_range = "maximum"
+  )
+
+# Fixed y-axis maximum
+gghic(cc) +
+  geom_track(
+    data_paths = c("ChIP-seq" = track1),
+    data_range = 100  # Fix max to 100
+  )
+
+# Different maximums for each track
+gghic(cc) +
+  geom_track(
+    data_paths = c("Track1" = track1, "Track2" = track2),
+    data_range = c(50, 100)  # Track1 max=50, Track2 max=100
+  )
+
+# Using GRanges objects
+library(rtracklayer)
+gr1 <- import("path/to/track1.bw")
+gr2 <- import("path/to/track2.bw")
+
+gghic(cc) +
+  geom_track(
+    track_grs = list("H3K27ac" = gr1, "H3K4me3" = gr2)
+  )
+
+# Custom track dimensions
+gghic(cc) +
+  geom_track(
+    data_paths = c("Signal" = track1),
+    width_ratio = 1 / 15,   # Taller tracks
+    spacing_ratio = 1        # More spacing
+  )
+
+# Disable rasterization for vector output
+gghic(cc) +
+  geom_track(
+    data_paths = c("ChIP" = track1),
+    rasterize = FALSE
+  )
+
+# High-resolution rasterization
+gghic(cc) +
+  geom_track(
+    data_paths = c("Signal" = track1),
+    rasterize = TRUE,
+    dpi = 600,
+    dev = "ragg"
+  )
+
+# Multi-chromosome with custom boundaries
+cc_multi <- ChromatinContacts("path/to/cooler.cool",
+                              focus = c("chr4", "chr8")) |>
+  import()
+gghic(cc_multi) +
+  geom_track(
+    data_paths = c("ATAC" = track1),
+    draw_boundary = TRUE,
+    boundary_colour = "gray50",
+    linetype = "dotted"
+  )
+}
+
+}
+\seealso{
+\itemize{
+\item \code{\link[=geom_track2]{geom_track2()}} for a simplified version with direct data frame input
+\item \code{\link[=gghic]{gghic()}} for creating the base Hi-C plot
+\item \code{\link[=geom_annotation]{geom_annotation()}} for gene annotation tracks
+\item \code{\link[=geom_hic]{geom_hic()}} for the Hi-C heatmap layer
 }
 }

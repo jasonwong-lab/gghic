@@ -2,7 +2,7 @@
 % Please edit documentation in R/geom-concatemer.R
 \name{geom_concatemer}
 \alias{geom_concatemer}
-\title{geom_concatemer}
+\title{Visualize multi-way contact concatemers below Hi-C map}
 \usage{
 geom_concatemer(
   mapping = NULL,
@@ -84,22 +84,24 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{width_ratio}{The ratio of the width of each concatemer track
-relative to the height of the Hi-C plot. Default is \code{1/100}.}
+\item{width_ratio}{Numeric. Height of each concatemer track relative to Hi-C
+plot height (default: 1/100).}
 
-\item{spacing_ratio}{The ratio of the spacing between two tracks.
-Default is \code{1/5}.}
+\item{spacing_ratio}{Numeric. Spacing between concatemer tracks as fraction
+of track height (default: 1/5).}
 
-\item{concatemer_grs}{The GRanges object of the concatemer tracks.
-Default is \code{NULL}.}
+\item{concatemer_grs}{GRanges object containing concatemer fragment
+coordinates. Must include metadata column specified by \code{group_identifier}.
+Either \code{concatemer_grs} or \code{concatemer_path} required (default: NULL).}
 
-\item{concatemer_path}{The paths to the concatemer files. Default is \code{NULL}.}
+\item{concatemer_path}{Character. Path to file containing concatemer data.
+Either \code{concatemer_grs} or \code{concatemer_path} required (default: NULL).}
 
-\item{group_identifier}{A character indicating the column name in the
-concatemer GRanges object that identifies the group of
-concatemers. Default is \code{NULL}.}
+\item{group_identifier}{Character. Name of metadata column in \code{concatemer_grs}
+that identifies which fragments belong to the same read (e.g.,
+\code{"read_name"}) (required).}
 
-\item{fill}{The fill color of the gene model track. Default is \code{"black"}.}
+\item{fill}{Character. Fill color for concatemer bars (default: \code{"black"}).}
 
 \item{...}{Parameters to be ignored.}
 }
@@ -107,7 +109,11 @@ concatemers. Default is \code{NULL}.}
 A ggplot object.
 }
 \description{
-A ggplot2 geom for concatemers containing multi-way contacts.
+Displays multi-way chromatin contact reads (concatemers) as horizontal bars
+positioned below the Hi-C contact map. Each bar represents genomic fragments
+contacted by a single long sequencing read, with gaps shown as connecting
+lines. Useful for visualizing Pore-C, Tri-C, or similar multi-way contact
+data in genomic context.
 }
 \details{
 Requires the following aesthetics:

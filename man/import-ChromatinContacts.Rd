@@ -8,80 +8,43 @@
 \S4method{import}{ChromatinContacts,ANY,ANY}(con, format, text, balance_column = "weight", ...)
 }
 \arguments{
-\item{con}{A \code{ChromatinContacts} object containing the path to the cooler
-file and optional focus regions.}
+\item{con}{ChromatinContacts object with cooler file path.}
 
-\item{format}{Character string specifying the balance column name to use
-for normalization. This parameter is used as the second positional
-argument for convenience. Default is \code{"weight"}.}
+\item{format}{Character. Balance column name for normalization (default:
+\code{"weight"}). Can be provided as second argument for convenience.}
 
-\item{text}{Not used. Included for compatibility with the generic.}
+\item{text}{Not used (compatibility).}
 
-\item{balance_column}{Character string specifying the balance column name
-to use for normalization. If \code{format} is provided, it overrides this
-parameter. Default is \code{"weight"}.}
+\item{balance_column}{Character. Balance column name (overridden by
+\code{format} if provided).}
 
-\item{...}{Additional arguments (currently not used).}
+\item{...}{Additional arguments (not used).}
 }
 \value{
-A \code{ChromatinContacts} object with the \code{interactions} slot populated
-by a \code{GInteractions} object containing:
-\itemize{
-\item bin_id1: Bin ID for the first anchor
-\item bin_id2: Bin ID for the second anchor
-\item count: Raw interaction count
-\item balanced: Normalized interaction count (if balance weights are available)
-}
+ChromatinContacts with \code{interactions} slot populated by GInteractions
+containing bin_id1, bin_id2, count, and balanced columns.
 }
 \description{
-Imports chromatin interaction data from a cooler file into a
-ChromatinContacts object. The method loads bin-level interactions and
-applies balancing weights if available.
+Imports interaction data from cooler file into ChromatinContacts object.
 }
 \details{
-The function loads chromatin interaction data from a cooler file. If a
-focus region is specified in the \code{ChromatinContacts} object, only
-interactions within or between those regions are loaded. Otherwise, all
-genome-wide interactions are imported.
+Loads Hi-C data from cooler file. If focus regions are specified, only those
+interactions are loaded. Balance weights (e.g., "weight", "KR", "VC") are
+used to normalize raw counts. Warning issued if balance column not found.
 
-The balance column (e.g., "weight", "KR", "VC") is used to normalize
-the raw counts. If the specified balance column is not found in the
-cooler file, a warning is issued and unbalanced counts are returned.
-
-For convenience, the balance column name can be provided as the second
-positional argument: \code{import(cc, "KR")} is equivalent to
+Shorthand: \code{import(cc, "KR")} is equivalent to
 \code{import(cc, balance_column = "KR")}.
 }
 \examples{
 \dontrun{
-# Basic import from cooler file
-cc <- ChromatinContacts("sample.cool")
-cc <- import(cc)
-
-# Using pipe operator
+# Basic import
 cc <- ChromatinContacts("sample.cool") |> import()
 
 # With specific balance column
-cc <- import(cc, balance_column = "KR")
+cc <- import(cc, "KR")
 
-# Convenient syntax for balance column
-cc <- import(cc, "VC")
-
-# Import with focus region (more efficient)
-cc <- ChromatinContacts(
-  "sample.cool",
-  focus = "chr1:1000000-5000000"
-) |> import()
-
-# Multi-resolution cooler
-cc <- ChromatinContacts(
-  "sample.mcool",
-  resolution = 10000
-) |> import()
-
-# Check imported data
-interactions(cc)
-length(interactions(cc))
+# Focus region (more efficient)
+cc <- ChromatinContacts("sample.cool", focus = "chr1:1-5e6") |> import()
 }
 
 }

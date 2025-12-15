@@ -23,7 +23,7 @@ geom_hic(
 )
 }
 \arguments{
-\item{mapping}{Set of aesthetic mappings created by \code{\link[ggplot2:aes]{ggplot2::aes()}}.}
+\item{mapping}{Aesthetic mappings from \code{\link[ggplot2:aes]{ggplot2::aes()}}.}
 
 \item{data}{The data to be displayed in this layer. There are three
 options:
@@ -82,78 +82,45 @@ rather than combining with them. This is most useful for helper functions
 that define both data and aesthetics and shouldn't inherit behaviour from
 the default plot specification, e.g. \code{\link[ggplot2:annotation_borders]{annotation_borders()}}.}
 
-\item{rasterize}{Logical. Rasterize the heatmap for better performance with
-large datasets. Default is \code{TRUE}.}
+\item{rasterize}{Logical. Rasterize for performance (default: TRUE).}
 
-\item{dpi}{Numeric. Resolution for rasterization. Default is \code{300}.}
+\item{dpi}{Numeric. Rasterization resolution (default: 300).}
 
-\item{dev}{Character. Graphics device for rasterization. Default is
-\code{"cairo"}.}
+\item{dev}{Character. Graphics device (default: \code{"cairo"}).}
 
-\item{scale}{Numeric. Scaling factor for rasterization. Default is \code{1}.}
+\item{scale}{Numeric. Rasterization scaling (default: 1).}
 
-\item{draw_boundary}{Logical. Draw boundary lines between chromosomes in
-multi-chromosome plots. Default is \code{TRUE}.}
+\item{draw_boundary}{Logical. Draw chromosome boundaries (default: TRUE).}
 
-\item{boundary_colour}{Character. Color for boundary lines. Default is
-\code{"black"}.}
+\item{boundary_colour}{Character. Boundary color (default: \code{"black"}).}
 
-\item{linetype}{Line type for boundaries. Default is \code{"dashed"}.}
+\item{linetype}{Boundary line type (default: \code{"dashed"}).}
 
-\item{...}{Additional parameters (currently unused).}
+\item{...}{Additional parameters (unused).}
 }
 \value{
 A ggplot2 layer.
 }
 \description{
-Creates a Hi-C contact heatmap layer using diamond/rotated square geometry.
-This is the core visualization layer for displaying chromatin interaction
-frequencies.
+Creates Hi-C contact heatmap layer with diamond-shaped tiles.
 }
 \details{
-\code{geom_hic()} transforms rectangular interaction data into diamond-shaped
-heatmap tiles. Each interaction is plotted as a rotated square at 45 degrees,
-creating the characteristic triangular Hi-C heatmap visualization.
+Transforms interaction data into diamond tiles at 45°, creating the
+characteristic triangular Hi-C visualization.
 
-\strong{Required aesthetics:}
-\itemize{
-\item \code{seqnames1} - Chromosome name for first anchor
-\item \code{start1} - Start position for first anchor
-\item \code{end1} - End position for first anchor
-\item \code{seqnames2} - Chromosome name for second anchor
-\item \code{start2} - Start position for second anchor
-\item \code{end2} - End position for second anchor
-\item \code{fill} - Value to map to color (typically scaled contact frequency)
-}
+\strong{Required aesthetics:} seqnames1, start1, end1, seqnames2, start2, end2,
+fill
 }
 \examples{
 \dontrun{
-# Load and import Hi-C data
-cc <- ChromatinContacts("path/to/cooler.cool") |>
-  import()
-
-# Basic Hi-C heatmap using geom_hic
+cc <- ChromatinContacts("file.cool") |> import()
 library(ggplot2)
 ggplot() +
   geom_hic(
-    data = scaleData(cc["chr4"], "balanced", log10), aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-    )
-  ) +
-  scale_fill_gradientn(colors = c("white", "red")) +
-  theme_hic()
-
-# Multi-chromosome plot
-cc_multi <- cc[c("chr4", "chr11")]
-ggplot() +
-  geom_hic(
-    data = scaleData(cc_multi, "balanced", log10), aes(
-      seqnames1 = seqnames1, start1 = start1, end1 = end1,
-      seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score
-    ), draw_boundary = TRUE, boundary_colour = "blue"
-  ) +
-  theme_hic()
+    data = scaleData(cc["chr4"], "balanced", log10),
+    aes(seqnames1 = seqnames1, start1 = start1, end1 = end1,
+        seqnames2 = seqnames2, start2 = start2, end2 = end2, fill = score)
+  ) + theme_hic()
 }
 
 }

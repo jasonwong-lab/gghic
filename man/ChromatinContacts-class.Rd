@@ -5,95 +5,72 @@
 \alias{ChromatinContacts-class}
 \title{ChromatinContacts S4 class}
 \description{
-An S4 class to represent chromatin contact data from Hi-C experiments stored
-in cooler format (.cool or .mcool files). This lightweight object acts as a
-pointer to Hi-C data without loading the full matrix into memory until
-explicitly imported.
+S4 class representing chromatin contact data from cooler files (.cool or
+.mcool). Memory-efficient pointer that loads data only when \code{import()} is
+called.
 }
 \details{
-The \code{ChromatinContacts} class provides an efficient framework for managing
-Hi-C data. Key features:
+Key features:
 \itemize{
-\item \strong{Memory efficient}: Only loads data when \code{import()} is called
-\item \strong{Flexible focusing}: Subset regions before or after loading
-\item \strong{Feature integration}: Attach TADs, loops, and tracks that auto-subset
-with the interaction data
-\item \strong{Multi-resolution support}: Works with both .cool and .mcool files
+\item Memory-efficient: loads data only when needed
+\item Flexible focusing: subset regions before or after import
+\item Feature integration: automatically subsets attached features
+\item Multi-resolution: supports both .cool and .mcool files
 }
 
-The \code{focus} parameter accepts flexible specifications:
+Focus parameter options:
 \itemize{
 \item Single region: \code{"chr1:1000000-2000000"}
 \item Whole chromosome: \code{"chr1"}
-\item Multiple regions with OR: \code{"chr1 | chr2"} (includes all interactions)
-\item Inter-regional with AND: \code{"chr1 & chr2"} (inter-chromosomal only)
-\item GInteractions object for programmatic definition
+\item Multiple regions (all combinations): \code{"chr1 | chr2"}
+\item Inter-chromosomal only: \code{"chr1 & chr2"}
+\item GInteractions object for programmatic control
 }
 }
 \section{Slots}{
 
 \describe{
-\item{\code{cooler_path}}{Character string. Path to the .cool or .mcool file.}
+\item{\code{cooler_path}}{Character. Path to cooler file.}
 
-\item{\code{resolution}}{Integer or NULL. Resolution in base pairs for .mcool files.
-Required for multi-resolution cooler files.}
+\item{\code{resolution}}{Integer or NULL. Resolution in base pairs (required for
+.mcool files).}
 
-\item{\code{focus}}{GInteractions or NULL. Genomic regions of interest to
-focus on. Can be specified as a GInteractions object,
-or NULL for genome-wide data.}
+\item{\code{focus}}{GInteractions or NULL. Genomic regions of interest (NULL for
+genome-wide).}
 
-\item{\code{interactions}}{GInteractions or NULL. The imported Hi-C interaction data.
-Initially NULL until \code{import()} is called.}
+\item{\code{interactions}}{GInteractions or NULL. Imported Hi-C interaction data.}
 
-\item{\code{seqinfo}}{Seqinfo or NULL. Sequence information for the genome assembly.}
+\item{\code{seqinfo}}{Seqinfo or NULL. Genome assembly sequence information.}
 
 \item{\code{compartments}}{GRanges or NULL. A/B compartment annotations.}
 
-\item{\code{TADs}}{GRanges or NULL. Topologically associating domains (TADs).}
+\item{\code{TADs}}{GRanges or NULL. Topologically associating domains.}
 
 \item{\code{loops}}{GInteractions or NULL. Chromatin loop calls.}
 
-\item{\code{multi_contacts}}{GRanges or NULL. Multi-way contact regions (e.g., from
-Pore-C data).}
+\item{\code{multi_contacts}}{GRanges or NULL. Multi-way contact regions.}
 
-\item{\code{tracks}}{GRangesList. Additional genomic signal tracks (e.g., ChIP-seq,
-ATAC-seq).}
+\item{\code{tracks}}{GRangesList. Genomic signal tracks (ChIP-seq, ATAC-seq, etc.).}
 }}
 
 \examples{
 \dontrun{
-# Create object pointing to cooler file
-cc <- ChromatinContacts(cooler_path = "data.cool")
+# Create and import
+cc <- ChromatinContacts("data.cool") |> import()
 
-# Create with focus on specific region
-cc <- ChromatinContacts(
-  cooler_path = "data.cool",
-  focus = "chr1:1000000-2000000"
-)
+# Focus on specific region
+cc <- ChromatinContacts("data.cool", focus = "chr1:1-2e6") |> import()
 
-# Multi-resolution cooler with specific resolution
-cc <- ChromatinContacts(
-  cooler_path = "data.mcool",
-  resolution = 10000
-)
-
-# Import the data
-cc <- import(cc)
+# Multi-resolution cooler
+cc <- ChromatinContacts("data.mcool", resolution = 10000) |> import()
 
 # Add features
 features(cc, "TADs") <- tads_granges
 features(cc, "loops") <- loops_ginteractions
-features(cc, "tracks") <- tracks_grangeslist
 }
 
 }
 \seealso{
-\itemize{
-\item \code{\link[=ChromatinContacts]{ChromatinContacts()}} - Constructor function
-\item \link{import-ChromatinContacts} - Load interaction data
-\item \code{\link[=features]{features()}} - Access or set genomic features
-\item \code{\link[=resolution]{resolution()}} - Get resolution
-\item \code{\link[=focus]{focus()}} - Get focus regions
-\item \code{\link[=gghic]{gghic()}} - Create visualizations
-}
+\code{\link[=ChromatinContacts]{ChromatinContacts()}}, \link{import-ChromatinContacts}, \code{\link[=features]{features()}},
+\code{\link[=resolution]{resolution()}}, \code{\link[=focus]{focus()}}, \code{\link[=gghic]{gghic()}}
 }
