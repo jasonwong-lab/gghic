@@ -546,7 +546,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
-#>  [3] rjson_0.2.23                xfun_0.54                  
+#>  [3] rjson_0.2.23                xfun_0.55                  
 #>  [5] bslib_0.9.0                 ggplot2_4.0.1              
 #>  [7] htmlwidgets_1.6.4           rhdf5_2.54.1               
 #>  [9] Biobase_2.70.0              lattice_0.22-7             
@@ -573,7 +573,7 @@ sessionInfo()
 #> [51] purrr_1.2.0                 restfulr_0.0.16            
 #> [53] labeling_0.4.3              fastmap_1.2.0              
 #> [55] grid_4.5.2                  cli_3.6.5                  
-#> [57] SparseArray_1.10.6          magrittr_2.0.4             
+#> [57] SparseArray_1.10.7          magrittr_2.0.4             
 #> [59] S4Arrays_1.10.1             utf8_1.2.6                 
 #> [61] dichromat_2.0-0.1           XML_3.99-0.20              
 #> [63] withr_3.0.2                 scales_1.4.0               

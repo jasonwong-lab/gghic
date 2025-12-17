@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz
+#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz
+#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz
+#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpE1s78e/file20e87a75afa.pairs.gz
+#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
@@ -891,7 +891,7 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
-#>  [3] rjson_0.2.23                xfun_0.54                  
+#>  [3] rjson_0.2.23                xfun_0.55                  
 #>  [5] bslib_0.9.0                 htmlwidgets_1.6.4          
 #>  [7] rhdf5_2.54.1                Biobase_2.70.0             
 #>  [9] lattice_0.22-7              bitops_1.0-9               
@@ -917,7 +917,7 @@ sessionInfo()
 #> [49] digest_0.6.39               purrr_1.2.0                
 #> [51] restfulr_0.0.16             labeling_0.4.3             
 #> [53] fastmap_1.2.0               grid_4.5.2                 
-#> [55] cli_3.6.5                   SparseArray_1.10.6         
+#> [55] cli_3.6.5                   SparseArray_1.10.7         
 #> [57] magrittr_2.0.4              S4Arrays_1.10.1            
 #> [59] utf8_1.2.6                  dichromat_2.0-0.1          
 #> [61] XML_3.99-0.20               withr_3.0.2                
