@@ -10,6 +10,8 @@
 
 <p align="center"> A versatile R package for exploring and visualizing 3D genome organization </p>
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0) [![GitHub issues](https://img.shields.io/github/issues/jasonwong-lab/gghic)](https://github.com/jasonwong-lab/gghic/issues) [![GitHub stars](https://img.shields.io/github/stars/jasonwong-lab/gghic)](https://github.com/jasonwong-lab/gghic/stargazers)
+
 > :warning: `gghic` is in its early stages. Issues and PRs are welcome.
 
 ## Introduction
@@ -54,10 +56,14 @@ devtools::install_github("jasonwong-lab/gghic")
 citation("gghic")
 ```
 
-## Author
+## Authors
 
-Minghao Jiang, <mjhk@connect.hku.hk>
+Minghao Jiang, <mjhk@connect.hku.hk> [![gghic contributors](https://contrib.rocks/image?repo=jasonwong-lab/gghic)](https://github.com/jasonwong-lab/gghic/graphs/contributors)
 
 ## License
 
 **`gghic`** is licensed under the [GNU General Public License v3](LICENSE.md).
+
+---
+
+[![Star History Chart](https://api.star-history.com/svg?repos=jasonwong-lab/gghic&type=Date)](https://star-history.com/#jasonwong-lab/gghic&Date)
