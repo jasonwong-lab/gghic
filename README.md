@@ -66,4 +66,9 @@ Minghao Jiang, <mjhk@connect.hku.hk> [![gghic contributors](https://contrib.rock
 
 ---
 
-[![Star History Chart](https://api.star-history.com/svg?repos=jasonwong-lab/gghic&type=Date)](https://star-history.com/#jasonwong-lab/gghic&Date)
+<p align="center">
+  <a href="https://star-history.com/#jasonwong-lab/gghic&Date">
+    <img src="https://api.star-history.com/svg?repos=jasonwong-lab/gghic&type=Date" alt="Star History Chart" width="49%">
+  </a>
+  <img src="https://repobeats.axiom.co/api/embed/928dc0c1b250d4cf741190b134bedf01c882491b.svg" alt="Repobeats analytics image" width="49%">
+</p>
