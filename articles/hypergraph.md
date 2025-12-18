@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
+#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
+#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
+#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpD88S09/file200c685221e7.pairs.gz
+#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
