@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
+#> Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
+#> Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
+#> Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpMAe0VB/file1e7a606a26a.pairs.gz
+#> Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
@@ -909,7 +909,7 @@ sessionInfo()
 #> [33] Seqinfo_1.0.0               InteractionSet_1.38.0      
 #> [35] htmltools_0.5.9             sass_0.4.10                
 #> [37] RCurl_1.98-1.17             yaml_2.3.12                
-#> [39] tidyr_1.3.1                 crayon_1.5.3               
+#> [39] tidyr_1.3.2                 crayon_1.5.3               
 #> [41] pillar_1.11.1               pkgdown_2.2.0              
 #> [43] jquerylib_0.1.4             BiocParallel_1.44.0        
 #> [45] cachem_1.1.0                DelayedArray_0.36.0        
@@ -917,17 +917,17 @@ sessionInfo()
 #> [49] digest_0.6.39               purrr_1.2.0                
 #> [51] restfulr_0.0.16             labeling_0.4.3             
 #> [53] fastmap_1.2.0               grid_4.5.2                 
-#> [55] cli_3.6.5                   SparseArray_1.10.7         
+#> [55] cli_3.6.5                   SparseArray_1.10.8         
 #> [57] magrittr_2.0.4              S4Arrays_1.10.1            
 #> [59] utf8_1.2.6                  dichromat_2.0-0.1          
 #> [61] XML_3.99-0.20               withr_3.0.2                
 #> [63] scales_1.4.0                rmarkdown_2.30             
 #> [65] XVector_0.50.0              httr_1.4.7                 
 #> [67] matrixStats_1.5.0           ragg_1.5.0                 
-#> [69] evaluate_1.0.5              knitr_1.50                 
+#> [69] evaluate_1.0.5              knitr_1.51                 
 #> [71] BiocIO_1.20.0               GenomicRanges_1.62.1       
 #> [73] IRanges_2.44.0              viridisLite_0.4.2          
-#> [75] rtracklayer_1.70.0          rlang_1.1.6                
+#> [75] rtracklayer_1.70.1          rlang_1.1.6                
 #> [77] Rcpp_1.1.0                  glue_1.8.0                 
 #> [79] BiocGenerics_0.56.0         jsonlite_2.0.0             
 #> [81] R6_2.6.1                    Rhdf5lib_1.32.0            
