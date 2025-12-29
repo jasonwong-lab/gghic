@@ -15,6 +15,8 @@
 #' @param n_multiways_filter Integer vector or NULL. Filter by specific contact
 #'   orders, e.g., `c(3,4)` for 3-way and 4-way only (default: NULL).
 #' @param chroms Character or NULL. Filter by chromosome(s) (default: NULL).
+#' @param bins Integer vector or NULL. Filter by participating bin indices,
+#'   e.g., `c(1, 2, 5)` (default: NULL).
 #' @param append Logical. Append to existing selection (TRUE) or replace
 #'   (FALSE, default: TRUE).
 #' @param ... Additional arguments (not used).
@@ -31,7 +33,10 @@
 #' \dontrun{
 #' # Default: top 5 intra + 5 inter per chromosome
 #' mc <- MultiWayContacts("sample.pairs.gz") |>
-#'   import() |> build() |> tidy() |> select()
+#'   import() |>
+#'   build() |>
+#'   tidy() |>
+#'   select()
 #'
 #' # More hyperedges
 #' mc <- mc |> select(n_intra = 10, n_inter = 10, append = FALSE)
@@ -41,13 +46,16 @@
 #'
 #' # Specific chromosomes
 #' mc <- mc |> select(chroms = c("chr1", "chr2"), append = FALSE)
+#'
+#' # Specific bins
+#' mc <- mc |> select(bins = c(1, 5, 10), append = FALSE)
 #' }
 #'
 #' @export
 methods::setMethod(
   "select", "MultiWayContacts",
   function(
-    x, n_intra = 5, n_inter = 5, n_multiways_filter = NULL, chroms = NULL, append = TRUE, ...
+    x, n_intra = 5, n_inter = 5, n_multiways_filter = NULL, chroms = NULL, bins = NULL, append = TRUE, ...
   ) {
     if (is.null(x@tidied_hypergraph)) {
       stop(
@@ -113,6 +121,31 @@ methods::setMethod(
 
       hyperedge_chroms <- hyperedge_chroms |>
         dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
+    }
+
+    # Filter by specified bins if provided
+    if (!is.null(bins)) {
+      # Get hyperedges that involve any of the specified bins
+      hyperedges_to_keep <- hg_tidy |>
+        dplyr::filter(bin_idx %in% bins) |>
+        dplyr::pull(hyperedge_idx) |>
+        unique()
+
+      if (length(hyperedges_to_keep) == 0) {
+        stop(
+          "No hyperedges found involving the specified bins: ",
+          paste(bins, collapse = ", ")
+        )
+      }
+
+      hg_tidy <- hg_tidy |>
+        dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
+
+      hyperedge_types <- hyperedge_types |>
+        dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
+
+      hyperedge_chroms <- hyperedge_chroms |>
+        dplyr::filter(purrr::map_lgl(chroms, ~ any(.x %in% unique(hg_tidy$chrom))))
     }
 
     # For each chromosome, select top hyperedges
