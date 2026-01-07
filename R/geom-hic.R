@@ -87,7 +87,7 @@ GeomHic <- ggplot2::ggproto(
   "GeomHic",
   ggplot2::Geom,
   required_aes = c(
-    "x", "xmin", "xmax", "xend", "y", "ymin", "ymax", "yend", "fill"
+    "x", "xmin", "xmax", "xend", "y", "ymin", "ymax", "yend", "fill", "type"
   ),
   default_aes = ggplot2::aes(fill = NA, colour = NA, linetype = "dashed"),
   draw_key = ggplot2::draw_key_polygon,
@@ -106,6 +106,7 @@ GeomHic <- ggplot2::ggproto(
         (n_sn > 1 || (n_sn == 2 && any(data$seqnames1 == data$seqnames2)))
     ) {
       coords_line_top <- coords |>
+        dplyr::filter(type == "boundary") |>
         dplyr::group_by(seqnames1, seqnames2) |>
         dplyr::slice_max(order_by = ymax, n = 1, with_ties = TRUE) |>
         dplyr::slice_max(order_by = xmax, n = 1, with_ties = FALSE) |>
@@ -145,12 +146,15 @@ GeomHic <- ggplot2::ggproto(
         default.units = "native"
       )
     }
+
+    coords_hic <- coords |>
+      dplyr::filter(type != "boundary")
     grob_hic <- grid::polygonGrob(
-      x = c(coords$x, coords$xmin, coords$xmax, coords$xend),
-      y = c(coords$y, coords$ymin, coords$ymax, coords$yend),
-      id = rep(seq_len(nrow(coords)), 4),
+      x = c(coords_hic$x, coords_hic$xmin, coords_hic$xmax, coords_hic$xend),
+      y = c(coords_hic$y, coords_hic$ymin, coords_hic$ymax, coords_hic$yend),
+      id = rep(seq_len(nrow(coords_hic)), 4),
       default.units = "native",
-      gp = grid::gpar(fill = coords$fill, col = NA)
+      gp = grid::gpar(fill = coords_hic$fill, col = NA)
     )
 
     if (rasterize) {
