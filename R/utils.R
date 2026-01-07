@@ -240,17 +240,27 @@ getBreaksLabels <- function(data) {
   tryCatch(
     {
       if (Sys.info()["sysname"] == "Linux") {
-        # Linux: read from /proc/meminfo
+        # Linux: read available memory from /proc/meminfo
         meminfo <- readLines("/proc/meminfo")
-        mem_total_line <- grep("^MemTotal:", meminfo, value = TRUE)
-        as.numeric(sub("MemTotal:\\s+(\\d+).*", "\\1", mem_total_line)) / 1024
+        mem_avail_line <- grep("^MemAvailable:", meminfo, value = TRUE)
+        if (length(mem_avail_line) > 0) {
+          as.numeric(sub("MemAvailable:\\s+(\\d+).*", "\\1", mem_avail_line)) / 1024
+        } else {
+          # Fallback to MemFree if MemAvailable not available
+          mem_free_line <- grep("^MemFree:", meminfo, value = TRUE)
+          as.numeric(sub("MemFree:\\s+(\\d+).*", "\\1", mem_free_line)) / 1024
+        }
       } else if (Sys.info()["sysname"] == "Darwin") {
-        # macOS: use sysctl
-        mem_bytes <- as.numeric(system("sysctl -n hw.memsize", intern = TRUE))
-        mem_bytes / (1024^2)
+        # macOS: use vm_stat to get available memory
+        vm_stat <- system("vm_stat", intern = TRUE)
+        page_size <- as.numeric(sub(".*page size of (\\d+) bytes.*", "\\1", vm_stat[1]))
+        free_pages <- as.numeric(sub("Pages free:\\s+(\\d+).*", "\\1", grep("^Pages free:", vm_stat, value = TRUE)))
+        inactive_pages <- as.numeric(sub("Pages inactive:\\s+(\\d+).*", "\\1", grep("^Pages inactive:", vm_stat, value = TRUE)))
+        # Available memory = free + inactive pages
+        (free_pages + inactive_pages) * page_size / (1024^2)
       } else if (Sys.info()["sysname"] == "Windows") {
-        # Windows: use memory.size()
-        memory.limit()
+        # Windows: use memory.size() to get available memory
+        memory.size(NA)
       } else {
         # Unknown OS - use conservative default
         warning("Unknown OS, using default 16 GB", call. = FALSE)
@@ -548,6 +558,50 @@ getBreaksLabels <- function(data) {
           c(start2 = "start2", end2 = "end2")
         )
       )
+  }
+
+  dat$type <- "interaction"
+
+  # Generate boundary rows for intra-chromosomal interactions
+  intra_chroms <- dat |>
+    dplyr::filter(seqnames1 == seqnames2) |>
+    dplyr::pull(seqnames1) |>
+    unique()
+
+  if (length(intra_chroms) > 0) {
+    boundary_rows <- purrr::map_df(intra_chroms, function(chrom) {
+      chrom_data <- dat |> dplyr::filter(seqnames1 == chrom, seqnames2 == chrom)
+
+      min_start <- min(c(chrom_data$start1, chrom_data$start2))
+      max_end <- max(c(chrom_data$end1, chrom_data$end2))
+
+      # Infer bin size from first row
+      bin_size <- chrom_data$end1[1] - chrom_data$start1[1]
+
+      leftmost_start <- min_start
+      leftmost_end <- min_start + bin_size
+      rightmost_start <- max_end - bin_size
+      rightmost_end <- max_end
+
+      # Create a boundary row
+      template <- chrom_data[1, ]
+      template$start1 <- leftmost_start
+      template$end1 <- leftmost_end
+      template$start2 <- rightmost_start
+      template$end2 <- rightmost_end
+      template$type <- "boundary"
+
+      # Set numeric columns (like counts) to NA
+      numeric_cols <- names(template)[sapply(template, is.numeric)]
+      coord_cols <- c("start1", "end1", "start2", "end2")
+      for (col in setdiff(numeric_cols, coord_cols)) {
+        template[[col]] <- NA
+      }
+
+      template
+    })
+
+    dat <- dplyr::bind_rows(dat, boundary_rows)
   }
 
   dat <- dat |>
@@ -1256,12 +1310,12 @@ getBreaksLabels <- function(data) {
   n_reads <- ncol(incidence)
 
   estimated_size_gb <- (as.numeric(n_bins) * as.numeric(n_reads) * 8) / (1024^3)
-  mem_limit_mb <- .getMemLim()
-  available_gb <- mem_limit_mb / 1024
-  threshold_gb <- available_gb * 0.5
+  available_ram_mb <- .getMemLim()
+  available_gb <- available_ram_mb / 1024
+  threshold_gb <- available_gb * 0.8
 
   message(sprintf(
-    "Estimated matrix size: %.1f GB, System RAM: %.1f GB (threshold: %.1f GB)",
+    "Estimated matrix size: %.1f GB, Available RAM: %.1f GB (threshold: %.1f GB)",
     estimated_size_gb, available_gb, threshold_gb
   ))
 
