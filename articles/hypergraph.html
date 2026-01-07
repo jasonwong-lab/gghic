@@ -66,7 +66,7 @@
                         <h4 data-toc-skip class="author">Minghao
 Jiang</h4>
             
-            <h4 data-toc-skip class="date">2025-12-29</h4>
+            <h4 data-toc-skip class="date">2026-01-07</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/hypergraph.Rmd" class="external-link"><code>vignettes/hypergraph.Rmd</code></a></small>
       <div class="d-none name"><code>hypergraph.Rmd</code></div>
@@ -378,7 +378,7 @@ analysis follows these steps:</p>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Convert to long format</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="co"># Select top hyperedges</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -387,7 +387,7 @@ analysis follows these steps:</p>
 <span><span class="co">#&gt; Removed 471 duplicate pairwise contacts within reads (2,308 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 3 contacts (80% quantile)</span></span>
 <span><span class="co">#&gt; Retained 1,337 contacts from 341 reads</span></span>
-<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, Available RAM: 12.5 GB (threshold: 10.0 GB)</span></span>
 <span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
 <span><span class="co">#&gt; Removed 14 duplicate hyperedges (327 unique patterns)</span></span>
 <span><span class="co">#&gt; Final hypergraph: 68 bins, 238 unique hyperedges (min 3-way contacts)</span></span>
@@ -411,7 +411,7 @@ analysis follows these steps:</p>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
 <span><span class="co">#&gt; Mode: (intra- and inter-chromosomal)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -420,7 +420,7 @@ analysis follows these steps:</p>
 <span><span class="co">#&gt; Removed 872 duplicate pairwise contacts within reads (4,447 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 2 contacts (80% quantile)</span></span>
 <span><span class="co">#&gt; Retained 2,873 contacts from 496 reads</span></span>
-<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, Available RAM: 12.5 GB (threshold: 10.0 GB)</span></span>
 <span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
 <span><span class="co">#&gt; Removed 3 duplicate hyperedges (493 unique patterns)</span></span>
 <span><span class="co">#&gt; Final hypergraph: 138 bins, 435 unique hyperedges (min 3-way contacts)</span></span>
@@ -634,7 +634,7 @@ chromosome)</li>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -643,7 +643,7 @@ chromosome)</li>
 <span><span class="co">#&gt; Removed 471 duplicate pairwise contacts within reads (2,308 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 4 contacts (85% quantile)</span></span>
 <span><span class="co">#&gt; Retained 860 contacts from 301 reads</span></span>
-<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, Available RAM: 12.5 GB (threshold: 10.0 GB)</span></span>
 <span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
 <span><span class="co">#&gt; Removed 36 duplicate hyperedges (265 unique patterns)</span></span>
 <span><span class="co">#&gt; Final hypergraph: 60 bins, 46 unique hyperedges (min 5-way contacts)</span></span>
@@ -662,7 +662,7 @@ chromosome)</li>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">5</span>, append <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpD5xCgx/file21ef97d2162.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -672,7 +672,7 @@ chromosome)</li>
 <span><span class="co">#&gt; Removed 649 duplicate pairwise contacts within reads (3,140 remaining)</span></span>
 <span><span class="co">#&gt; Filtering bin pairs with &gt;= 3 contacts (85% quantile)</span></span>
 <span><span class="co">#&gt; Retained 1,290 contacts from 353 reads</span></span>
-<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, System RAM: 15.6 GB (threshold: 7.8 GB)</span></span>
+<span><span class="co">#&gt; Estimated matrix size: 0.0 GB, Available RAM: 12.3 GB (threshold: 9.8 GB)</span></span>
 <span><span class="co">#&gt; Identifying unique hyperedge patterns...</span></span>
 <span><span class="co">#&gt; Removed 18 duplicate hyperedges (335 unique patterns)</span></span>
 <span><span class="co">#&gt; Final hypergraph: 112 bins, 331 unique hyperedges (min 2-way contacts)</span></span>
