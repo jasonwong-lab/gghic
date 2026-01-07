@@ -15,8 +15,9 @@
 #' @param n_multiways_filter Integer vector or NULL. Filter by specific contact
 #'   orders, e.g., `c(3,4)` for 3-way and 4-way only (default: NULL).
 #' @param chroms Character or NULL. Filter by chromosome(s) (default: NULL).
-#' @param bins Integer vector or NULL. Filter by participating bin indices,
-#'   e.g., `c(1, 2, 5)` (default: NULL).
+#' @param bins Named integer vector/list or NULL. Filter by chromosome-specific
+#'   bin indices, e.g., `c("chr11" = c(1, 2, 3), "chr12" = c(5, 10))`
+#'   (default: NULL).
 #' @param append Logical. Append to existing selection (TRUE) or replace
 #'   (FALSE, default: TRUE).
 #' @param ... Additional arguments (not used).
@@ -47,8 +48,8 @@
 #' # Specific chromosomes
 #' mc <- mc |> select(chroms = c("chr1", "chr2"), append = FALSE)
 #'
-#' # Specific bins
-#' mc <- mc |> select(bins = c(1, 5, 10), append = FALSE)
+#' # Specific bins per chromosome
+#' mc <- mc |> select(bins = list("chr11" = c(1, 5, 10)), append = FALSE)
 #' }
 #'
 #' @export
@@ -99,7 +100,7 @@ methods::setMethod(
     hyperedge_types <- hyperedge_types |>
       dplyr::select(hyperedge_idx, type, weight)
 
-    # Filter by specified chromosomes if provided
+    # Filter by specified chromosomes if provided (top priority)
     if (!is.null(chroms)) {
       # Get hyperedges that involve any of the specified chromosomes
       hyperedges_to_keep <- hyperedge_chroms |>
@@ -123,18 +124,26 @@ methods::setMethod(
         dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
     }
 
-    # Filter by specified bins if provided
+    # Filter by specified chromosome-specific bins if provided
     if (!is.null(bins)) {
-      # Get hyperedges that involve any of the specified bins
-      hyperedges_to_keep <- hg_tidy |>
-        dplyr::filter(bin_idx %in% bins) |>
-        dplyr::pull(hyperedge_idx) |>
+      if (is.null(names(bins)) || any(names(bins) == "")) {
+        stop("bins must be a named list with chromosome names, e.g., list(\"chr11\" = c(1, 2, 3))")
+      }
+
+      # Get hyperedges that involve any of the specified chromosome-bin combinations
+      hyperedges_to_keep <- purrr::map(names(bins), function(chr) {
+        bin_indices <- bins[[chr]]
+        hg_tidy |>
+          dplyr::filter(chrom == chr, bin %in% bin_indices) |>
+          dplyr::pull(hyperedge_idx) |>
+          unique()
+      }) |>
+        unlist() |>
         unique()
 
       if (length(hyperedges_to_keep) == 0) {
         stop(
-          "No hyperedges found involving the specified bins: ",
-          paste(bins, collapse = ", ")
+          "No hyperedges found involving the specified chromosome-bin combinations"
         )
       }
 
@@ -145,7 +154,7 @@ methods::setMethod(
         dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
 
       hyperedge_chroms <- hyperedge_chroms |>
-        dplyr::filter(purrr::map_lgl(chroms, ~ any(.x %in% unique(hg_tidy$chrom))))
+        dplyr::filter(hyperedge_idx %in% hyperedges_to_keep)
     }
 
     # For each chromosome, select top hyperedges
