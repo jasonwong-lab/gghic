@@ -142,9 +142,9 @@
 
 .grs2Gis <- function(grs, res) {
   starts_1 <- start(grs)
+  ends_1 <- starts_1 + res - 1
+  starts_2 <- end(grs) - res + 1
   ends_2 <- end(grs)
-  starts_2 <- starts_1 + res - 1
-  ends_1 <- ends_2 - res + 1
 
   anchor1 <- GenomicRanges::GRanges(
     seqnames = GenomicRanges::seqnames(grs),
