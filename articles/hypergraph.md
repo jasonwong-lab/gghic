@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz
+#> Reading pairs from: /tmp/RtmpEa3ghf/file1ec25658a311.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -282,7 +282,7 @@ mc_chr22 <- mc_chr22 |>
 #> Removed 471 duplicate pairwise contacts within reads (2,308 remaining)
 #> Filtering bin pairs with >= 3 contacts (80% quantile)
 #> Retained 1,337 contacts from 341 reads
-#> Estimated matrix size: 0.0 GB, Available RAM: 12.5 GB (threshold: 10.0 GB)
+#> Estimated matrix size: 0.0 GB, Available RAM: 12.6 GB (threshold: 10.0 GB)
 #> Identifying unique hyperedge patterns...
 #> Removed 14 duplicate hyperedges (327 unique patterns)
 #> Final hypergraph: 68 bins, 238 unique hyperedges (min 3-way contacts)
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz
+#> Reading pairs from: /tmp/RtmpEa3ghf/file1ec25658a311.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz
+#> Reading pairs from: /tmp/RtmpEa3ghf/file1ec25658a311.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpIVVgTq/file1e6d29f19718.pairs.gz
+#> Reading pairs from: /tmp/RtmpEa3ghf/file1ec25658a311.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
@@ -531,7 +531,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
 #> Removed 649 duplicate pairwise contacts within reads (3,140 remaining)
 #> Filtering bin pairs with >= 3 contacts (85% quantile)
 #> Retained 1,290 contacts from 353 reads
-#> Estimated matrix size: 0.0 GB, Available RAM: 12.3 GB (threshold: 9.8 GB)
+#> Estimated matrix size: 0.0 GB, Available RAM: 12.3 GB (threshold: 9.9 GB)
 #> Identifying unique hyperedge patterns...
 #> Removed 18 duplicate hyperedges (335 unique patterns)
 #> Final hypergraph: 112 bins, 331 unique hyperedges (min 2-way contacts)
@@ -898,11 +898,11 @@ sessionInfo()
 #> [11] rhdf5filters_1.22.0         vctrs_0.6.5                
 #> [13] tools_4.5.2                 generics_0.1.4             
 #> [15] parallel_4.5.2              stats4_4.5.2               
-#> [17] curl_7.0.0                  tibble_3.3.0               
+#> [17] curl_7.0.0                  tibble_3.3.1               
 #> [19] pkgconfig_2.0.3             Matrix_1.7-4               
 #> [21] RColorBrewer_1.1-3          cigarillo_1.0.0            
 #> [23] S7_0.2.1                    desc_1.4.3                 
-#> [25] S4Vectors_0.48.0            lifecycle_1.0.4            
+#> [25] S4Vectors_0.48.0            lifecycle_1.0.5            
 #> [27] compiler_4.5.2              farver_2.1.2               
 #> [29] Rsamtools_2.26.0            Biostrings_2.78.0          
 #> [31] textshaping_1.0.4           codetools_0.2-20           
@@ -914,7 +914,7 @@ sessionInfo()
 #> [43] jquerylib_0.1.4             BiocParallel_1.44.0        
 #> [45] cachem_1.1.0                DelayedArray_0.36.0        
 #> [47] abind_1.4-8                 tidyselect_1.2.1           
-#> [49] digest_0.6.39               purrr_1.2.0                
+#> [49] digest_0.6.39               purrr_1.2.1                
 #> [51] restfulr_0.0.16             labeling_0.4.3             
 #> [53] fastmap_1.2.0               grid_4.5.2                 
 #> [55] cli_3.6.5                   SparseArray_1.10.8         
@@ -927,8 +927,8 @@ sessionInfo()
 #> [69] evaluate_1.0.5              knitr_1.51                 
 #> [71] BiocIO_1.20.0               GenomicRanges_1.62.1       
 #> [73] IRanges_2.44.0              viridisLite_0.4.2          
-#> [75] rtracklayer_1.70.1          rlang_1.1.6                
-#> [77] Rcpp_1.1.0                  glue_1.8.0                 
+#> [75] rtracklayer_1.70.1          rlang_1.1.7                
+#> [77] Rcpp_1.1.1                  glue_1.8.0                 
 #> [79] BiocGenerics_0.56.0         jsonlite_2.0.0             
 #> [81] R6_2.6.1                    Rhdf5lib_1.32.0            
 #> [83] GenomicAlignments_1.46.0    MatrixGenerics_1.22.0      

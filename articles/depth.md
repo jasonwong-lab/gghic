@@ -554,11 +554,11 @@ sessionInfo()
 #> [13] vctrs_0.6.5                 tools_4.5.2                
 #> [15] generics_0.1.4              parallel_4.5.2             
 #> [17] stats4_4.5.2                curl_7.0.0                 
-#> [19] tibble_3.3.0                pkgconfig_2.0.3            
+#> [19] tibble_3.3.1                pkgconfig_2.0.3            
 #> [21] Matrix_1.7-4                RColorBrewer_1.1-3         
 #> [23] cigarillo_1.0.0             S7_0.2.1                   
 #> [25] desc_1.4.3                  S4Vectors_0.48.0           
-#> [27] lifecycle_1.0.4             compiler_4.5.2             
+#> [27] lifecycle_1.0.5             compiler_4.5.2             
 #> [29] farver_2.1.2                Rsamtools_2.26.0           
 #> [31] Biostrings_2.78.0           textshaping_1.0.4          
 #> [33] codetools_0.2-20            Seqinfo_1.0.0              
@@ -570,7 +570,7 @@ sessionInfo()
 #> [45] BiocParallel_1.44.0         DelayedArray_0.36.0        
 #> [47] cachem_1.1.0                abind_1.4-8                
 #> [49] tidyselect_1.2.1            digest_0.6.39              
-#> [51] purrr_1.2.0                 restfulr_0.0.16            
+#> [51] purrr_1.2.1                 restfulr_0.0.16            
 #> [53] labeling_0.4.3              fastmap_1.2.0              
 #> [55] grid_4.5.2                  cli_3.6.5                  
 #> [57] SparseArray_1.10.8          magrittr_2.0.4             
@@ -582,8 +582,8 @@ sessionInfo()
 #> [69] ragg_1.5.0                  evaluate_1.0.5             
 #> [71] knitr_1.51                  BiocIO_1.20.0              
 #> [73] GenomicRanges_1.62.1        IRanges_2.44.0             
-#> [75] rtracklayer_1.70.1          rlang_1.1.6                
-#> [77] Rcpp_1.1.0                  glue_1.8.0                 
+#> [75] rtracklayer_1.70.1          rlang_1.1.7                
+#> [77] Rcpp_1.1.1                  glue_1.8.0                 
 #> [79] BiocGenerics_0.56.0         jsonlite_2.0.0             
 #> [81] R6_2.6.1                    Rhdf5lib_1.32.0            
 #> [83] GenomicAlignments_1.46.0    MatrixGenerics_1.22.0      
