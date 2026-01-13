@@ -141,7 +141,9 @@ StatTrack <- ggplot2::ggproto(
     if (data_range[1] == "auto") {
       .max <- tracks |>
         dplyr::group_by(name) |>
-        dplyr::summarize(.max = round(max(score, na.rm = TRUE), digits = 2))
+        dplyr::summarize(
+          .max = round(max(score, na.rm = TRUE), digits = 2)
+        )
     }
     if (data_range[1] == "maximum") {
       .max <- tibble::tibble(
@@ -153,13 +155,19 @@ StatTrack <- ggplot2::ggproto(
       .max <- tibble::tibble(name = unique(tracks$name), .max = data_range)
     }
 
+    .min <- tracks |>
+      dplyr::group_by(name) |>
+      dplyr::summarize(.min = round(min(score, na.rm = TRUE), digits = 2))
+
     dat_track <- tracks |>
       dplyr::left_join(ys, by = "name") |>
       dplyr::left_join(.max, by = "name") |>
+      dplyr::left_join(.min, by = "name") |>
       dplyr::mutate(
+        y = y + .height * (abs(.min) / (.max - .min)),
         x = start,
         xmax = end,
-        ymin = y + ((.height / .max) * score),
+        ymin = y + ((.height / (.max - .min)) * score),
         type = "track"
       ) |>
       dplyr::mutate(
@@ -179,9 +187,11 @@ StatTrack <- ggplot2::ggproto(
     dat_axis <- dat_track |>
       dplyr::distinct(name, .keep_all = TRUE) |>
       dplyr::mutate(
+        y = y - .height * (abs(.min) / (.max - .min)),
         ymin = y + .height,
         x = min_x,
         text_ymin = as.character(.max),
+        text_y = as.character(.min),
         type = "axis"
       )
 
@@ -303,7 +313,7 @@ GeomTrack <- ggplot2::ggproto(
         nrow(coords_axis) * 2
       ),
       y = c(coords_axis$ymin, coords_axis$y),
-      label = c(coords_axis$text_ymin, rep("0", nrow(coords_axis))),
+      label = c(coords_axis$text_ymin, coords_axis$text_y),
       just = c("right", "centre"),
       gp = grid::gpar(col = "black", fontsize = fontsize),
       default.units = "native"
