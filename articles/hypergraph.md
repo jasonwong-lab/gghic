@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpEswtfY/file1e5f79aac202.pairs.gz
+#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -282,7 +282,7 @@ mc_chr22 <- mc_chr22 |>
 #> Removed 471 duplicate pairwise contacts within reads (2,308 remaining)
 #> Filtering bin pairs with >= 3 contacts (80% quantile)
 #> Retained 1,337 contacts from 341 reads
-#> Estimated matrix size: 0.0 GB, Available RAM: 12.6 GB (threshold: 10.0 GB)
+#> Estimated matrix size: 0.0 GB, Available RAM: 12.6 GB (threshold: 10.1 GB)
 #> Identifying unique hyperedge patterns...
 #> Removed 14 duplicate hyperedges (327 unique patterns)
 #> Final hypergraph: 68 bins, 238 unique hyperedges (min 3-way contacts)
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpEswtfY/file1e5f79aac202.pairs.gz
+#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -317,7 +317,7 @@ mc_multi <- mc_multi |>
 #> Removed 872 duplicate pairwise contacts within reads (4,447 remaining)
 #> Filtering bin pairs with >= 2 contacts (80% quantile)
 #> Retained 2,873 contacts from 496 reads
-#> Estimated matrix size: 0.0 GB, Available RAM: 12.5 GB (threshold: 10.0 GB)
+#> Estimated matrix size: 0.0 GB, Available RAM: 12.6 GB (threshold: 10.0 GB)
 #> Identifying unique hyperedge patterns...
 #> Removed 3 duplicate hyperedges (493 unique patterns)
 #> Final hypergraph: 138 bins, 435 unique hyperedges (min 3-way contacts)
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpEswtfY/file1e5f79aac202.pairs.gz
+#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpEswtfY/file1e5f79aac202.pairs.gz
+#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
