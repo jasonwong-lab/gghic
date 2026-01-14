@@ -281,8 +281,10 @@ getBreaksLabels <- function(data) {
 # * geom_annotation                                                          * #
 # *--------------------------------------------------------------------------* #
 .extractTrs <- function(gr, gene, txdump, include_ncrna, gene_info) {
-  if (!requireNamespace("txdbmaker", quietly = TRUE) ||
-    !requireNamespace("Gviz", quietly = TRUE)) {
+  if (
+    !requireNamespace("txdbmaker", quietly = TRUE) ||
+      !requireNamespace("Gviz", quietly = TRUE)
+  ) {
     stop(
       "Packages 'txdbmaker' and 'Gviz' are required for gene annotation. ",
       "Install them with: BiocManager::install(c('txdbmaker', 'Gviz'))",
@@ -764,8 +766,10 @@ getBreaksLabels <- function(data) {
 }
 
 .ensureTxdb <- function(txdb, gtf_path) {
-  if (!requireNamespace("txdbmaker", quietly = TRUE) ||
-    !requireNamespace("AnnotationDbi", quietly = TRUE)) {
+  if (
+    !requireNamespace("txdbmaker", quietly = TRUE) ||
+      !requireNamespace("AnnotationDbi", quietly = TRUE)
+  ) {
     stop(
       "Packages 'txdbmaker' and 'AnnotationDbi' are required for gene annotation. ",
       "Install them with: BiocManager::install(c('txdbmaker', 'AnnotationDbi'))",
