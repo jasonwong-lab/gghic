@@ -66,7 +66,7 @@ StatHicUnder <- ggplot2::ggproto(
       )
 
     env$n_hic_under <- 1
-    env$min_y <- min(dat$ymax)
+    # env$min_y <- min(dat$ymax)
 
     dat
   }
