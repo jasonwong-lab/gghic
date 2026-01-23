@@ -112,13 +112,12 @@ StatTadUnder <- ggplot2::ggproto(
     dat <- dat_tad |>
       dplyr::mutate(
         xmin = start1,
-        x = (end1 + start2) / 2,
+        xmax = (start1 + end2) / 2,
         xend = end2,
         ymin = min_y - (res * 0.5),
-        y = (x - end1) * -1 + min_y,
+        ymax = (xmax - start1) * -1 + min_y - (res * 0.5),
         yend = ymin
-      ) |>
-      dplyr::mutate(xmax = x, ymax = y)
+      )
 
     dat
   }
