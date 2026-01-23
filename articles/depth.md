@@ -542,16 +542,16 @@ sessionInfo()
 #> [1] stats     graphics  grDevices utils     datasets  methods   base     
 #> 
 #> other attached packages:
-#> [1] gghic_0.2.1    rappdirs_0.3.3 dplyr_1.1.4   
+#> [1] gghic_0.2.1    rappdirs_0.3.4 dplyr_1.1.4   
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
-#>  [3] rjson_0.2.23                xfun_0.55                  
+#>  [3] rjson_0.2.23                xfun_0.56                  
 #>  [5] bslib_0.9.0                 ggplot2_4.0.1              
 #>  [7] htmlwidgets_1.6.4           rhdf5_2.54.1               
 #>  [9] Biobase_2.70.0              lattice_0.22-7             
 #> [11] bitops_1.0-9                rhdf5filters_1.22.0        
-#> [13] vctrs_0.6.5                 tools_4.5.2                
+#> [13] vctrs_0.7.0                 tools_4.5.2                
 #> [15] generics_0.1.4              parallel_4.5.2             
 #> [17] stats4_4.5.2                curl_7.0.0                 
 #> [19] tibble_3.3.1                pkgconfig_2.0.3            

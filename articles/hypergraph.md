@@ -273,7 +273,7 @@ mc_chr22 <- mc_chr22 |>
   gghic::tidy() |> # Convert to long format
   gghic::select(n_intra = 10) # Select top hyperedges
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
+#> Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -308,7 +308,7 @@ mc_multi <- mc_multi |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 10)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
+#> Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra- and inter-chromosomal)
 #> 
@@ -491,7 +491,7 @@ mc_high_order <- MultiWayContacts(pairs_file, focus = "chr22") |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 0)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
+#> Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz
 #> Filtering for chromosome: chr22
 #> Mode: (intra-chromosomal only)
 #> 
@@ -521,7 +521,7 @@ mc_compare <- MultiWayContacts(pairs_file, focus = c("chr21", "chr22")) |>
   gghic::tidy() |>
   gghic::select(n_intra = 10, n_inter = 5, append = FALSE)
 #> Reading pairs from file using C implementation...
-#> Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz
+#> Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz
 #> Filtering for 2 chromosomes
 #> Mode: (intra-chromosomal only)
 #> 
@@ -891,11 +891,11 @@ sessionInfo()
 #> 
 #> loaded via a namespace (and not attached):
 #>  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               
-#>  [3] rjson_0.2.23                xfun_0.55                  
+#>  [3] rjson_0.2.23                xfun_0.56                  
 #>  [5] bslib_0.9.0                 htmlwidgets_1.6.4          
 #>  [7] rhdf5_2.54.1                Biobase_2.70.0             
 #>  [9] lattice_0.22-7              bitops_1.0-9               
-#> [11] rhdf5filters_1.22.0         vctrs_0.6.5                
+#> [11] rhdf5filters_1.22.0         vctrs_0.7.0                
 #> [13] tools_4.5.2                 generics_0.1.4             
 #> [15] parallel_4.5.2              stats4_4.5.2               
 #> [17] curl_7.0.0                  tibble_3.3.1               

@@ -66,7 +66,7 @@
                         <h4 data-toc-skip class="author">Minghao
 Jiang</h4>
             
-            <h4 data-toc-skip class="date">2026-01-14</h4>
+            <h4 data-toc-skip class="date">2026-01-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/jasonwong-lab/gghic/blob/master/vignettes/hypergraph.Rmd" class="external-link"><code>vignettes/hypergraph.Rmd</code></a></small>
       <div class="d-none name"><code>hypergraph.Rmd</code></div>
@@ -378,7 +378,7 @@ analysis follows these steps:</p>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="co"># Convert to long format</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span><span class="op">)</span> <span class="co"># Select top hyperedges</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -411,7 +411,7 @@ analysis follows these steps:</p>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
 <span><span class="co">#&gt; Mode: (intra- and inter-chromosomal)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -634,7 +634,7 @@ chromosome)</li>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for chromosome: chr22</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -662,7 +662,7 @@ chromosome)</li>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/tidy.html">tidy</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu">gghic</span><span class="fu">::</span><span class="fu"><a href="../reference/select.html">select</a></span><span class="op">(</span>n_intra <span class="op">=</span> <span class="fl">10</span>, n_inter <span class="op">=</span> <span class="fl">5</span>, append <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading pairs from file using C implementation...</span></span>
-<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpaujEeZ/file1ef9692158d6.pairs.gz</span></span>
+<span><span class="co">#&gt; Reading pairs from: /tmp/RtmpYFp0GV/file1ec413c37a85.pairs.gz</span></span>
 <span><span class="co">#&gt; Filtering for 2 chromosomes</span></span>
 <span><span class="co">#&gt; Mode: (intra-chromosomal only)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -1040,11 +1040,11 @@ mappings</li>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
 <span><span class="co">#&gt;  [1] SummarizedExperiment_1.40.0 gtable_0.3.6               </span></span>
-<span><span class="co">#&gt;  [3] rjson_0.2.23                xfun_0.55                  </span></span>
+<span><span class="co">#&gt;  [3] rjson_0.2.23                xfun_0.56                  </span></span>
 <span><span class="co">#&gt;  [5] bslib_0.9.0                 htmlwidgets_1.6.4          </span></span>
 <span><span class="co">#&gt;  [7] rhdf5_2.54.1                Biobase_2.70.0             </span></span>
 <span><span class="co">#&gt;  [9] lattice_0.22-7              bitops_1.0-9               </span></span>
-<span><span class="co">#&gt; [11] rhdf5filters_1.22.0         vctrs_0.6.5                </span></span>
+<span><span class="co">#&gt; [11] rhdf5filters_1.22.0         vctrs_0.7.0                </span></span>
 <span><span class="co">#&gt; [13] tools_4.5.2                 generics_0.1.4             </span></span>
 <span><span class="co">#&gt; [15] parallel_4.5.2              stats4_4.5.2               </span></span>
 <span><span class="co">#&gt; [17] curl_7.0.0                  tibble_3.3.1               </span></span>
